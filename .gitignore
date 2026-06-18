@@ -8,3 +8,9 @@
 # bv (beads viewer) local config and caches
 .bv/
 .fallow/
+
+# .pi/ runtime files (gitignored)
+.pi/state/
+.pi/memory/
+.pi/artifacts/
+.pi/tasks/

@@ -39,7 +39,7 @@ pi
 ├── VERSION                         # Kit version (0.2.0)
 ├── .env.example                    # Environment variables (none required)
 ├── guard.example.json              # pi-guard ruleset example
-├── settings.json                   # 4 extensions + 15 skills + 9 prompts
+├── settings.json                   # 4 extensions + 59 skills + 9 prompts
 │
 ├── agents/                         # 7 subagent personas
 │   ├── build.md                    # Primary orchestrator
@@ -74,14 +74,13 @@ pi
 │   ├── development-lifecycle-workflow.md
 │   └── garbage-collection.md
 │
-├── skills/                         # 15 skills (Tier 1+2)
+├── skills/                         # 59 skills (all shipped)
 │   ├── INDEX.md                    # Task → skill routing
 │   ├── behavioral-kernel/          # Tier 1
 │   ├── defense-in-depth/           # Tier 1
 │   ├── incremental-implementation/ # Tier 1
 │   ├── verification-before-completion/  # Tier 1
-│   ├── (10 Tier 2 skills)
-│   └── _tier-3-archive/            # 42 archived skills (not loaded)
+│   ├── (55 Tier 2 skills — all loaded on-demand)
 │
 ├── templates/                      # 10 project context templates
 │   ├── prd.md, project.md, state.md, tech-stack.md
@@ -240,39 +239,30 @@ Install with `pi install npm:@davecodes/pi-dcp npm:pi-guard`. The pi-guard confi
 
 ---
 
-## Skills (15 shipped, 42 archived)
+## Skills (59 all shipped)
 
-See `skills/INDEX.md` for the full task → skill routing table and tier-3 installation instructions.
+See `skills/INDEX.md` for the full task → skill routing table.
 
 **Tier 1 (4 skills, always loaded):**
-- `behavioral-kernel`
-- `defense-in-depth`
-- `incremental-implementation`
-- `verification-before-completion`
+- `behavioral-kernel` — Re-center on core execution discipline
+- `defense-in-depth` — Validate at multiple system layers
+- `incremental-implementation` — Thin vertical slices with verify-after-each
+- `verification-before-completion` — Evidence before claiming completion
 
-**Tier 2 (11 skills, on-demand):**
-- Process: `brainstorming`, `spec-driven-development`, `planning-and-task-breakdown`, `subagent-driven-development`, `documentation-and-adrs`, `code-review-and-quality`
-- Implementation: `test-driven-development`, `testing-anti-patterns`
-- Debug: `debugging-and-error-recovery`, `root-cause-tracing`
-- Git: `git-workflow-and-versioning`
+**Tier 2 (55 skills, loaded on-demand):**
 
-**Tier 3 (42 skills, archived in `_tier-3-archive/`):**
-Niche platforms and tools. See `skills/INDEX.md` for the full list.
+| Category | Skills |
+|----------|--------|
+| Process | `brainstorming`, `spec-driven-development`, `planning-and-task-breakdown`, `subagent-driven-development`, `documentation-and-adrs`, `code-review-and-quality`, `agent-code-quality-gate`, `development-lifecycle`, `deprecation-and-migration`, `grill-me`, `source-driven-development`, `writing-skills`, `code-cleanup` |
+| Implementation | `test-driven-development`, `testing-anti-patterns`, `deep-module-design`, `api-and-interface-design` |
+| Debug | `debugging-and-error-recovery`, `root-cause-tracing` |
+| Git | `git-workflow-and-versioning`, `using-git-worktrees` |
+| Frontend/UI | `frontend-design`, `design-taste-frontend`, `high-end-visual-design`, `minimalist-ui`, `industrial-brutalist-ui`, `react-best-practices`, `redesign-existing-projects`, `mockup-to-code`, `accessibility-audit`, `design-system-audit` |
+| Platform | `cloudflare`, `vercel-deploy-claimable`, `supabase`, `supabase-postgres-best-practices`, `ci-cd-and-automation`, `shipping-and-launch`, `performance-optimization`, `security-and-hardening` |
+| Mobile | `swift-concurrency`, `swiftui-expert-skill`, `core-data-expert` |
+| Tools | `figma`, `jira`, `polar`, `resend`, `playwright`, `chrome-devtools`, `browser-testing-with-devtools`, `srcwalk`, `opensrc`, `pdf-extract`, `webclaw`, `gemini-large-context`, `fallow` |
 
-### Installing Tier-3 Skills
-
-If you need a Tier-3 skill (e.g., `cloudflare` for Cloudflare Workers, `react-best-practices` for React projects):
-
-```bash
-# Option 1: Copy from archive
-cp -r .pi/skills/_tier-3-archive/<skill> .pi/skills/
-
-# Option 2: Skip this kit and use a different source
-# - Anthropic Skills: https://github.com/anthropics/skills
-# - Pi Skills: https://github.com/badlogic/pi-skills
-```
-
-Then `/reload` in pi to pick up the new skill.
+All skills live directly in `.pi/skills/<name>/SKILL.md`. Pi auto-discovers them on startup. No manual installation needed.
 
 ---
 
@@ -365,7 +355,7 @@ Then `/reload` in pi.
 | Aspect | OpenCodeKit | This kit (Pi) |
 |--------|-------------|---------------|
 | Agents | 7 (with `build` + 6) | 7 (same) — uses `pi-subagents` schema |
-| Skills | 59 (4 Tier-1 + 55 Tier-2) | 15 (4 Tier-1 + 11 Tier-2) + 42 archived |
+| Skills | 59 (4 Tier-1 + 55 Tier-2) | 59 (all shipped — 4 Tier-1 + 55 Tier-2) |
 | Code-intel | `srcwalk` plugin (7 tools) | Uses `pi-srcwalk` (5 tools, BM25 + RRF) |
 | External research | `webclaw` + `grepsearch` + `context7` | Uses `pi-search` (5 tools, Exa web) |
 | Subagent dispatch | `task()` in agent body | Same — `pi-subagents` extension |

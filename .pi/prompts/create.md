@@ -26,10 +26,17 @@ Create a specification (PRD), set up workspace, and define executable tasks — 
 
 ## Available Tools
 
-| Tool      | Use When                                     |
-| --------- | -------------------------------------------- |
-| `explore` | Finding patterns in codebase, affected files |
-| `scout`   | External research, best practices            |
+| Tool               | Use When                                              |
+| ------------------ | ----------------------------------------------------- |
+| `subagent`         | Delegate to `explore`, `scout`, `review`, `general` agents |
+| `semantic_query`   | Find code patterns by natural language                |
+| `semantic_grep`    | Search codebase by regex pattern                      |
+| `semantic_inspect` | Inspect symbol definitions, callers, callees          |
+| `semantic_show`    | Read source at path:line                              |
+| `websearch`        | Search the web for external references                |
+| `context7`         | Look up official library documentation                |
+| `memory_search`    | Search durable project memory (decisions, patterns)   |
+| `observation`      | Persist findings to long-term memory                  |
 
 ## Phase 1: Duplicate Check
 
@@ -59,16 +66,16 @@ Ask user before spawning agents:
 Based on research depth choice, spawn agents using `subagent` tool:
 
 **If Deep:**
-- 3x `explore` (patterns, tests, deps)
-- 1x `scout` (feature/epic)
-- 1x `review` (epic)
+   - 3x subagent calls with `explore` agent (patterns, tests, deps)
+   - 1x subagent call with `scout` agent (feature/epic)
+   - 1x subagent call with `review` agent (epic)
 
 **If Standard:**
-- 2x `explore` (patterns, tests)
-- 1x `scout` (feature/epic only)
+   - 2x subagent calls with `explore` agent (patterns, tests)
+   - 1x subagent call with `scout` agent (feature/epic only)
 
 **If Minimal:**
-- 1x `explore` (patterns)
+   - 1x subagent call with `explore` agent (patterns)
 
 **If Skip:**
 - No agents, use existing AGENTS.md context
@@ -82,6 +89,8 @@ SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9 ]//g' | tr '
 mkdir -p ".pi/artifacts/$SLUG"
 echo "$SLUG" > ".pi/artifacts/.active"
 ```
+
+> **`.active` convention:** The active slug is written to `.pi/artifacts/.active`. All downstream commands (`/plan`, `/ship`, `/verify`) read this file to know which feature is current. If `.active` is missing or stale, the agent should ask the user to re-run `/create`.
 
 ## Phase 6: Determine PRD Rigor
 

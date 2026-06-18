@@ -104,7 +104,7 @@ Initialize project planning context with roadmap and state files.
 
 ### Phase 1: Discovery (brownfield)
 
-If the project has existing code (brownfield — see auto-detection above), spawn parallel codebase analysis using `explore` agent.
+If the project has existing code (brownfield — see auto-detection above), spawn parallel codebase analysis via `subagent({ agent: "explore" })`.
 
 If greenfield (no existing code), skip to requirements gathering.
 
@@ -156,17 +156,15 @@ Report what was created:
 
 ---
 
-### Skill Installation
+### Skill Selection
 
-If you use a platform-specific technology, install the matching skill:
+If you use a platform-specific technology, the matching skill is already available in `.pi/skills/`. Pi auto-discovers all 59 skills on startup. Simply reference the skill by name in your `/skill:<name>` command when needed:
 
-```bash
-.pi/scripts/install-skill.sh cloudflare
-.pi/scripts/install-skill.sh react-best-practices
-.pi/scripts/install-skill.sh supabase-postgres-best-practices
-.pi/scripts/install-skill.sh swiftui-expert-skill
-.pi/scripts/install-skill.sh swift-concurrency
-.pi/scripts/install-skill.sh core-data-expert
-```
+- `cloudflare` — Cloudflare Workers, Pages, KV, D1, R2, AI
+- `react-best-practices` — React/Next.js performance patterns
+- `supabase-postgres-best-practices` — Postgres query optimization
+- `swiftui-expert-skill` — SwiftUI development
+- `swift-concurrency` — Swift async/await patterns
+- `core-data-expert` — Core Data on iOS/macOS
 
-Run `.pi/scripts/install-skill.sh --list` to see all available. Skills are on-demand — only install what your project actually needs.
+See `.pi/skills/INDEX.md` for the complete task → skill routing table. Skills load on-demand via `/skill:<name>` — no installation needed.

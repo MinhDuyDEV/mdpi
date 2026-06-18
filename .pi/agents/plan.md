@@ -163,12 +163,12 @@ must_haves:
 **Level 2 - Standard Research** (15-30 min)
 
 - Choosing between 2-3 options, new external integration
-- Action: Spawn `@scout` for research, document findings
+- Action: Spawn `subagent({ agent: "scout" })` for research, document findings
 
 **Level 3 - Deep Dive** (1+ hour)
 
 - Architectural decision with long-term impact, novel problem
-- Action: Full research with parallel `@scout` agents, document decisions
+- Action: Full research with parallel `subagent({ agent: "scout" })` calls, document decisions
 
 **Depth indicators:**
 
@@ -310,7 +310,7 @@ When planning under constraint:
 | Scope too large to plan in one pass | Decompose into milestone phases; plan Phase 1 deeply, outline Phase 2+                 |
 | Requirements keep shifting          | Document assumptions, mark uncertainty with `[ASSUMPTION: ...]`, request clarification |
 | Complex dependencies                | Create dependency graph; identify the critical path; flag blocking items               |
-| "I don't know enough to plan"       | Launch parallel research (subagents: `@explore`, `@scout`)                             |
+| "I don't know enough to plan"       | Launch parallel research (subagents: `explore`, `scout`)                         |
 
 ## Delegation by Phase
 

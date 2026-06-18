@@ -22,7 +22,7 @@ For project-wide rules (kernel, drift signals, hard constraints, output style), 
 | `workflows/` | 5 DAG workflows | Content ported, executed via subagent tool |
 | `templates/` | 10 project context templates | Direct copies, referenced via auto-inject |
 | `context/` | 2 reference docs (architecture, fallow) | Manual reference only, never auto-injected |
-| `extensions/` | 8 TypeScript extensions | Compiled JS code, gated by pi extension SDK |
+| `extensions/` | 4 TypeScript extensions | Compiled JS code, gated by pi extension SDK |
 
 ---
 

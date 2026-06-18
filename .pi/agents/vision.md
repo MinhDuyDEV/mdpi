@@ -76,7 +76,7 @@ If Figma is available, request MCP access via `figma-go` (or framelink MCP) and 
 
 When auditing a live site without `DESIGN.md`, extract brand identity from the live site first:
 
-1. Inspect homepage with `web_fetch` (or `mcp` webclaw tools)
+1. Inspect homepage with `web_fetch` (or load `webclaw` skill for advanced scraping)
 2. Note colors, fonts, logos, content tone
 3. Cross-reference with visual analysis findings
 4. Flag inconsistencies between declared brand and actual UI

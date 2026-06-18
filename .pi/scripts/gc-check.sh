@@ -46,7 +46,7 @@ pass "All extensions within size limits"
 
 # --- 3. No stale .opencode/ references in active skills ---
 echo "[Check 3/4] No stale .opencode/ references in active skills..."
-ACTIVE_SKILLS=$(find "$ROOT/.pi/skills" -maxdepth 2 -name "SKILL.md" -not -path "*/_tier-3-archive/*" 2>/dev/null || true)
+ACTIVE_SKILLS=$(find "$ROOT/.pi/skills" -maxdepth 2 -name "SKILL.md" 2>/dev/null || true)
 STALE=""
 for f in $ACTIVE_SKILLS; do
   matches=$(grep -nF ".opencode/" "$f" 2>/dev/null || true)

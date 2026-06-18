@@ -29,9 +29,9 @@ This command invokes the `audit-pattern` workflow for multi-agent parallel execu
 
 1. **Read the workflow:** `.pi/workflows/audit-pattern.md`
 2. **Execute all phases:**
-   - Phase 1: Spawn 1 `explore` agent to discover all occurrences
-   - Phase 2: Spawn multiple `review` agents (dynamic count based on occurrences)
-   - Phase 3: Spawn 1 `general` agent to synthesize findings
+   - Phase 1: Spawn 1 subagent with `explore` agent to discover all occurrences
+   - Phase 2: Spawn multiple subagents with `review` agent (dynamic count based on occurrences)
+   - Phase 3: Spawn 1 subagent with `general` agent to synthesize findings
 3. **Replace placeholders:**
    - `{pattern}` → the pattern from $ARGUMENTS
    - `{phase_N_output}` → actual output from completed phases

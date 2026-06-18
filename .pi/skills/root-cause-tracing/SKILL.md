@@ -187,3 +187,30 @@ From debugging session (2025-10-03):
 ## See Also
 
 - **systematic-debugging** - Full four-phase process before/after tracing deep stack failures
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "The error message tells me what's wrong" | Error messages show where the symptom manifests, not where the root cause originates. Trace backward. |
+| "I fixed the immediate crash, that's enough" | Fixing the symptom without finding the root cause guarantees recurrence. |
+| "Tracing the full call stack takes too long" | Every minute spent tracing saves hours of debugging the same bug's next manifestation. |
+| "The root cause is probably in this file" | Assumptions about location are wrong >50% of the time. Instrument and trace, don't guess. |
+
+## Red Flags
+
+- Fix applied at symptom location without tracing origin
+- Assumption about root cause without instrumentation evidence
+- Error path not traced through all layers (API → Service → DB)
+- Logging added only at the error site, not upstream
+- Bug closed without understanding why the invalid data was produced
+
+## Verification
+
+After root-cause tracing:
+
+- [ ] The full chain from symptom to root cause is documented
+- [ ] Instrumentation was added at key points in the chain (not just the error site)
+- [ ] The fix addresses the root cause, not the symptom
+- [ ] A regression test prevents the same root cause from recurring
+- [ ] All layers in the chain are validated (no hidden invalid data sources remain)

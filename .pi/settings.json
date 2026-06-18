@@ -1,17 +1,14 @@
 {
   "$schema": "https://pi.dev/schema/settings.json",
+  "packages": ["npm:@tintinweb/pi-subagents", "npm:@sting8k/pi-srcwalk"],
   "extensions": [
     "./extensions/workflows-runner.ts",
     "./extensions/templates-injector.ts",
     "./extensions/pi-memory.ts",
     "./extensions/pi-session-summary.ts"
   ],
-  "skills": [
-    "./skills"
-  ],
-  "prompts": [
-    "./prompts"
-  ],
+  "skills": ["./skills"],
+  "prompts": ["./prompts"],
   "enableSkillCommands": true,
   "defaultThinkingLevel": "high",
   "powerline": {

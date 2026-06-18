@@ -49,3 +49,30 @@ When drift is detected:
 - vcc_recall replaces memory_search (session-only, not LTM)
 - `subagent` tool replaces `task()` for delegation
 - Avoid building "infrastructure for infrastructure's sake" — Pi already has 13 npm extensions
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "I know what to do without reading the skill" | Drift happens silently. Re-read the kernel before it compounds. |
+| "This edge case isn't important right now" | Edge cases ignored become edge-case bugs in production later. |
+| "I'll just make this one quick change" | "Quick changes" outside scope are the primary vector for entropy. |
+| "The skill is too restrictive for this task" | The restrictions exist because they prevent known failure modes. |
+
+## Red Flags
+
+- Adding abstraction for a single use case
+- Changing adjacent code "while you're here"
+- Postponing verification until the end
+- Claiming completion without a named proof path
+- Silently picking one interpretation from multiple valid readings
+
+## Verification
+
+After applying the behavioral kernel:
+
+- [ ] The task scope is clearly defined and bounded
+- [ ] No unrelated code was modified "while you're here"
+- [ ] The smallest working change was chosen for each step
+- [ ] Verification evidence exists before any completion claim
+- [ ] Assumptions were surfaced and confirmed, not silently acted on

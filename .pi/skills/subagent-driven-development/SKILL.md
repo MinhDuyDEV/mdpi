@@ -232,3 +232,22 @@ See review template: requesting-code-review/review.md
 - **dispatching-parallel-agents** — for parallel investigation
 - **executing-plans** — for batch execution with checkpoints
 - **requesting-code-review** — for review between subagent tasks
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "I'll just do it myself, faster than delegating" | Serial work hits context limits. Parallel subagents finish multi-file tasks faster. |
+| "The subagent will figure out the details" | Subagents need explicit contracts. Vague prompts produce wrong implementations. |
+| "I don't need to review subagent output" | Subagents hallucinate and drift. Every output needs verification. |
+| "One subagent can handle the whole feature" | Large scope in one agent compounds errors. Split into independent tasks. |
+
+## Verification
+
+After completing subagent-driven implementation:
+
+- [ ] Each task had explicit acceptance criteria before dispatch
+- [ ] Subagent outputs were independently verified (diff reviewed, tests run)
+- [ ] No file conflicts between parallel subagents
+- [ ] Each subagent commit is atomic and reviewable
+- [ ] The full feature passes integration testing

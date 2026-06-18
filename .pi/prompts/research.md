@@ -71,17 +71,22 @@ Default depth: ~30 tool calls for moderate exploration.
 
 ### Available Tools
 
-| Tool         | Use When                        |
-| ------------ | ------------------------------- |
-| `explore`    | Codebase patterns, structure    |
-| `scout`      | External docs, best practices   |
-| `context7`   | Official API references         |
-| `codesearch` | Real-world usage examples       |
-| `grepsearch` | GitHub code search              |
+| Tool               | Use When                                          |
+| ------------------ | ------------------------------------------------- |
+| `subagent`         | Delegate to `explore` (codebase), `scout` (external research) |
+| `semantic_query`   | Find code patterns by natural language            |
+| `semantic_grep`    | Search codebase by regex pattern                  |
+| `semantic_inspect` | Inspect symbol definitions, callers, callees      |
+| `context7`         | Official API documentation                        |
+| `codesearch`       | Real-world usage examples                         |
+| `grepsearch`       | GitHub code search                                |
+| `websearch`        | General web search                                |
+| `web_fetch`        | Fetch and extract web page content                |
+| `memory_search`    | Search durable project memory (decisions, bugfixes) |
 
 ### Source Priority
 
-1. **Codebase patterns** — delegate to `explore` agent
+1. **Codebase patterns** — delegate via `subagent({ agent: "explore" })`
 2. **Official docs** — `context7` for API references
 3. **GitHub examples** — `codesearch` / `grepsearch` for real-world patterns
 4. **Web search** — only if tiers 1-3 don't answer

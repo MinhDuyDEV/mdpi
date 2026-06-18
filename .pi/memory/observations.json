@@ -1,3 +1,43 @@
 {
-  "observations": []
+  "observations": [
+    {
+      "id": "obs_seed_001",
+      "type": "discovery",
+      "title": "Pi memory system initialized from ockit-mapping kit",
+      "narrative": "The 4-tier Long-Term Memory (LTM) system is ready. Create observations for decisions, bugs, patterns, and discoveries you want to persist across sessions. Use observation tool to create new entries, memory_search to find past knowledge.",
+      "concepts": ["memory", "setup", "pi"],
+      "confidence": "high",
+      "feedbackScore": 0,
+      "retrievalCount": 0,
+      "source": "manual",
+      "createdAt": 1750000000000,
+      "updatedAt": 1750000000000
+    },
+    {
+      "id": "obs_seed_002",
+      "type": "learning",
+      "title": "Skills auto-discoverable by Pi — no manual install needed",
+      "narrative": "All 59 skills (4 Tier-1 + 55 Tier-2) in .pi/skills/ are auto-discovered by Pi on startup. Use /skill:<name> to load on-demand. Tier-1 skills (behavioral-kernel, defense-in-depth, incremental-implementation, verification-before-completion) are always loaded into system prompt.",
+      "concepts": ["skills", "tier-system", "auto-discovery"],
+      "confidence": "high",
+      "feedbackScore": 0,
+      "retrievalCount": 0,
+      "source": "manual",
+      "createdAt": 1750000000000,
+      "updatedAt": 1750000000000
+    },
+    {
+      "id": "obs_seed_003",
+      "type": "decision",
+      "title": "Kit uses structured delegation via subagent routing",
+      "narrative": "When the user asks for research, code search, review, planning, or UI analysis, the build agent routes to the appropriate subagent (scout, explore, review, plan, vision). For implementation tasks, use general subagent. Always verify subagent work before accepting — read diffs, run verification, check acceptance criteria.",
+      "concepts": ["delegation", "subagents", "routing", "verification"],
+      "confidence": "high",
+      "feedbackScore": 0,
+      "retrievalCount": 0,
+      "source": "manual",
+      "createdAt": 1750000000000,
+      "updatedAt": 1750000000000
+    }
+  ]
 }

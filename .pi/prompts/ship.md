@@ -23,13 +23,17 @@ Execute spec tasks, verify each passes, run review, mark complete.
 
 ## Available Tools
 
-| Tool                 | Use When                                  |
-| -------------------- | ----------------------------------------- |
-| `explore`            | Finding patterns in codebase, prior art   |
-| `scout`              | External research, best practices         |
-| `semantic_inspect`   | Finding symbol definitions, references    |
-| `semantic_query`     | Finding code patterns                     |
-| `subagent`           | Spawning subagents for parallel execution |
+| Tool                 | Use When                                            |
+| -------------------- | --------------------------------------------------- |
+| `subagent`           | Delegate to `explore`, `scout`, `review`, `general` agents |
+| `semantic_query`     | Find code patterns by natural language              |
+| `semantic_grep`      | Search codebase by regex pattern                    |
+| `semantic_inspect`   | Find symbol definitions, callers, callees           |
+| `semantic_show`      | Read source at path:line                            |
+| `semantic_review`    | Diff review with codebase evidence                  |
+| `websearch`          | Search the web for external references              |
+| `vcc_recall`         | Search session history for prior approaches         |
+| `memory_search`      | Search durable project memory                       |
 
 ## Phase 1: Guards
 
@@ -38,6 +42,8 @@ Execute spec tasks, verify each passes, run review, mark complete.
 Use `vcc_recall` to search for failed approaches to avoid repeating.
 
 ### Plan Validation
+
+> **`.active` convention:** Commands read `$(cat .pi/artifacts/.active)` to resolve the current feature slug. If `.active` is missing or empty, tell user to run `/create` first.
 
 Verify:
 - `.pi/artifacts/$(cat .pi/artifacts/.active)/spec.md` exists (if not, tell user to run `/create` first)

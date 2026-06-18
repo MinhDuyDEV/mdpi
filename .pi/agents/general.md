@@ -182,8 +182,8 @@ Before claiming task done:
 
 Delegate to:
 
-- `@explore` for codebase discovery
-- `@scout` for external research
-- `@review` for deep debugging/security review
-- `@plan` for architecture or decomposition
-- `@vision` for UI/UX analysis
+- `subagent({ agent: "explore" })` for codebase discovery
+- `subagent({ agent: "scout" })` for external research
+- `subagent({ agent: "review" })` for deep debugging/security review
+- `subagent({ agent: "plan" })` for architecture or decomposition
+- `subagent({ agent: "vision" })` for UI/UX analysis

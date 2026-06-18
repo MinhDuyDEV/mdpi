@@ -328,3 +328,12 @@ TDD cycle:
 If TDD reveals you're testing mock behavior, you've gone wrong.
 
 Fix: Test real behavior or question why you're mocking at all.
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "I'll mock everything for speed" | Over-mocking produces tests that pass while the real code is broken. Mock only external boundaries. |
+| "The test is too complex to write simply" | Complex tests indicate complex code. Simplify the code, and the test simplifies too. |
+| "I'll add test-only methods to the production code" | Test-only methods in production code create untested production paths. Use dependency injection instead. |
+| "100% coverage means the code is tested" | Coverage measures execution, not correctness. 80% coverage with good assertions beats 100% with none. |

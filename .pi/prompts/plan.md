@@ -58,8 +58,8 @@ Before research, determine discovery level:
 |-------|-------|--------|
 | **0** | Skip — pure internal work, existing patterns only | Skip research |
 | **1** | Quick (2-5 min) — single known library | `context7 resolve-library-id + query-docs` |
-| **2** | Standard (15-30 min) — choosing between 2-3 options | Spawn `@scout` for research |
-| **3** | Deep (1+ hour) — architectural decision | Full research with parallel `@scout` |
+| **2** | Standard (15-30 min) — choosing between 2-3 options | Spawn subagent with `scout` agent for research |
+| **3** | Deep (1+ hour) — architectural decision | Full research with parallel subagents using `scout` agent |
 
 ## Phase 3: Research (if Level 1-3)
 

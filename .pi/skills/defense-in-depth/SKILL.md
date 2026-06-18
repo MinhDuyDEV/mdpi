@@ -141,3 +141,21 @@ When you find a bug:
 
 - `verification-before-completion` skill
 - `behavioral-kernel` skill
+
+## Red Flags
+
+- Validation only at the outermost layer
+- Trusting upstream data without verification
+- Error handling that assumes valid input
+- "This can never be null" comments without null checks
+- Single-point validation in a multi-hop data flow
+
+## Verification
+
+After applying defense-in-depth:
+
+- [ ] Validation exists at every system boundary data crosses
+- [ ] Each layer validates independently, not relying on upstream guarantees
+- [ ] Invalid data cannot reach the persistence or business logic layer
+- [ ] Error handling at each layer is appropriate (not swallowing, not crashing)
+- [ ] New validation rules have corresponding tests

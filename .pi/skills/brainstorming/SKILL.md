@@ -109,3 +109,30 @@ Start by understanding the current project context, then ask questions one at a 
 
 - `writing-plans` - Turn validated direction into zero-ambiguity implementation tasks
 - `prd` - Capture behavioral requirements before implementation
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "I already know what to build" | Premature convergence is the #1 cause of wrong solutions. Explore alternatives first. |
+| "Asking too many questions wastes time" | 10 questions now saves 10 hours of rework later. |
+| "We'll figure out edge cases during implementation" | Edge cases discovered late become hacks. Surface them during design. |
+| "The first idea is usually the best" | First ideas are biased by recency and familiarity. Generate alternatives. |
+
+## Red Flags
+
+- Jumping to implementation without exploring alternatives
+- Asking zero clarification questions before proposing a design
+- The design is a single paragraph with no trade-offs discussed
+- User's first idea accepted as final without alternatives explored
+- Design doesn't reference existing codebase patterns or constraints
+
+## Verification
+
+After completing a brainstorming session:
+
+- [ ] At least 2-3 distinct approaches were explored and compared
+- [ ] Trade-offs for each approach are documented
+- [ ] The recommended approach has clear rationale
+- [ ] Key assumptions are surfaced and validated
+- [ ] The design is written to `.pi/artifacts/<slug>/design.md`
