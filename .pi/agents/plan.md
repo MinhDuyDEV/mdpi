@@ -149,23 +149,25 @@ must_haves:
 
 ## Discovery Levels
 
+> Same Level 0-3 taxonomy as `/create` and `/plan` prompts (Skip / Quick / Standard / Deep).
+
 **Level 0 - Skip** (pure internal work, existing patterns only)
 
-- ALL work follows established codebase patterns (grep confirms)
+- ALL work follows established codebase patterns (`semantic_grep` confirms)
 - No new external dependencies
 - Examples: Add delete button, add field to model, create CRUD endpoint
 
-**Level 1 - Quick Verification** (2-5 min)
+**Level 1 - Quick** (~30 sec)
 
 - Single known library, confirming syntax/version
 - Action: `context7 resolve-library-id + query-docs`
 
-**Level 2 - Standard Research** (15-30 min)
+**Level 2 - Standard** (~1 min)
 
 - Choosing between 2-3 options, new external integration
 - Action: Spawn `subagent({ agent: "scout" })` for research, document findings
 
-**Level 3 - Deep Dive** (1+ hour)
+**Level 3 - Deep** (~2 min)
 
 - Architectural decision with long-term impact, novel problem
 - Action: Full research with parallel `subagent({ agent: "scout" })` calls, document decisions
@@ -298,8 +300,9 @@ Load contextually:
 | Situation                              | Skill              |
 | -------------------------------------- | ------------------ |
 | Requirements ambiguous                 | `brainstorming`    |
-| Producing `plan.md`                    | `writing-plans`    |
-| Spec artifacts missing/need conversion | `prd` / `prd-task` |
+| Producing `spec.md` (PRD)              | `spec-driven-development` |
+| Decomposing spec → `plan.md` + `tasks.json` | `planning-and-task-breakdown` |
+| Spec artifacts missing/need conversion | `spec-driven-development` → `planning-and-task-breakdown` |
 
 ## Pressure Handling
 
@@ -314,13 +317,13 @@ When planning under constraint:
 
 ## Delegation by Phase
 
-| Phase     | Delegate To    | When                               |
-| --------- | -------------- | ---------------------------------- |
-| Ground    | `@explore`     | Need to discover existing patterns |
-| Calibrate | `@scout`       | External research required         |
-| Transform | `@plan` (self) | Core planning work                 |
-| Release   | `@plan` (self) | Write artifact                     |
-| Reset     | `@build`       | Handoff to implementation          |
+| Phase     | Delegate To          | When                               |
+| --------- | -------------------- | ---------------------------------- |
+| Ground    | Agent: `explore`     | Need to discover existing patterns |
+| Calibrate | Agent: `scout`       | External research required         |
+| Transform | Agent: `plan` (self) | Core planning work                 |
+| Release   | Agent: `plan` (self) | Write artifact                     |
+| Reset     | Agent: `build`       | Handoff to implementation          |
 
 ## Workflow
 

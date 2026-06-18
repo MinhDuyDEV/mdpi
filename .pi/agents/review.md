@@ -150,7 +150,7 @@ If you find a pre-existing issue:
 ## Rules
 
 - **Read-only is a hard constraint** — never modify files
-- Bash is for read-only operations (grep, find, ls, cat)
+- Bash is for read-only operations; prefer `semantic_grep` over built-in `grep` for text/regex search (project rule). Built-in `grep` is acceptable for exact one-off pattern checks, but reach for `semantic_grep` first.
 - Return absolute paths with `file:line` references
 - Mark uncertainty with `[UNCERTAIN: ...]` markers
 - Cite concrete code, not abstract patterns

@@ -129,7 +129,7 @@ For complex delegation, write large context once and point subagents at the file
 
 ```ts
 write(".pi/artifacts/<slug>/worker-context.md", contextContent)
-subagent({ agent: "general", task: "Read worker-context.md and implement task 3." })
+subagent({ agent: "general", prompt: "Read worker-context.md and implement task 3." })
 ```
 
 Use when: shared context > ~500 tokens, multiple subagents need the same background, or plans/specs must be passed without duplication.
@@ -172,65 +172,22 @@ Implement requested work, verify with fresh evidence.
 
 ## Iterative Quality Loop
 
-Score-gated, review-driven feedback loop for high-risk features or when the user explicitly requests quality gating. This is optional — skip for routine changes.
+Score-gated, review-driven feedback loop for high-risk features or when the user explicitly requests quality gating. **Optional** — skip for routine changes.
 
-### Score-Based Gate
-
-After each review round, produce a confidence score:
+**Don't re-implement the loop here.** It is owned by the `quality-loop` workflow (`.pi/workflows/quality-loop.md`), whose runtime state schema lives at `.pi/templates/review-state.json`. Invoke it:
 
 ```
-5/5 — perfect, exit
-4/5 — good, minor issues only, ask user
-<4/5 — needs fixes, loop
+run_workflow({ name: "quality-loop", args: { slug: "<feature-slug>" } })
 ```
 
-Score is derived from the ratio of critical → important → minor findings.
+The workflow handles REVIEW → GATE → STALL CHECK → FILTER → FIX → RE-REVIEW until score ≥ 5/5 or escalation (stall / max rounds / architecture finding).
 
-### Loop State (`review-state.json`)
+### When to trigger (summary)
 
-Track iteration progress in a structured file:
+- High-risk feature or explicit user quality-gating request
+- Score gate: 5/5 → done · 4/5 → ask user · <4/5 → loop
+- Escalate on: architecture finding, same score 2 rounds in a row, max rounds (5) reached
 
-```json
-{
-  "slug": "feature-slug",
-  "rounds": 0,
-  "maxRounds": 5,
-  "lastScore": 0,
-  "sameScoreCount": 0,
-  "findingsResolved": 0,
-  "findingsRemaining": 0,
-  "status": "active"
-}
-```
+### Review subagent handoff
 
-### Escalation Rules
-
-| Condition | Action |
-|-----------|--------|
-| Architecture/design finding | Stop, present to user with options |
-| Unclear feedback | Ask user for clarification |
-| Same score 2 rounds in a row | Escalate — fixes stalled, surface accumulated findings |
-| Max rounds (5) reached | Escalate with full finding log |
-| PASS (5/5) | Mark done, continue to close |
-
-### Loop Flow
-
-```
-1. EXECUTE    → implement per spec/plan
-2. REVIEW     → spawn review subagent with spec + current diff → score + findings
-3. GATE       → score ≥ 5? → DONE
-4. STALL?     → same score 2x? → ESCALATE
-5. MAX?       → rounds ≥ 5? → ESCALATE
-6. FILTER     → split findings: actionable vs informational vs architecture
-7. FIX        → one fixer subagent per actionable finding (file:line + suggestion)
-8. RE-REVIEW  → go to step 2
-```
-
-### Review Subagent Prompt
-
-When spawning the review agent, include:
-
-- The original spec/slug
-- The current diff (all changed files)
-- The current `review-state.json`
-- Instructions to return: score (X/5), findings list (severity + file:line + suggestion), and a suggested next action
+When spawning the review agent for a loop round, include: the original spec/slug, the current diff (all changed files), the current `review-state.json`, and instructions to return score (X/5) + findings (severity + file:line + suggestion) + suggested next action.
