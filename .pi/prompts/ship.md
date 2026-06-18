@@ -10,7 +10,16 @@ Execute spec tasks, verify each passes, run review, mark complete.
 
 ## Load Skills
 
-- `verification-before-completion` skill
+Before shipping, load these skills from `.pi/skills/`:
+
+| Skill | Why |
+|-------|-----|
+| `verification-before-completion` | Evidence-before-claims discipline; phantom completion detection |
+| `shipping-and-launch` | Pre-ship checklist, rollback planning, handoff protocols |
+| `subagent-driven-development` | Fresh subagent per task with review gates |
+| `test-driven-development` | RED-GREEN-REFACTOR workflow for TDD tasks |
+| `git-workflow-and-versioning` | Atomic commits, branch strategy, conventional commits |
+| `code-review-and-quality` | Five-axis review: correctness, readability, architecture, security, performance |
 
 ## Before You Ship
 
@@ -141,7 +150,7 @@ When task has `checkpoint:*` type:
 
 ### TDD Execution Flow
 
-When task specifies TDD:
+When task specifies TDD, load `test-driven-development` skill and follow its methodology:
 
 **RED Phase:**
 1. Create test file with failing test
@@ -160,7 +169,7 @@ When task specifies TDD:
 
 ### Task Commit Protocol
 
-After each task completes (verification passed):
+Load `git-workflow-and-versioning` skill. After each task completes (verification passed):
 
 1. **Check modified files:** `git status --short`
 2. **Stage individually** (NEVER `git add .`):
@@ -228,15 +237,12 @@ If any UI files changed, verify UX gates:
 Run **5 parallel agents** for review using subagent parallel mode:
 
 ```typescript
-subagent({
-  tasks: [
-    { agent: "review", task: "Security/correctness review: ${WHAT_WAS_IMPLEMENTED} against ${PLAN}" },
-    { agent: "review", task: "Performance/architecture review: ..." },
-    { agent: "review", task: "Type-safety/tests review: ..." },
-    { agent: "review", task: "Conventions/patterns review: ..." },
-    { agent: "review", task: "Simplicity/completeness review: ..." }
-  ]
-});
+// Spawn 5 parallel review agents (one per concern area):
+subagent({ agent: "review", prompt: "Security/correctness review: ${WHAT_WAS_IMPLEMENTED} against ${PLAN}" });
+subagent({ agent: "review", prompt: "Performance/architecture review: ${WHAT_WAS_IMPLEMENTED} against ${PLAN}" });
+subagent({ agent: "review", prompt: "Type-safety/tests review: ${WHAT_WAS_IMPLEMENTED} against ${PLAN}" });
+subagent({ agent: "review", prompt: "Conventions/patterns review: ${WHAT_WAS_IMPLEMENTED} against ${PLAN}" });
+subagent({ agent: "review", prompt: "Simplicity/completeness review: ${WHAT_WAS_IMPLEMENTED} against ${PLAN}" });
 ```
 
 Wait for all 5 agents to return. Synthesize findings.
@@ -315,6 +321,16 @@ Ask user before closing.
 
 If confirmed, update `.pi/artifacts/todo.md` to mark all tasks complete and append summary to `.pi/artifacts/$(cat .pi/artifacts/.active)/progress.md`.
 
+## Failure Handling
+
+| Scenario | Action |
+|----------|--------|
+| Task verification fails 2x | Stop, report blocker with file:line evidence |
+| Subagent returns failure | Read error, retry once with adjusted prompt, then escalate |
+| Review finds critical issue | Fix inline, re-run verification, continue |
+| Batch workflow failure | Fall back to sequential execution |
+| Missing `.active` slug | Report: "No active feature. Run `/create` first." |
+
 ## Output
 
 Report:
@@ -355,3 +371,7 @@ Report:
 | Research a topic  | `/research`   |
 | Fix a bug         | `/fix`        |
 | Verify gate       | `/verify`     |
+
+## Related Skills
+
+See `.pi/skills/INDEX.md` for the complete task → skill routing table.

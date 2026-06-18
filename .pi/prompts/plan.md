@@ -17,6 +17,15 @@ Create a detailed implementation plan with TDD steps. Optional deep-planning bet
 - **Budget context**: Target ~50% context per execution
 - **Vertical slices**: Each task should cover one feature end-to-end
 
+## Load Skills
+
+Before creating the plan, load these skills from `.pi/skills/`:
+
+| Skill | Why |
+|-------|-----|
+| `planning-and-task-breakdown` | Goal-backward methodology, task decomposition, dependency graphing |
+| `context-engineering` | Context budget management, packing strategies for subagent handoffs |
+
 ## Phase 0: Institutional Research (Mandatory)
 
 Before touching the PRD or planning anything, load what the codebase already knows.
@@ -40,7 +49,7 @@ Look for: commit conventions, recent changes (merge conflict risk), similar feat
 ```typescript
 subagent({
   agent: "explore",
-  task: "Search the codebase for patterns, conventions, and existing implementations related to: [FEATURE]. Return: existing patterns to follow, files to be aware of, and any gotchas."
+  prompt: "Search the codebase for patterns, conventions, and existing implementations related to: [FEATURE]. Return: existing patterns to follow, files to be aware of, and any gotchas."
 });
 ```
 
@@ -71,6 +80,8 @@ Spawn parallel agents to gather implementation context:
 | `scout`   | Best practices, common patterns, pitfalls                            |
 
 ## Phase 4: Goal-Backward Analysis
+
+Load `planning-and-task-breakdown` skill. Follow its goal-backward methodology:
 
 **Step 1: Extract Goal from PRD** — outcome-shaped, not task-shaped.
 
@@ -170,6 +181,22 @@ Scan `plan.md` content for these patterns:
 | **CRITICAL** | Stop. Remove violation from plan. Report to user.                  |
 | **WARNING**  | Flag in plan output. Add confirmation checkpoint to affected task. |
 
+## Failure Handling
+
+| Scenario | Action |
+|----------|--------|
+| Plan already exists | Ask user: overwrite or skip? |
+| Missing spec artifact | Report: "No spec found. Run `/create` first." |
+| Subagent research fails | Retry once with adjusted prompt, then proceed with existing knowledge |
+| Verification fails 2x | Stop, report blocker with file:line evidence |
+
+## Stop Conditions
+
+- Spec artifact missing → stop, tell user: run `/create` first
+- Plan already exists → ask user before overwriting
+- Constitutional violation found (CRITICAL) → remove violation from plan, report to user
+- Verification fails 2x on same approach → stop, escalate
+
 ## Phase 9: Report
 
 1. **Discovery Level:** [0-3] with rationale
@@ -188,3 +215,7 @@ Scan `plan.md` content for these patterns:
 | Create spec    | `/create`    |
 | Execute plan   | `/ship`      |
 | Research first | `/research`  |
+
+## Related Skills
+
+See `.pi/skills/INDEX.md` for the complete task → skill routing table.

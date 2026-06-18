@@ -42,7 +42,7 @@ If complexity is detected as complex, use the `subagent` tool:
 // Phase 1: Spawn multiple scout agents (dynamic count based on angles)
 subagent({
   agent: "scout",
-  task: "Search for different perspectives on: ${ARGUMENTS}. Cover opposing viewpoints, authoritative sources, and recent developments. Return findings with URLs and confidence levels."
+  prompt: "Search for different perspectives on: ${ARGUMENTS}. Cover opposing viewpoints, authoritative sources, and recent developments. Return findings with URLs and confidence levels."
 });
 
 // Then cross-check findings with review agents, synthesize
@@ -68,6 +68,15 @@ Default depth: ~30 tool calls for moderate exploration.
 - **Don't over-research**: Stop when you have enough to proceed
 - **Use source priority**: Codebase → Docs → Source → GitHub → Web
 - **Verify confidence**: Medium+ confidence required before stopping
+
+## Load Skills
+
+Before researching, load these skills from `.pi/skills/`:
+
+| Skill | Why |
+|-------|-----|
+| `source-driven-development` | Ground findings in official docs, source code, and cited references |
+| `srcwalk` | Navigate codebase with repo maps, symbol search, callers/callees |
 
 ### Available Tools
 
@@ -103,6 +112,22 @@ Default depth: ~30 tool calls for moderate exploration.
 - Tool budget exhausted for depth level
 - Last 5 tool calls yielded no new insights
 
+## Failure Handling
+
+| Scenario | Action |
+|----------|--------|
+| Subagent returns failure | Retry once with adjusted prompt, then escalate |
+| Network/API error | Cache findings so far, retry with degraded mode |
+| No results found | Report empty result set, suggest broader search terms |
+| Tool budget exhausted | Report findings so far, note what remains unexplored |
+
+## Stop Conditions
+
+- All questions answered with medium+ confidence → stop research, proceed
+- Tool budget exhausted for depth level → stop, report findings
+- Last 5 tool calls yielded no new insights → stop, avoid diminishing returns
+- Network/API repeatedly unavailable → stop, report partial results
+
 ## Output
 
 1. **Execution mode:** Direct or Workflow
@@ -120,3 +145,7 @@ Default depth: ~30 tool calls for moderate exploration.
 | Plan details   | `/plan`      |
 | Pick up work   | `/ship`      |
 | Audit codebase | `/audit`     |
+
+## Related Skills
+
+See `.pi/skills/INDEX.md` for the complete task → skill routing table.

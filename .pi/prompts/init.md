@@ -17,10 +17,23 @@ Initialize project setup. Run once per project.
 | `.pi/roadmap.md` / `.pi/state.md` | Skip if exists, ask before overwrite |
 | `.pi/user.md` | Skip if exists, ask before overwrite |
 
-## Skills
+## Load Skills
 
-Load `brainstorming` skill when ambiguous requirements arise.
-Load `verification-before-completion` skill after AGENTS.md creation.
+Before initializing, load these skills from `.pi/skills/`:
+
+| Skill | Why |
+|-------|-----|
+| `context-engineering` | AGENTS.md structure, context hierarchy, rules file best practices |
+| `documentation-and-adrs` | Doc conventions, ADR format when architectural decisions arise |
+
+Load `brainstorming` skill conditionally when ambiguous requirements arise.
+
+## Before You Initialize
+
+- **Be certain**: Only init once per project; re-init improves, never overwrites
+- **Don't over-init**: If AGENTS.md is already good, skip to planning
+- **Validate commands**: Test each detected command before writing to AGENTS.md
+- **Respect existing**: Roadmap, state, user.md — ask before overwriting
 
 ## Parse Arguments
 
@@ -80,7 +93,7 @@ Write detected values to `.pi/tech-stack.md`. Then persist to long-term memory:
 
 ```typescript
 observation({
-  type: "feature",
+  type: "decision",
   title: "Project initialized — [tech stack summary]",
   narrative: "Core setup completed: AGENTS.md, tech-stack.md created for [language/framework] project",
   concepts: "project-setup, initialization",
@@ -145,6 +158,22 @@ Write to `.pi/user.md` with the captured preferences.
 
 ---
 
+## Failure Handling
+
+| Scenario | Action |
+|----------|--------|
+| Command validation fails | Report which command failed with actual error |
+| AGENTS.md already exists | Improve in-place, don't overwrite blindly |
+| Fallow not available | Skip fallow setup, note in output |
+| Tech stack detection ambiguous | Ask user to confirm, don't guess |
+
+## Stop Conditions
+
+- User says no to AGENTS.md confirmation → stop, report detection only
+- Roadmap/state/user.md exists and user says no to overwrite → skip, report
+- AGENTS.md exceeds 150 lines → trim before writing
+- Command validation fails → stop, report which command failed
+
 ## Output
 
 Report what was created:
@@ -168,3 +197,7 @@ If you use a platform-specific technology, the matching skill is already availab
 - `core-data-expert` — Core Data on iOS/macOS
 
 See `.pi/skills/INDEX.md` for the complete task → skill routing table. Skills load on-demand via `/skill:<name>` — no installation needed.
+
+## Related Skills
+
+See `.pi/skills/INDEX.md` for the complete task → skill routing table.

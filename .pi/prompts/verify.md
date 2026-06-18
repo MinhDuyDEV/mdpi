@@ -9,7 +9,12 @@ Check implementation against PRD before shipping.
 
 ## Load Skills
 
-- `verification-before-completion` skill
+Before verifying, load these skills from `.pi/skills/`:
+
+| Skill | Why |
+|-------|-----|
+| `verification-before-completion` | Evidence-before-claims; phantom detection; verification cache protocol |
+| `code-review-and-quality` | Phase 4 coherence check: cross-reference artifacts for correctness |
 
 ## Parse Arguments
 
@@ -123,6 +128,22 @@ Cross-reference artifacts for contradictions:
 
 Flag contradictions with specific file references.
 
+## Failure Handling
+
+| Scenario | Action |
+|----------|--------|
+| Gate fails | Report which gate failed with exact error |
+| Verification fails 2x | Stop, report blocker with file:line evidence |
+| Cache stamp mismatch | Run gates fresh — don't reuse stale cache |
+| Phantom artifacts detected | Report PHANTOM score, block completion |
+
+## Stop Conditions
+
+- Any gate (typecheck/lint/test/build) fails → stop, report exact error
+- Phantom score is PHANTOM → block completion, fix stubs first
+- Cache bypassed but gates fail → re-cache not permitted until all pass
+- Verification fails 2x on same approach → stop, escalate
+
 ## Phase 5: Report
 
 Append to `.pi/artifacts/$(cat .pi/artifacts/.active)/progress.md`: `Verification: [PASS|PARTIAL|FAIL] - [summary]`
@@ -143,3 +164,7 @@ Output:
 | Ship after verify | `/ship <id>`  |
 | Plan a feature    | `/plan`       |
 | Fix a bug         | `/fix`        |
+
+## Related Skills
+
+See `.pi/skills/INDEX.md` for the complete task → skill routing table.

@@ -8,55 +8,52 @@ Run structural analysis, update quality grades, and open cleanup PRs.
 
 ## Load Skills
 
-- `fallow` skill
-- `verification-before-completion` skill
+Before running GC, load these skills from `.pi/skills/`:
 
-## Phase 1: Run Fallow Scan
+| Skill | Why |
+|-------|-----|
+| `fallow` | Structural analysis for dead code, duplication, complexity |
+| `code-cleanup` | Safe code removal patterns for Phase 4 cleanup PRs |
 
-```bash
-npx fallow --format json --quiet
-```
+Load `verification-before-completion` skill after fixes are applied.
 
-Extract:
-- Dead code (unused exports, files, dependencies)
-- Code duplication (clone groups)
-- Complexity hotspots (cyclomatic complexity)
-- Architecture boundary violations
+## Before You GC
 
-## Phase 2: Read Existing Quality Grades
+- **Be certain**: GC is maintenance — don't run during active feature work
+- **Don't over-clean**: Only fix P0/P1 findings; P2/P3 are logged for next cycle
+- **Use the workflow**: The garbage-collection workflow handles multi-phase execution
+- **Verify fixes**: Each cleanup PR must pass typecheck + lint before merging
 
-Read `.pi/QUALITY.md` if it exists. Compare with current Fallow findings.
+## Execution
 
-## Phase 3: Grade Each Domain
+This command delegates to the `garbage-collection` workflow for multi-phase execution.
 
-Run the structural check (use `.pi/scripts/gc-check.sh` if available, otherwise manual inspection):
+1. **Read the workflow:** `.pi/workflows/garbage-collection.md`
+2. **Execute all phases:**
+   - Phase 1: Run `npx fallow --format json --quiet` and extract findings
+   - Phase 2: Read `.pi/QUALITY.md`, compare with Fallow results, update grades
+   - Phase 3: Prioritize findings by severity (P0-P3)
+   - Phase 4: (if findings warrant) Spawn `subagent({ agent: "general", prompt: "Fix: [finding]" })` for P0/P1
+3. **Replace placeholders:** `{phase_N_output}` → actual output from completed phases
+4. **Aggregate results** between phases
 
-```bash
-bash .pi/scripts/gc-check.sh
-```
+**Announce:** "Running garbage collection via garbage-collection workflow."
 
-Update `.pi/QUALITY.md` with grades per domain:
+## Failure Handling
 
-| Domain | Source | Grade |
-|--------|--------|-------|
-| Plugins | `.pi/extensions/*.ts` | A–D |
-| Commands | `.pi/prompts/*.md` | A–D |
-| Skills | `.pi/skills/` | A–D |
-| Docs | `.pi/context/*.md` | A–D |
-| Agents | `.pi/agents/*.md` | A–D |
+| Scenario | Action |
+|----------|--------|
+| Fallow scan fails | Check if fallow is installed: `npx fallow --version`. Install if missing. |
+| Quality grades unchanged | Report as-is — no change is a valid result |
+| Cleanup PR creation fails | Log issue, continue with remaining PRs |
+| Verification fails 2x | Stop, report blocker with file:line evidence |
 
-## Phase 4: Open Cleanup PRs (if findings warrant)
+## Stop Conditions
 
-For each P0/P1 finding from Fallow, spawn a `general` agent:
-
-```typescript
-subagent({
-  agent: "general",
-  task: `Fix this Fallow finding: [detail]. Run verification after.`
-});
-```
-
-Wait for all fix tasks to complete. Verify each.
+- Fallow not installed → report install command, stop
+- No findings returned → report clean state, skip Phase 4
+- Cleanup PR fails review → log issue, don't block report
+- Verification fails 2x on same approach → stop, escalate
 
 ## Phase 5: Report
 
@@ -73,3 +70,7 @@ Output:
 |---|---|
 | Full verification | `/verify all --full` |
 | Architecture audit | `/audit` |
+
+## Related Skills
+
+See `.pi/skills/INDEX.md` for the complete task → skill routing table.

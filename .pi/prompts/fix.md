@@ -12,6 +12,13 @@ Systematically debug and fix the reported issue.
 - `root-cause-tracing` skill
 - `verification-before-completion` skill
 
+## Before You Fix
+
+- **Be certain**: Reproduce the issue before touching code
+- **Don't guess**: Trace to root cause — never fix symptoms
+- **Verify the fix**: Always reproduce the original issue first, then confirm it's gone
+- **Escalate if stuck**: After 2 failed verification attempts, escalate with learnings
+
 ## Process
 
 ### Phase 1: Reproduce
@@ -43,6 +50,22 @@ npm test            # or vitest relevant test
 
 If verification fails twice on the same approach, escalate with learnings.
 
+## Failure Handling
+
+| Scenario | Action |
+|----------|--------|
+| Cannot reproduce issue | Report reproduction steps attempted, ask for clarification |
+| Root cause ambiguous | Trace backward through call stack, add instrumentation |
+| Verification fails 2x | Stop, report blocker with learnings from both attempts |
+| Fix causes regression | Revert fix, report regression with evidence |
+
+## Stop Conditions
+
+- Cannot reproduce after 3 attempts → stop, ask for clarification
+- Fix causes regression → revert, report
+- Verification fails 2x on same approach → stop, escalate with learnings
+- Root cause is in third-party dependency → stop, report with upstream reference
+
 ## Output
 
 Report:
@@ -50,3 +73,7 @@ Report:
 2. Fix applied
 3. Verification results
 4. What else was considered and rejected
+
+## Related Skills
+
+See `.pi/skills/INDEX.md` for the complete task → skill routing table.
