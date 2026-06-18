@@ -12,9 +12,11 @@
 # .pi/ runtime files (gitignored)
 .pi/state/
 .pi/memory/
-.pi/artifacts/
 .pi/tasks/
 .pi/npm/
+# .pi/artifacts/: ignore everything EXCEPT the template example/ (shipped with kit)
+.pi/artifacts/*
+!.pi/artifacts/example/
 
 # mdpi CLI build artifacts
 node_modules/

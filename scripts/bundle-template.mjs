@@ -29,6 +29,7 @@ const INCLUDES = [
   "context",
   "extensions",
   "scripts",
+  "artifacts/example",
   "settings.json",
   "AGENTS.md",
   "README.md",
