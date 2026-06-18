@@ -5,7 +5,7 @@ description: "Task-to-skill routing table with File Match + Keyword triggers, Ph
 
 # Skills Index — Task → Skill Mapping
 
-This file helps the agent (and humans) discover which skill to load for a given task. Skills are auto-loaded into the system prompt at startup (Tier 1), triggered by File/Keyword Match rules, or loaded on-demand via `/skill:<name>` (Tier 2). All 64 skills are available directly in `.pi/skills/`.
+This file helps the agent (and humans) discover which skill to load for a given task. Skills are auto-loaded into the system prompt at startup (Tier 1), triggered by File/Keyword Match rules, or loaded on-demand via `/skill:<name>` (Tier 2). All 67 skills are available directly in `.pi/skills/`.
 
 **How routing works:** File Match → Keyword Match → Quick Routing Table → Decision Tree (if ambiguous).
 
@@ -24,6 +24,7 @@ When the agent edits files matching these patterns, the listed skills auto-load.
 | `.github/workflows/**,Dockerfile,docker-compose*.yml` | `ci-cd-and-automation` | Pipeline design + caching |
 | `.pi/skills/*/SKILL.md` | `writing-skills` | Skill authoring best practices |
 | `*.css,*.scss,*.less` | `frontend-design`, `design-taste-frontend` | Design system consistency |
+| `*.tsx,*.jsx` | `frontend-ui-engineering` | Production-quality UI standards |
 | `*.md,docs/**,ADR*.md` | `documentation-and-adrs` | Doc structure + ADR format |
 
 ---
@@ -46,7 +47,8 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | docs, documentation, README, ADR, changelog | `documentation-and-adrs` |
 | commit, branch, merge, rebase, git, worktree | `git-workflow-and-versioning`, `using-git-worktrees` |
 | context, memory, token, agent quality, degraded | `context-engineering` |
-| brainstorm, idea, design, concept, explore | `brainstorming`, `spec-driven-development` |
+| brainstorm, idea, design, concept, explore, ideate, refine | `brainstorming`, `idea-refine`, `spec-driven-development` |
+| interview, grill, are we sure, what do you want | `interview-me` |
 | plan, break down, decompose, tasks, roadmap | `planning-and-task-breakdown` |
 | logs, metrics, traces, alerts, monitoring, observability | `observability-and-instrumentation` |
 | email, send, transactional, template, Resend | `resend` |
@@ -77,6 +79,8 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | Skill | Use when | Phase | Risk |
 |-------|----------|-------|------|
 | `using-agent-skills` | Discovering which skill applies to the current task — meta-skill for skill routing | Define | Low |
+| `interview-me` | One-question-at-a-time interview extracting what the user actually wants (not what they think they want) until ~95% confidence | Define | Low |
+| `idea-refine` | Structured divergent/convergent thinking — turn vague ideas into concrete one-pagers with "Not Doing" list | Define | Low |
 | `brainstorming` | Refining ideas into designs before coding | Define | Low |
 | `spec-driven-development` | Vague request → concrete spec before implementation | Define | Low |
 | `grill-me` | Adversarial interrogation of ideas before implementation | Define | Low |
@@ -121,6 +125,7 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 
 | Skill | Use when | Phase | Risk |
 |-------|----------|-------|------|
+| `frontend-ui-engineering` | Production-quality UIs — component architecture, design systems, WCAG 2.1 AA, avoid AI aesthetic | Build | Medium |
 | `frontend-design` | Building any web UI with React-based frameworks | Build | Medium |
 | `design-taste-frontend` | BASE aesthetic layer to override default LLM design biases | Build | Low |
 | `high-end-visual-design` | Premium, agency-quality, or luxury visual design | Build | Low |
@@ -185,7 +190,10 @@ Maps user intent to skill(s). `→` = sequential pipeline (execute in order). `+
 | "fix this bug" | `root-cause-tracing` → `debugging-and-error-recovery` + `verification-before-completion` | Verify | Medium |
 | "review this code" / "audit this PR" | `code-review-and-quality` + `verification-before-completion` | Review | Medium |
 | "research X" / "how does X work" | (Use `scout` subagent, no skill needed) | Define | Low |
-| "design X" / "brainstorm X" / "ideate X" | `brainstorming` | Define | Low |
+| "design X" / "brainstorm X" / "ideate X" | `brainstorming` \| `idea-refine` | Define | Low |
+| "interview me" / "grill me" / "what do I want" | `interview-me` | Define | Low |
+| "refine this idea" / "stress-test my plan" | `idea-refine` | Define | Low |
+| "build UI" / "build component" (production quality) | `frontend-ui-engineering` + `frontend-design` | Build | Medium |
 | "write test" / "add coverage" / "TDD" | `test-driven-development` + `testing-anti-patterns` | Build | Medium |
 | "ship this" / "deploy" / "release" | `verification-before-completion` → `shipping-and-launch` | Ship | High |
 | "write docs" / "document this" / "ADR" | `documentation-and-adrs` | Ship | Low |
