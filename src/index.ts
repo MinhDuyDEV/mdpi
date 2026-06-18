@@ -2,9 +2,10 @@
 /**
  * mdpi — CLI to scaffold and manage a Pi coding-agent kit (.pi/) in any repo.
  *
- * Command surface (v0.2.0):
+ * Command surface (v0.3.0):
  *   mdpi init      Scaffold curated .pi/ kit into cwd + write manifest
  *   mdpi upgrade   Bring .pi/ up to bundled template version (manifest-based)
+ *   mdpi new       Scaffold a new kit component (skill|prompt|agent|workflow|template)
  *   mdpi lint      Governance checks (skills frontmatter + dead cross-refs, docs drift)
  *   mdpi doctor    .pi/ health check (version/manifest/counts/orphans/lint)
  *   mdpi --version / -v
@@ -19,6 +20,7 @@ import packageInfo from "../package.json" with { type: "json" };
 import { doctorCommand } from "./commands/doctor.js";
 import { initCommand } from "./commands/init.js";
 import { lintAll } from "./commands/lint.js";
+import { newCommand } from "./commands/new.js";
 import { upgradeCommand } from "./commands/upgrade.js";
 import { logger, setLogLevel } from "./utils/logger.js";
 
@@ -52,6 +54,15 @@ cli
   .option("--prune-all", "Delete orphan files (template-removed since install)")
   .action(async (options) => {
     await upgradeCommand(options);
+  });
+
+// ── new ─────────────────────────────────────────────────────────────────
+cli
+  .command("new <kind> [name]", "Scaffold a new kit component (skill|prompt|agent|workflow|template)")
+  .option("-d, --description <text>", "Set the frontmatter description (default: TODO placeholder)")
+  .option("--force", "Overwrite an existing file at the destination")
+  .action(async (kind: string, name: string | undefined, options) => {
+    await newCommand(kind, name, { force: options?.force, description: options?.description });
   });
 
 // ── lint ─────────────────────────────────────────────────────────────────

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_No published changes yet._
+
+## [0.3.0] — 2026-06-19
+
 ### Added
 - **Test suite** (Vitest): unit tests for `manifest.ts` (hashing, manifest round-trip,
   `fileModificationStatus` 4 states, deleted-file edge), `upgrade` classification
@@ -23,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reported.
 - `mdpi doctor --fix` — regenerates a missing/invalid `.template-manifest.json`
   so `mdpi upgrade` can detect user edits again.
+- `mdpi new <kind> [name]` — scaffold a new kit component
+  (`skill|prompt|agent|workflow|template`) from a lint-passing skeleton. `-d <text>`
+  sets the description; `--force` overwrites. The skill skeleton ships with
+  frontmatter + When to Use/NOT so it passes `mdpi lint` immediately.
 - `CHANGELOG.md` (this file).
 
 ### Changed
@@ -83,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No license gate, no `--global` (pi global dir `~/.pi/agent/` is pi's own config —
   installing the full kit there is a footgun). Project-local only.
 
-[Unreleased]: https://github.com/MinhDuyDEV/ockit-mapping/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/MinhDuyDEV/ockit-mapping/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/MinhDuyDEV/ockit-mapping/releases/tag/v0.3.0
 [0.2.0]: https://github.com/MinhDuyDEV/ockit-mapping/releases/tag/v0.2.0
 [0.1.0]: https://github.com/MinhDuyDEV/ockit-mapping/releases/tag/v0.1.0

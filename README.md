@@ -14,6 +14,7 @@ npm install -g mdpi     # or one-off: npx mdpi init
 |---------|--------------|
 | `mdpi init` | Scaffold the curated `.pi/` kit into the current repo + write `.version` + `.template-manifest.json` (SHA-256 file map). Idempotent; `--force` overwrites template files (preserves user files), `--quiet` for CI. |
 | `mdpi upgrade` | Bring `.pi/` up to the bundled template version. Manifest-based: overwrites only user-unmodified files, preserves user edits, lists orphans. `--check` dry-run, `--force` overwrite modified, `--prune-all` delete orphans. |
+| `mdpi new <kind> [name]` | Scaffold a new kit component (`skill\|prompt\|agent\|workflow\|template`) from a lint-passing skeleton. `-d <text>` sets the description; `--force` overwrites. The skill skeleton comes with frontmatter + When to Use/NOT so it passes `mdpi lint` immediately. |
 | `mdpi lint [skills\|docs\|all]` | Governance: SKILL.md frontmatter (pi `name`+`description`), H1, When to Use/NOT, line limits, references/ depth, **dead cross-ref detection** (skills referencing non-existent skills), + README count/slash-command drift. `--json` for machine output. |
 | `mdpi doctor` | `.pi/` health: version match, manifest valid, settings.json valid, kit dir counts, orphan detection, lint summary. |
 | `mdpi --version` / `mdpi --help` | — |
