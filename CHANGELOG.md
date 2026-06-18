@@ -31,6 +31,12 @@ _No published changes yet._
   (`skill|prompt|agent|workflow|template`) from a lint-passing skeleton. `-d <text>`
   sets the description; `--force` overwrites. The skill skeleton ships with
   frontmatter + When to Use/NOT so it passes `mdpi lint` immediately.
+- `mdpi init --only <cats>` — install only the listed category dirs
+  (comma-sep: `agents,prompts,skills,templates,workflows,context,extensions`)
+  plus the always-on kit config/docs. settings.json is trimmed to drop references
+  to excluded `skills`/`prompts`/`extensions` dirs so pi doesn't resolve dangling
+  paths. Caveat: `mdpi upgrade` compares against the FULL template — a subset
+  install isn't remembered as partial (use `--check` first).
 - `CHANGELOG.md` (this file).
 
 ### Changed

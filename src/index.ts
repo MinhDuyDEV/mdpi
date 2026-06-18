@@ -42,6 +42,7 @@ cli
   .command("init", "Scaffold a Pi coding-agent kit (.pi/) into the current repo")
   .option("--force", "Overwrite existing .pi/ template files (preserves extra user files)")
   .option("-y, --yes", "Skip prompts, use defaults (for CI)")
+  .option("--only <cats>", "Install only these categories (comma-sep: agents,prompts,skills,templates,workflows,context,extensions)")
   .action(async (options) => {
     await initCommand(options);
   });
