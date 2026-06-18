@@ -7,6 +7,20 @@ description: Use when work starts drifting into silent assumptions, overengineer
 
 A short reset skill for non-trivial work when the larger prompt is getting noisy.
 
+## When to Use
+
+- Work is drifting into silent assumptions, overengineering, or drive-by refactors
+- You're about to add abstraction for a single use case
+- You're changing adjacent code "while you're here"
+- Completion is being claimed without a named proof path
+- You're silently picking one interpretation from multiple valid readings
+
+## When NOT to Use
+
+- The task is a trivial, single-step change with an obvious answer
+- You already surfaced assumptions and named the verification path up front
+- Pure lookup/reference questions (no decision or diff involved)
+
 ## Kernel
 
 1. **Clarify before committing** — surface assumptions or ask instead of silently choosing.

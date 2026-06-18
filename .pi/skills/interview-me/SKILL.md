@@ -23,9 +23,10 @@ Apply this skill when:
 - The user hasn't said which value they're optimizing for when two reasonable ones are in tension (simplicity vs. flexibility, cost vs. speed)
 - The user explicitly invokes: "interview me", "grill me", "before we start, are we sure?", "stress-test my thinking"
 
-**When NOT to use:**
+## When NOT to Use
 
 - The ask is unambiguous and self-contained ("rename this variable", "fix this typo")
+- Requirements are already captured in a spec — start from the spec instead
 - The user has explicitly asked for speed over verification
 - Pure information requests ("how does X work?", "what does this code do?")
 - Mechanical operations (renames, formats, file moves)

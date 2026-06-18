@@ -23,6 +23,12 @@ Use before saying work is complete, fixed, passing, ready, or high quality after
 
 Do not use as a substitute for specialist review. For final merge/security/API review, also load the relevant review/security/API skill.
 
+## When NOT to Use
+
+- The change is trivial (typo, rename, formatting) with no behavior impact
+- You haven't implemented anything yet — the gate is for claiming completion, not starting
+- For specialist review needs (security audit, API contract, merge approval) — load the dedicated review/security/API skill instead of relying on this gate alone
+
 ## Quality Gate
 
 Answer every item. If any answer is "no" or "unknown," either fix it, verify it, or report the remaining risk explicitly.

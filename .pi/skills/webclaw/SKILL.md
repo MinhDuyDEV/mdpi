@@ -26,6 +26,13 @@ Fast, local-first web content extraction for LLMs. Rust-based scraper with TLS f
 | Extract brand identity | `brand`                | Colors, fonts, logos from any site         |
 | LLM-optimized output   | `scrape` with `-f llm` | 67% fewer tokens than raw HTML             |
 
+## When NOT to Use
+
+- One-off fetch of a single simple page with no bot protection — `webfetch` is lighter
+- You need to follow JS-rendered SPAs requiring a real browser — use `playwright` / `chrome-devtools` instead
+- The site is behind authentication you don't have credentials for — webclaw can't bypass login walls
+- You only need the page's raw HTML for a quick grep — `web_fetch` or `curl` suffice
+
 ## MCP Tools (8 local, no API key needed)
 
 ### scrape

@@ -17,6 +17,12 @@ Feed agents the right information at the right time. Context is the single bigge
 - Setting up a new project for AI-assisted development
 - The agent is not following project conventions
 
+## When NOT to Use
+
+- The session is already going well and the agent is following conventions — don't re-engineer context mid-flow
+- The task is a quick, isolated change that doesn't need project-wide context
+- You're debugging a specific failure — use `root-cause-tracing` / `debugging-and-error-recovery` instead
+
 ## The Context Hierarchy
 
 Structure context from most persistent to most transient:

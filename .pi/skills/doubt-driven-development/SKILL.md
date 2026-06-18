@@ -28,7 +28,7 @@ Apply the skill when:
 - About to claim a non-obvious fact ("this is safe", "this scales", "this matches the spec")
 - Working in code you don't fully understand
 
-**When NOT to use:**
+## When NOT to Use
 
 - Mechanical operations (renaming, formatting, file moves)
 - Following a clear, unambiguous user instruction

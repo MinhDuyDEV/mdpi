@@ -7,9 +7,21 @@ description: "Meta-skill for discovering and routing to the right skill. Auto-lo
 
 ## Overview
 
-Agent Skills is a collection of 64 engineering workflow skills organized by development phase. Each skill encodes a specific process that senior engineers follow. This meta-skill helps you discover and apply the right skill for your current task.
+Agent Skills is a collection of 67 engineering workflow skills organized by development phase. Each skill encodes a specific process that senior engineers follow. This meta-skill helps you discover and apply the right skill for your current task.
 
-**This skill auto-loads when:** you edit `.pi/skills/*/SKILL.md`, or the user asks "which skill should I use", "what's the right skill for X", or when intent is ambiguous across multiple candidate skills.
+## When to Use
+
+- Starting a session and unsure which skill applies
+- Task phase changes (Define → Plan → Build → Verify → Ship)
+- Intent is ambiguous across multiple candidate skills
+- You are editing `.pi/skills/*/SKILL.md` (auto-load trigger)
+- User asks "which skill", "what should I use", "how do I do X"
+
+## When NOT to Use
+
+- A single skill clearly matches the task — load it directly instead of routing
+- The task is too small to warrant any skill (trivial one-liner)
+- You need the deep content of a specific skill — jump straight to it; this skill only routes
 
 ---
 

@@ -17,6 +17,13 @@ Build production-quality user interfaces that are accessible, performant, and vi
 - Adding interactivity or state management
 - Fixing visual or UX issues
 
+## When NOT to Use
+
+- Backend/logic-only work with no user-facing surface — use `incremental-implementation` or domain skills
+- Pure design-system/token work without implementation — use `design-system-audit` / `frontend-design`
+- Throwaway prototypes where production quality doesn't matter
+- The UI is already polished and the task is a non-visual change
+
 ## Related Skills
 
 This skill composes with others for a complete frontend quality pipeline:

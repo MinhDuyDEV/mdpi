@@ -7,6 +7,19 @@ description: "Refines raw ideas into sharp, actionable concepts through structur
 
 Refines raw ideas into sharp, actionable concepts worth building through structured divergent and convergent thinking.
 
+## When to Use
+
+- An idea is still vague and needs sharpening before any plan or code
+- You want to stress-test assumptions before committing to a direction
+- You need to expand options (divergent) before converging on one
+- Trigger phrases: "refine this idea", "ideate on X", "stress-test my plan", "brainstorm options"
+
+## When NOT to Use
+
+- The idea is already a concrete, bounded spec — go straight to `spec-driven-development`
+- The work is mechanical implementation with no design decisions
+- You need to extract requirements from a vague user ask — use `interview-me` instead
+
 ## How It Works
 
 1. **Understand & Expand (Divergent):** Restate the idea, ask sharpening questions, and generate variations.

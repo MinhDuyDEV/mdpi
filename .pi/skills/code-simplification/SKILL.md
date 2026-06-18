@@ -22,7 +22,7 @@ Simplify code by reducing complexity while preserving exact behavior. The goal i
 - When consolidating related logic scattered across files
 - After merging changes that introduced duplication or inconsistency
 
-**When NOT to use:**
+## When NOT to Use
 
 - Code is already clean and readable — don't simplify for the sake of it
 - You don't understand what the code does yet — comprehend before you simplify
