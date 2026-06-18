@@ -1,0 +1,414 @@
+# `.pi/` — Drop-in Kit for Pi Coding Agent
+
+A self-contained `.pi/` directory that turns any repository into a pi-coding-agent workspace with structured agents, skills, slash commands, workflows, templates, and safety guards.
+
+Adapted from [opencodekit](https://github.com/) → pi-coding-agent format. Optimized for the **"copy and use"** workflow: no global setup required.
+
+---
+
+## Quick Start
+
+```bash
+# 1. Copy kit into your repo
+cp -r /path/to/template/.pi /path/to/your-repo/.pi
+
+# 2. Edit project-level AGENTS.md (the one at repo root, NOT .pi/AGENTS.md)
+# - Set project name, vision, conventions
+
+# 3. Fill key templates
+vim .pi/templates/tech-stack.md   # framework, deps, verification commands
+vim .pi/templates/project.md      # project vision, success criteria
+vim .pi/templates/user.md         # (optional) your preferences
+
+# 4. Run pi
+cd /path/to/your-repo
+pi
+
+# 5. Bootstrap project context
+/init --all
+```
+
+---
+
+## What's Inside
+
+```
+.pi/
+├── AGENTS.md                       # Scoped rules (auto-loads when editing .pi/)
+├── README.md                       # This file
+├── VERSION                         # Kit version (0.2.0)
+├── .env.example                    # Environment variables (none required)
+├── guard.example.json              # pi-guard ruleset example
+├── settings.json                   # 4 extensions + 15 skills + 9 prompts
+│
+├── agents/                         # 7 subagent personas
+│   ├── build.md                    # Primary orchestrator
+│   ├── explore.md                  # Read-only codebase search
+│   ├── general.md                  # Surgical implementation (1-3 files)
+│   ├── plan.md                     # Architecture & decomposition
+│   ├── review.md                   # Code review & debugging
+│   ├── scout.md                    # External research
+│   └── vision.md                   # UI/UX & accessibility
+│
+├── extensions/                     # 4 custom TypeScript extensions
+│   ├── workflows-runner.ts         # DAG workflow executor
+│   ├── templates-injector.ts       # Auto-inject project templates
+│   ├── pi-memory.ts                # 4-tier long-term memory (JSON)
+│   └── pi-session-summary.ts       # Anchored session summary
+│
+├── prompts/                        # 9 slash commands (pi-native)
+│   ├── init.md                     # Bootstrap project context
+│   ├── plan.md                     # Create implementation plan
+│   ├── ship.md                     # Execute plan, verify, review
+│   ├── verify.md                   # Verify implementation
+│   ├── fix.md                      # Debug + fix bug
+│   ├── research.md                 # Research topic
+│   ├── audit.md                    # Audit codebase pattern
+│   ├── create.md                   # Create spec + tasks
+│   └── gc.md                       # Garbage collection
+│
+├── workflows/                      # 5 DAG workflows
+│   ├── audit-pattern.md
+│   ├── batch-implement.md
+│   ├── deep-research.md
+│   ├── development-lifecycle-workflow.md
+│   └── garbage-collection.md
+│
+├── skills/                         # 15 skills (Tier 1+2)
+│   ├── INDEX.md                    # Task → skill routing
+│   ├── behavioral-kernel/          # Tier 1
+│   ├── defense-in-depth/           # Tier 1
+│   ├── incremental-implementation/ # Tier 1
+│   ├── verification-before-completion/  # Tier 1
+│   ├── (10 Tier 2 skills)
+│   └── _tier-3-archive/            # 42 archived skills (not loaded)
+│
+├── templates/                      # 10 project context templates
+│   ├── prd.md, project.md, state.md, tech-stack.md
+│   ├── tasks.md, roadmap.md, user.md, design.md
+│   └── proposal.md, adr.md
+│
+├── scripts/                        # 1 utility script
+│   └── gc-check.sh                 # Structural invariants for /gc
+│
+├── context/                        # 2 reference docs
+│   ├── architecture.md             # Pi 5-layer architecture
+│   └── fallow.md                   # Fallow CLI reference
+│
+├── state/                          # Runtime state (gitignored)
+│   └── session-summary.{json,md}
+│
+├── memory/                         # Runtime LTM storage (gitignored)
+│   └── observations.json
+│
+├── artifacts/                      # Task output directories
+│   ├── .gitkeep                    # (or .active marker)
+│   ├── example/                    # 4 example templates (plan/progress/research/spec)
+│   └── history/                    # Migration history (mapping-compact.md)
+│
+└── tasks/                          # Runtime task list (json)
+```
+
+---
+
+## Workflows
+
+### Greenfield Project (no existing code)
+
+```
+/init --all
+  → Detect: no existing code
+  → Skill: behavioral-kernel
+  → Create: AGENTS.md (root) + 5 templates
+  → Output: .pi/templates/{project,tech-stack,roadmap,state,user}.md
+
+/plan "First feature"
+  → Skill: brainstorming (if ambiguous) + incremental-implementation
+  → Output: .pi/artifacts/<slug>/plan.md
+
+/ship
+  → Workflow: batch-implement → audit-pattern → final synthesis
+  → Skill: verification-before-completion gates
+  → Output: implementation + verification log
+```
+
+### Brownfield Project (existing code)
+
+```
+/init --deep
+  → Detect: existing code
+  → Skill: code-review-and-quality (audit existing)
+  → Improve: AGENTS.md + templates
+
+/research "<topic>" | /audit "<pattern>"
+  → Workflow: deep-research | audit-pattern
+  → Skill: root-cause-tracing (if bug)
+
+/plan → /ship
+```
+
+### Bug Fix
+
+```
+/fix "<bug description>"
+  → Skill: root-cause-tracing + debugging-and-error-recovery
+  → 4 phases: reproduce → isolate → fix → verify
+  → Skill: verification-before-completion gate
+  → Output: root cause + fix + verification
+```
+
+### Daily Work (no command)
+
+The primary agent routes based on user input:
+
+| User says | Routes to |
+|-----------|-----------|
+| "find X" / "where is X" | `explore` subagent + `pi-srcwalk` |
+| "research X" / "best practice" | `scout` subagent + `pi-search` |
+| "review this code" | `review` subagent |
+| "implement X" (small) | `general` subagent |
+| "implement X" (large) | `plan` subagent first, then `general` per task |
+| "design X" / "UI review" | `vision` subagent |
+
+---
+
+## Architecture (5 Layers)
+
+See `context/architecture.md` for full details.
+
+```
+┌────────────────────────────────────────────┐
+│  1. Core  — pi-coding-agent (jiti + API)  │
+├────────────────────────────────────────────┤
+│  2. Settings — settings.json              │
+├────────────────────────────────────────────┤
+│  3. Skills + Prompts — declarative         │
+├────────────────────────────────────────────┤
+│  4. Agents — subagent personas             │
+├────────────────────────────────────────────┤
+│  5. Extensions — programmatic             │
+└────────────────────────────────────────────┘
+```
+
+**Key rule:** Extensions must NOT import from other extensions. They communicate via lifecycle events.
+
+---
+
+## Subagent Routing (built-in)
+
+| Intent | Subagent | Tools |
+|--------|----------|-------|
+| Find/locate code | `explore` | read, grep, find, ls, bash, semantic_* |
+| Research external | `scout` | read, bash, find, ls, websearch, codesearch, context7, web_fetch |
+| Review/debug | `review` | read, grep, find, ls, bash, semantic_* |
+| Plan/architect | `plan` | read, bash, find, ls, semantic_*, websearch, codesearch, context7 |
+| Visual/UI | `vision` | read, bash, find, ls |
+| Implement (1-3 files) | `general` | full tool set |
+| Orchestrate | `build` | full tool set + subagent |
+
+---
+
+## Extensions
+
+This kit ships **4 custom TypeScript extensions** and uses **2 external npm packages** for specialized functionality.
+
+### Custom (4)
+
+| Extension | Purpose | Status |
+|-----------|---------|--------|
+| `workflows-runner` | Parses DAG workflows from `.pi/workflows/*.md`, returns execution plan with `subagent()` calls | Production |
+| `templates-injector` | Auto-injects `project.md`, `tech-stack.md`, `state.md` into system prompt | Production |
+| `pi-memory` | 4-tier LTM (Capture → Distill → Curate → Inject) with JSON persistence | Production (JSON, ~1000 obs max) |
+| `pi-session-summary` | Anchored iterative summarization across compaction cycles | Production |
+
+### External packages (auto-loaded from global)
+
+| Package | Purpose | Why external |
+|---------|---------|--------------|
+| `@davecodes/pi-dcp` | Dynamic context pruning (dedup, error purge, compress tool) | Battle-tested, superset of what we'd write |
+| `jdiamond/pi-guard` | Tool permission system (bash AST parser, path globs, default ruleset) | Proper bash AST parser handles `\|`, `&&`, `xargs` — regex can't |
+
+Install with `pi install npm:@davecodes/pi-dcp npm:pi-guard`. The pi-guard config example lives at `.pi/guard.example.json` — copy the `guard` block into `.pi/settings.json` to enable.
+
+### Removed (intentionally)
+
+| Extension | Reason | Replaced by |
+|-----------|--------|-------------|
+| `commands-dispatcher` | Pi's built-in prompt template loader already does this | pi core (no install needed) |
+| `dcp-strategies` | Superseded by `@davecodes/pi-dcp` (active globally) | `pi install npm:@davecodes/pi-dcp` |
+| `pi-guard` (local) | Superseded by `jdiamond/pi-guard` (proper AST parser) | `pi install npm:pi-guard` |
+
+---
+
+## Skills (15 shipped, 42 archived)
+
+See `skills/INDEX.md` for the full task → skill routing table and tier-3 installation instructions.
+
+**Tier 1 (4 skills, always loaded):**
+- `behavioral-kernel`
+- `defense-in-depth`
+- `incremental-implementation`
+- `verification-before-completion`
+
+**Tier 2 (11 skills, on-demand):**
+- Process: `brainstorming`, `spec-driven-development`, `planning-and-task-breakdown`, `subagent-driven-development`, `documentation-and-adrs`, `code-review-and-quality`
+- Implementation: `test-driven-development`, `testing-anti-patterns`
+- Debug: `debugging-and-error-recovery`, `root-cause-tracing`
+- Git: `git-workflow-and-versioning`
+
+**Tier 3 (42 skills, archived in `_tier-3-archive/`):**
+Niche platforms and tools. See `skills/INDEX.md` for the full list.
+
+### Installing Tier-3 Skills
+
+If you need a Tier-3 skill (e.g., `cloudflare` for Cloudflare Workers, `react-best-practices` for React projects):
+
+```bash
+# Option 1: Copy from archive
+cp -r .pi/skills/_tier-3-archive/<skill> .pi/skills/
+
+# Option 2: Skip this kit and use a different source
+# - Anthropic Skills: https://github.com/anthropics/skills
+# - Pi Skills: https://github.com/badlogic/pi-skills
+```
+
+Then `/reload` in pi to pick up the new skill.
+
+---
+
+## Customization
+
+### Add a new subagent persona
+
+```bash
+cat > .pi/agents/my-agent.md << 'EOF'
+---
+name: my-agent
+description: What this agent does
+tools: read, bash, grep, find, ls
+model: claude-sonnet-4-5
+---
+
+# My Agent
+
+System prompt here.
+EOF
+```
+
+### Add a new slash command
+
+```bash
+cat > .pi/prompts/my-cmd.md << 'EOF'
+---
+description: What this command does
+argument-hint: "<args>"
+---
+
+Prompt body here. Use $1, $@, $ARGUMENTS for arg substitution.
+EOF
+```
+
+### Add a new skill
+
+```bash
+mkdir -p .pi/skills/my-skill
+cat > .pi/skills/my-skill/SKILL.md << 'EOF'
+---
+name: my-skill
+description: Use when... (be specific)
+---
+
+# My Skill
+
+Body here.
+EOF
+```
+
+Then `/reload` in pi.
+
+### Add a new workflow
+
+```bash
+cat > .pi/workflows/my-workflow.md << 'EOF'
+# my-workflow
+
+Brief description.
+
+## Args
+
+- `arg1` (required) — description
+
+## Phases
+
+### Phase 1: discover
+- **Agent:** explore
+- **Concurrency:** 1
+
+**Prompt:**
+
+\`\`\`
+The prompt for this phase.
+\`\`\`
+
+## Final Synthesis (Main Agent)
+
+Synthesize outputs from {phase_1_output}.
+EOF
+```
+
+Then `/reload` in pi.
+
+---
+
+## Differences from OpenCodeKit
+
+| Aspect | OpenCodeKit | This kit (Pi) |
+|--------|-------------|---------------|
+| Agents | 7 (with `build` + 6) | 7 (same) — uses `pi-subagents` schema |
+| Skills | 59 (4 Tier-1 + 55 Tier-2) | 15 (4 Tier-1 + 11 Tier-2) + 42 archived |
+| Code-intel | `srcwalk` plugin (7 tools) | Uses `pi-srcwalk` (5 tools, BM25 + RRF) |
+| External research | `webclaw` + `grepsearch` + `context7` | Uses `pi-search` (5 tools, Exa web) |
+| Subagent dispatch | `task()` in agent body | Same — `pi-subagents` extension |
+| Workflows | DAG markdown + plugin | Same DAG, but `workflows-runner` returns execution plan for LLM to execute |
+| Memory | 4-tier LTM (SQLite + FTS5) | 4-tier LTM (JSON, ~1000 obs max) |
+| Mid-session compression | Full DCP (LLM-invoked) | `@davecodes/pi-dcp` (npm package, auto-loaded) |
+| Safety | `guard.ts` plugin (regex) | `pi-guard` (jdiamond, bash AST parser) |
+| Settings | `opencode.json` (503 lines) | `settings.json` (~30 lines, lean) |
+| Scope | OpenCode runtime | Pi coding agent |
+
+---
+
+## Troubleshooting
+
+### Extensions don't load
+
+```bash
+# Check for syntax errors
+pi --list-extensions
+
+# Check pi-coding-agent version
+pi --version
+```
+
+### Skill not found
+
+```bash
+ls .pi/skills/<name>/SKILL.md  # verify file exists
+# Restart pi
+```
+
+### Workflow fails to parse
+
+Check that phases follow the format:
+- `### Phase <num>: <name>`
+- `- **Agent:** <type>`
+- `- **Concurrency:** <N>|Dynamic (rule)`
+- `- **Depends on:** Phase <num>` (optional)
+- `- **Tool:** \`subagent\` (single|parallel mode)` (optional)
+- `**Prompt:**` followed by code block
+
+---
+
+## License
+
+Adapted from opencodekit. See parent project for license terms.

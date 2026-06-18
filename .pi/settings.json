@@ -1,0 +1,20 @@
+{
+  "$schema": "https://pi.dev/schema/settings.json",
+  "extensions": [
+    "./extensions/workflows-runner.ts",
+    "./extensions/templates-injector.ts",
+    "./extensions/pi-memory.ts",
+    "./extensions/pi-session-summary.ts"
+  ],
+  "skills": [
+    "./skills"
+  ],
+  "prompts": [
+    "./prompts"
+  ],
+  "enableSkillCommands": true,
+  "defaultThinkingLevel": "high",
+  "powerline": {
+    "preset": "nerd"
+  }
+}

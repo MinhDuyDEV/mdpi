@@ -1,0 +1,75 @@
+# pi-guard Configuration Example for This Kit
+#
+# This file shows recommended guard rules for projects using the ockit-mapping kit.
+# Copy the `guard` block into your project's `.pi/settings.json` or merge into
+# `~/.pi/agent/settings.json` (global).
+#
+# Rule format: action is one of "allow", "ask", "deny"
+# - "allow": silently permit
+# - "ask": prompt user for confirmation
+# - "deny": block with error message
+#
+# Match priority: most specific rule wins. Subsequence matching for bash means
+# tokens must appear in order but extra args are allowed.
+#
+# Reference: https://github.com/jdiamond/pi-guard
+
+{
+  "guard": {
+    "enabled": true,
+    "rules": {
+      "*": "ask",
+      "bash": {
+        "*": "ask",
+        "git status": "allow",
+        "git log": "allow",
+        "git diff": "allow",
+        "git show": "allow",
+        "ls": "allow",
+        "pwd": "allow",
+        "cat *": "allow",
+        "echo *": "allow",
+        "rm *": "deny",
+        "rm -rf *": "deny",
+        "sudo *": "deny",
+        "curl * | bash": "deny",
+        "wget * | bash": "deny",
+        "git push": "ask",
+        "git push --force": "deny",
+        "git reset --hard": "deny",
+        "git clean -fd": "deny",
+        "npm publish": "deny",
+        "cat *.env*": "deny",
+        "cat .env": "deny"
+      },
+      "read": {
+        "*": "allow",
+        "**/*.env": "deny",
+        "**/*.env.*": "deny",
+        "**/*.pem": "deny",
+        "**/*.key": "deny",
+        "**/secrets/*": "deny"
+      },
+      "write": {
+        "*": "ask",
+        ".pi/artifacts/**": "allow",
+        ".pi/state/**": "allow",
+        ".pi/memory/**": "allow"
+      },
+      "edit": {
+        "*": "ask",
+        ".pi/**": "allow"
+      },
+      "spawn": {
+        "build": "allow",
+        "explore": "allow",
+        "general": "allow",
+        "plan": "allow",
+        "review": "allow",
+        "scout": "allow",
+        "vision": "allow",
+        "*": "deny"
+      }
+    }
+  }
+}

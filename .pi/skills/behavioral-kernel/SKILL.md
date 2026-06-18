@@ -1,0 +1,51 @@
+---
+name: behavioral-kernel
+description: Use when work starts drifting into silent assumptions, overengineering, drive-by refactors, or vague completion claims. Re-centers the agent on a compact Pi-native execution kernel with concrete anti-pattern examples.
+---
+
+# Behavioral Kernel
+
+A short reset skill for non-trivial work when the larger prompt is getting noisy.
+
+## Kernel
+
+1. **Clarify before committing** — surface assumptions or ask instead of silently choosing.
+2. **Choose the smallest working change** — solve today's problem directly before inventing flexibility.
+3. **Keep diffs surgical** — change only what the request requires; log unrelated issues and keep moving.
+4. **Define proof before acting** — say how success will be verified before implementation, then run that proof after.
+
+## Apply the Kernel
+
+Before coding, write down:
+
+- the ambiguity or assumptions in 1-3 bullets
+- the smallest acceptable diff
+- what you are explicitly not touching
+- the verification command, test path, or evidence you will use
+
+## Drift Signals
+
+Stop and reload this kernel if you catch yourself:
+
+- adding abstraction for a single use case
+- changing adjacent code "while you're here"
+- postponing verification until the end
+- claiming completion without a named proof path
+- silently picking one interpretation from multiple valid readings
+
+## Recovery Move
+
+When drift is detected:
+
+1. Re-state the request in one sentence.
+2. Re-state the smallest working change.
+3. Re-state the proof path.
+4. Delete or avoid anything outside that boundary.
+
+## Pi-Specific Notes
+
+- pi-srcwalk tools (`semantic_query`, `semantic_inspect`, `semantic_grep`, `semantic_show`) replace srcwalk CLI
+- pi-search tools (`websearch`, `codesearch`, `context7`, `grepsearch`, `web_fetch`) replace webclaw
+- vcc_recall replaces memory_search (session-only, not LTM)
+- `subagent` tool replaces `task()` for delegation
+- Avoid building "infrastructure for infrastructure's sake" — Pi already has 13 npm extensions
