@@ -17,43 +17,14 @@
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { mkdir, readdir } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import * as p from "@clack/prompts";
 import color from "picocolors";
 import { generateManifest } from "../utils/manifest.js";
+import { getPackageVersion, getTemplateRoot } from "../utils/template.js";
 
 const EXCLUDED_DIRS = ["node_modules", ".git", "dist", ".DS_Store", "coverage", ".next", ".turbo"];
 const EXCLUDED_FILES = ["bun.lock", "package-lock.json", "yarn.lock", "pnpm-lock.yaml"];
-
-/** Resolve the bundled template root: dist/template (published) or repo root (dev tsx). */
-function getTemplateRoot(): string | null {
-  const __dirname = dirname(fileURLToPath(import.meta.url));
-  const candidates = [join(__dirname, "template"), join(__dirname, "..", "..")];
-  for (const candidate of candidates) {
-    if (existsSync(join(candidate, ".pi"))) return candidate;
-  }
-  return null;
-}
-
-/** Resolve the mdpi package version (inlined by tsdown from package.json at build). */
-function getPackageVersion(): string {
-  const __dirname = dirname(fileURLToPath(import.meta.url));
-  const pkgPaths = [
-    join(__dirname, "..", "..", "package.json"),
-    join(__dirname, "..", "package.json"),
-  ];
-  for (const pkgPath of pkgPaths) {
-    if (!existsSync(pkgPath)) continue;
-    try {
-      const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as { version?: string };
-      return pkg.version ?? "unknown";
-    } catch {
-      continue;
-    }
-  }
-  return "unknown";
-}
 
 /** Recursively copy a directory, skipping runtime/lockfile noise. */
 async function copyDir(src: string, dest: string): Promise<void> {
