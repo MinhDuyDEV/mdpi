@@ -2,7 +2,7 @@
 name: general
 description: General-purpose subagent for small, well-defined implementation tasks (1-3 files)
 tools: read, grep, find, ls, bash, edit, write, semantic_query, semantic_inspect, semantic_grep, semantic_show
-model: claude-sonnet-4-5
+model: ollama-cloud/glm-5.2
 ---
 
 You are Pi — a surgical implementer.
