@@ -39,9 +39,10 @@ pi
 ├── VERSION                         # Kit version (0.2.0)
 ├── .env.example                    # Environment variables (none required)
 ├── guard.example.json              # pi-guard ruleset example
-├── settings.json                   # 4 extensions + 59 skills + 9 prompts
+├── settings.json                   # 4 extensions + 67 skills + 11 prompts
 │
 ├── agents/                         # 7 subagent personas
+│   ├── INDEX.md                    # Agent index + routing table
 │   ├── build.md                    # Primary orchestrator
 │   ├── explore.md                  # Read-only codebase search
 │   ├── general.md                  # Surgical implementation (1-3 files)
@@ -56,36 +57,42 @@ pi
 │   ├── pi-memory.ts                # 4-tier long-term memory (JSON)
 │   └── pi-session-summary.ts       # Anchored session summary
 │
-├── prompts/                        # 9 slash commands (pi-native)
+├── prompts/                        # 11 slash commands (pi-native)
+│   ├── INDEX.md                    # Command index + lifecycle diagram
 │   ├── init.md                     # Bootstrap project context
-│   ├── plan.md                     # Create implementation plan
-│   ├── ship.md                     # Execute plan, verify, review
-│   ├── verify.md                   # Verify implementation
+│   ├── create.md                   # Create spec + task outline
+│   ├── plan.md                     # Detailed implementation plan + tasks.json
+│   ├── ship.md                     # Execute tasks, verify, review, close
+│   ├── verify.md                   # Verify implementation (canonical gate owner)
 │   ├── fix.md                      # Debug + fix bug
 │   ├── research.md                 # Research topic
 │   ├── audit.md                    # Audit codebase pattern
-│   ├── create.md                   # Create spec + tasks
-│   └── gc.md                       # Garbage collection
+│   ├── gc.md                       # Garbage collection
+│   ├── status.md                   # Show active feature + blockers
+│   └── close.md                    # Finalize feature, clear .active
 │
-├── workflows/                      # 5 DAG workflows
+├── workflows/                      # 6 DAG workflows
+│   ├── INDEX.md                    # Workflow index + phase format
 │   ├── audit-pattern.md
 │   ├── batch-implement.md
 │   ├── deep-research.md
 │   ├── development-lifecycle-workflow.md
-│   └── garbage-collection.md
+│   ├── garbage-collection.md
+│   └── quality-loop.md
 │
-├── skills/                         # 59 skills (all shipped)
+├── skills/                         # 67 skills (all shipped)
 │   ├── INDEX.md                    # Task → skill routing
 │   ├── behavioral-kernel/          # Tier 1
 │   ├── defense-in-depth/           # Tier 1
 │   ├── incremental-implementation/ # Tier 1
 │   ├── verification-before-completion/  # Tier 1
-│   ├── (55 Tier 2 skills — all loaded on-demand)
+│   ├── (63 Tier 2 skills — all loaded on-demand)
 │
-├── templates/                      # 10 project context templates
+├── templates/                      # 12 project context templates
 │   ├── prd.md, project.md, state.md, tech-stack.md
 │   ├── tasks.md, roadmap.md, user.md, design.md
-│   └── proposal.md, adr.md
+│   ├── proposal.md, adr.md
+│   └── progress.md, review-state.json   # runtime artifact schemas
 │
 ├── scripts/                        # 1 utility script
 │   └── gc-check.sh                 # Structural invariants for /gc
@@ -239,7 +246,7 @@ Install with `pi install npm:@davecodes/pi-dcp npm:pi-guard`. The pi-guard confi
 
 ---
 
-## Skills (59 all shipped)
+## Skills (67 all shipped)
 
 See `skills/INDEX.md` for the full task → skill routing table.
 
@@ -249,7 +256,7 @@ See `skills/INDEX.md` for the full task → skill routing table.
 - `incremental-implementation` — Thin vertical slices with verify-after-each
 - `verification-before-completion` — Evidence before claiming completion
 
-**Tier 2 (55 skills, loaded on-demand):**
+**Tier 2 (63 skills, loaded on-demand):**
 
 | Category | Skills |
 |----------|--------|
@@ -355,7 +362,7 @@ Then `/reload` in pi.
 | Aspect | OpenCodeKit | This kit (Pi) |
 |--------|-------------|---------------|
 | Agents | 7 (with `build` + 6) | 7 (same) — uses `pi-subagents` schema |
-| Skills | 59 (4 Tier-1 + 55 Tier-2) | 59 (all shipped — 4 Tier-1 + 55 Tier-2) |
+| Skills | 67 (4 Tier-1 + 63 Tier-2) | 67 (all shipped — 4 Tier-1 + 63 Tier-2) |
 | Code-intel | `srcwalk` plugin (7 tools) | Uses `pi-srcwalk` (5 tools, BM25 + RRF) |
 | External research | `webclaw` + `grepsearch` + `context7` | Uses `pi-search` (5 tools, Exa web) |
 | Subagent dispatch | `task()` in agent body | Same — `pi-subagents` extension |
