@@ -30,7 +30,7 @@ This is a **mapping/porting project**, NOT a typical coding project. The content
 - **`.pi/workflows/`** — 5 DAG workflows (audit-pattern, batch-implement, deep-research, garbage-collection, development-lifecycle)
 - **`.pi/templates/`** — 10 project context templates (prd, project, state, tech-stack, etc.)
 - **`.pi/context/`** — 2 reference docs (architecture, fallow)
-- **`.pi/extensions/`** — 8 TypeScript extensions (commands-dispatcher, workflows-runner, pi-memory, pi-guard, etc.)
+- **`.pi/extensions/`** — 2 TypeScript extensions (workflows-runner, templates-injector); long-term memory via external `npm:pi-hermes-memory`
 
 When working in this project, agents should treat `.pi/` content as the **deliverable**, not as their own configuration. Don't modify `.pi/` files unless the user explicitly requests porting changes.
 
@@ -74,7 +74,7 @@ When working in this project, agents should treat `.pi/` content as the **delive
 | `templates/*.md` (project context) | `templates/*.md` (same) | Direct copy |
 | `plugin/*.ts` (OpenCode plugin SDK) | `extensions/*.ts` (Pi extension SDK) | Different SDKs; pi uses `@earendil-works/pi-coding-agent` |
 | `dcp.jsonc` + `dcp-prompts/` | N/A | Pi uses `@sting8k/pi-vcc` (different paradigm) |
-| `memory` plugin (4-tier LTM) | `pi-memory` extension (4-tier LTM, JSON-backed) | Same concept, simpler implementation |
+| `memory` plugin (4-tier LTM) | `npm:pi-hermes-memory` (markdown + SQLite FTS5, learning loop, secret scan, two-tier) | External package — replaces former in-house `pi-memory` |
 
 ### Mapping Rules
 
@@ -146,7 +146,7 @@ When working in this project, agents have access to:
 | `websearch` / `codesearch` / `context7` / `web_fetch` / `grepsearch` | External research | `webclaw`, `context7`, `grepsearch`, `codesearch` |
 | `subagent` | Single/parallel/chain subagent delegation | `task()` |
 | `vcc_recall` | Session history search | `vcc_recall` |
-| `observation` / `memory_search` / `memory_admin` | Long-term memory | `observation` / `memory-search` / `memory-admin` |
+| `memory` / `memory_search` / `session_search` / `skill_manage` | Long-term memory + session search + procedural skills | `observation` / `memory-search` / `memory-admin` (pi-hermes-memory) |
 
 ---
 

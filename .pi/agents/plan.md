@@ -265,7 +265,7 @@ Planning requires understanding what came before. Follow this ritual every sessi
 ### Ground Phase — Load Context
 
 ```typescript
-// 1. Search for similar past plans and patterns (use vcc_recall for session history, or observation() for LTM)
+// 1. Search for similar past plans and patterns (use vcc_recall for session history, or memory_search for LTM)
 vcc_recall({ query: "<feature/area> plan", limit: 5 });
 
 // 2. Check recent handoffs for context
@@ -281,9 +281,9 @@ Document key planning decisions and constraints for later LTM retrieval.
 
 ### Reset Phase — Save Plan & Learnings
 
-Save the completed plan and document planning insights via observation tool (when pi-memory is installed).
+Save the completed plan and document planning insights via the `memory` tool (action: `add`, target: `memory`) — pi-hermes-memory persists across sessions.
 
-**Only leader agents create observations.** Subagents report research; you record decisions.
+**Only leader agents create memory entries.** Subagents report research; you record decisions.
 
 ## Rules
 

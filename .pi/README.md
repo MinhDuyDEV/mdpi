@@ -51,11 +51,9 @@ pi
 │   ├── scout.md                    # External research
 │   └── vision.md                   # UI/UX & accessibility
 │
-├── extensions/                     # 4 custom TypeScript extensions
+├── extensions/                     # 2 custom TypeScript extensions (memory via external npm:pi-hermes-memory)
 │   ├── workflows-runner.ts         # DAG workflow executor
-│   ├── templates-injector.ts       # Auto-inject project templates
-│   ├── pi-memory.ts                # long-term memory: observations (JSON)
-│   └── pi-session-summary.ts       # Anchored session summary
+│   └── templates-injector.ts       # Auto-inject project templates
 │
 ├── prompts/                        # 11 slash commands (pi-native)
 │   ├── INDEX.md                    # Command index + lifecycle diagram
@@ -216,16 +214,14 @@ See `context/architecture.md` for full details.
 
 ## Extensions
 
-This kit ships **4 custom TypeScript extensions** and uses **2 external npm packages** for specialized functionality.
+This kit ships **2 custom TypeScript extensions** and uses **2 external npm packages** for specialized functionality. Long-term memory is provided by `npm:pi-hermes-memory` (declared in `settings.json:packages`) — see [## Memory](#memory) for architecture and tradeoffs.
 
-### Custom (4)
+### Custom (2)
 
 | Extension | Purpose | Status |
 |-----------|---------|--------|
 | `workflows-runner` | Parses DAG workflows from `.pi/workflows/*.md`, returns execution plan with `subagent()` calls | Production |
 | `templates-injector` | Auto-injects `project.md`, `tech-stack.md`, `state.md` into system prompt | Production |
-| `pi-memory` | LTM observations: manual capture + Promoter (session→LTM) + TF-IDF retrieval + injection (JSON) | Production (JSON; FTS5/SQLite deferred) |
-| `pi-session-summary` | Anchored iterative summarization across compaction cycles | Production |
 
 ### External packages (auto-loaded from global)
 
@@ -367,7 +363,7 @@ Then `/reload` in pi.
 | External research | `webclaw` + `grepsearch` + `context7` | Uses `pi-search` (5 tools, Exa web) |
 | Subagent dispatch | `task()` in agent body | Same — `pi-subagents` extension |
 | Workflows | DAG markdown + plugin | Same DAG, but `workflows-runner` returns execution plan for LLM to execute |
-| Memory | LTM (SQLite + FTS5) | LTM observations (JSON; manual capture + Promoter + TF-IDF; FTS5/SQLite deferred) |
+| Memory | LTM (SQLite + FTS5) | `npm:pi-hermes-memory` — markdown + SQLite FTS5, learning loop, secret scan, two-tier global/project (external package) |
 | Mid-session compression | Full DCP (LLM-invoked) | `@davecodes/pi-dcp` (npm package, auto-loaded) |
 | Safety | `guard.ts` plugin (regex) | `pi-guard` (jdiamond, bash AST parser) |
 | Settings | `opencode.json` (503 lines) | `settings.json` (~30 lines, lean) |
@@ -377,29 +373,40 @@ Then `/reload` in pi.
 
 ## Memory
 
-The kit's memory follows Addy Osmani's 4 memory-type model (*Lesson 5: memory and context*), not a "tier pipeline":
+The kit's memory layer is [`pi-hermes-memory`](https://github.com/chandra447/pi-hermes-memory) (`npm:pi-hermes-memory`, wired in `settings.json:packages`) — a mature external package (368 tests, 140★, MIT) ported from the Hermes agent. It replaces the kit's former in-house `pi-memory` + `pi-session-summary` extensions.
+
+The kit still follows Addy Osmani's 4 memory-type model (*Lesson 5: memory and context*):
 
 | Type | Duration | Kit component |
 |------|----------|---------------|
 | Short-term | one session | context window + pi-vcc compaction |
-| Episodic | across sessions (on-disk anchor) | `pi-session-summary` → `.pi/state/session-summary.*` |
-| Long-term | across sessions (retrieved on demand) | `pi-memory` → `.pi/memory/observations.json` |
-| Procedural | permanent | Agent Skills (`.pi/skills/*`) |
+| Episodic | across sessions (searchable) | `pi-hermes-memory` session indexing → SQLite FTS5; `session_search` tool |
+| Long-term | across sessions (retrieved on demand) | `pi-hermes-memory` markdown (`MEMORY.md`/`USER.md`) + SQLite FTS5; `memory` / `memory_search` tools |
+| Procedural | permanent | Agent Skills `.pi/skills/*` (67 curated, shipped) + `pi-hermes-memory` `skill_manage` (runtime-saved, `~/.pi/agent/pi-hermes-memory/skills/`) |
 | Declarative | varies (RAG) | `templates/` + `context/` + `semantic_*` / `websearch` / `context7` |
 
-**`pi-memory` (long-term layer) implements:**
+**`pi-hermes-memory` provides:**
 
-1. **Capture** — manual via the `observation` tool.
-2. **Promoter** — distills `pi-session-summary` decisions into LTM observations at `session_shutdown` / `session_compact` (`source:"auto-distill"`, `confidence:"low"`), guarded by a `lastPromotedDecisionTs` watermark. This is the memory-update layer (durable knowledge after a session).
-3. **Retrieval** — `memory_search` with TF-IDF scoring (lexical).
-4. **Injection** — `before_agent_start` injects top relevant observations, skipping auto-distilled decisions already in the session summary (no double injection).
+1. **Capture** — `memory` tool (add/replace/remove, target `memory`/`user`) + **background learning loop** (LLM review every 10 turns / 15 tool-calls) + **correction detection** (saves when the user corrects the agent).
+2. **Retrieval** — `memory_search` (SQLite FTS5 BM25, filter by `category`: failure/correction/insight/preference/convention/tool-quirk) + `session_search` (across all past sessions).
+3. **Injection** — **policy-only by default** (a `<memory-policy>` block tells the agent *when* to call `memory_search`); `memoryMode:"legacy-inject"` restores full-content injection.
+4. **Security** — **secret scanning** (blocks API keys/tokens/SSH keys) + XML fencing ("NOT new user input") against prompt injection.
+5. **Consolidation** — auto-merges when memory hits the 5000-char cap (LLM subprocess); never loses data.
+6. **Two-tier** — global (`~/.pi/agent/pi-hermes-memory/`) + per-project (`~/.pi/agent/projects-memory/<project>/`).
 
 **Memory vs RAG** — don't conflate:
 
-- **Memory** (`observation` / `memory_search`): personal — this project, this agent, written during sessions.
+- **Memory** (`memory` / `memory_search` / `session_search`): personal — this project, this agent, written during sessions.
 - **RAG** (`semantic_*` / `websearch` / `codesearch` / `context7`): general knowledge, looked up on demand.
 
-**Deferred** (re-evaluate when triggered): FTS5/SQLite storage (>500 obs + measured search failure), embeddings for semantic synonymy (observed synonymy gap), pattern-curator, config block, decay curve. Retrieval is lexical; "deploy" ≈ "ship to production" needs embeddings (not FTS5/TF-IDF).
+**Honest tradeoffs (decision B, 2026-06-18):**
+
+- **Native dep** — `better-sqlite3` (compiled); needs a build toolchain on unusual platforms (prebuilds cover common ones). The kit already accepts external binary deps (`pi-srcwalk`).
+- **LLM-subprocess cost** — every background review / correction / consolidation spawns `pi.exec("pi",["-p","--no-session",…])` → real token cost + latency + non-determinism per session.
+- **Vendor dependency** — core memory component is maintained by `chandra447` (9 contributors, active). The kit no longer owns its memory layer.
+- **Policy-only injection** — memory only surfaces if the agent chooses to call `memory_search`; can miss relevant memory if the agent "forgets" to search.
+- **Lost (vs former in-house extensions)** — `/decision`, `/intent`, `/summary` commands + the always-injected "Session Summary (anchored)" block. Gained: `session_search`, learning loop, secret scan, consolidation, two-tier, 368 tests.
+- **Retrieval is lexical** — FTS5 BM25 + literal-phrase match, case-insensitive. No embeddings/synonymy ("deploy" ≈ "ship" still needs embeddings — same gap as before, just indexed).
 
 ---
 

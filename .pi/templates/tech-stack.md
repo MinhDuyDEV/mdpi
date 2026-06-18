@@ -82,4 +82,4 @@ This file is automatically injected via the `templates-injector` extension (conf
 ---
 
 _Update this file when tech stack or constraints change._
-_AI will capture architecture, conventions, and gotchas via the `observation` tool as it works._
+_AI will capture architecture, conventions, and gotchas via the `memory` tool (pi-hermes-memory) as it works._

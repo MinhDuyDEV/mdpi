@@ -46,7 +46,7 @@ When drift is detected:
 
 - pi-srcwalk tools (`semantic_query`, `semantic_inspect`, `semantic_grep`, `semantic_show`) replace srcwalk CLI
 - pi-search tools (`websearch`, `codesearch`, `context7`, `grepsearch`, `web_fetch`) replace webclaw
-- vcc_recall replaces memory_search (session-only, not LTM)
+- `memory_search` (pi-hermes-memory) = durable LTM across sessions; `vcc_recall` = active-session history (not LTM)
 - `subagent` tool replaces `task()` for delegation
 - Avoid building "infrastructure for infrastructure's sake" — Pi already has 13 npm extensions
 

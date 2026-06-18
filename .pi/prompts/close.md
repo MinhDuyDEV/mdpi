@@ -58,11 +58,9 @@ Do **not** `rm` the file (other tooling may expect it to exist).
 
 ## Phase 4: Optional Memory
 
-If `--done` and the outcome is non-trivial, persist a decision observation:
-- type: "decision"
-- title: "Feature <slug> closed — <outcome>"
-- concepts: "feature-close, <slug>"
-- confidence: "high"
+If `--done` and the outcome is non-trivial, persist a memory entry via the `memory` tool (pi-hermes-memory, action: `add`, target: `memory`):
+- content: "Feature <slug> closed — <outcome> — <key learning>"
+- category: insight (durable learning from completing the feature)
 
 ## Stop Conditions
 

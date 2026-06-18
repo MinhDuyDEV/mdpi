@@ -70,7 +70,7 @@ head -5 .pi/agents/<name>.md          # Check existing frontmatter
 | `webclaw` | Replace with `websearch` / `codesearch` / `web_fetch` |
 | `srcwalk` CLI | Replace with `semantic_query` / `semantic_inspect` / `semantic_grep` / `semantic_show` |
 | `task({ subagent_type })` | Replace with `subagent({ agent })` |
-| `observation()` / `memory-search()` | Replace with `observation` / `memory_search` tools (pi-memory extension) |
+| `observation()` / `memory-search()` | Replace with `memory` (add/replace/remove) / `memory_search` / `session_search` tools (pi-hermes-memory) |
 | `compress` (DCP) | Remove (pi-vcc handles compaction at end-of-task) |
 | `fallow` references | Keep as-is (CLI tool, language-agnostic) |
 
