@@ -34,6 +34,14 @@ const REQUIRED_FRONTMATTER = ["name", "description"] as const;
 const MAX_LINES = 500;
 const MAX_LINES_WARNING = 400;
 
+// pi-native commands that READMEs legitimately reference but are NOT kit prompts.
+// Exempt from the 'unknown-prompt' rule so we don't false-flag pi builtins.
+const KNOWN_PI_BUILTINS = new Set([
+  "reload", "skill", "memory", "agent", "agents", "clear", "compact", "new",
+  "help", "exit", "quit", "model", "theme", "tools", "keys", "config", "ask",
+  "dcp", "vcc", "observation", "session",
+]);
+
 function parseFrontmatter(content: string): Record<string, unknown> | null {
   const m = content.match(/^---\n([\s\S]*?)\n---/);
   if (!m) return null;
@@ -222,7 +230,7 @@ export function lintDocs(piDir: string): Result {
     existsSync(join(piDir, sub))
       ? readdirSync(join(piDir, sub)).filter((f) => f.endsWith(".md")).map((f) => f.replace(/\.md$/, ""))
       : [];
-  const actualPrompts = list("prompts").sort();
+  const actualPrompts = list("prompts").filter((n) => n !== "INDEX").sort();
   const actualAgents = list("agents").length;
   const actualSkills = existsSync(join(piDir, "skills"))
     ? readdirSync(join(piDir, "skills")).filter((n) => statSync(join(piDir, "skills", n)).isDirectory())
@@ -242,7 +250,7 @@ export function lintDocs(piDir: string): Result {
         message: `README missing '/${cmd}' (prompt exists)`,
       });
   for (const cmd of documented)
-    if (!actualPrompts.includes(cmd))
+    if (!actualPrompts.includes(cmd) && !KNOWN_PI_BUILTINS.has(cmd))
       issues.push({
         scope: "README",
         rule: "readme-unknown-prompt",

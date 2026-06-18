@@ -105,13 +105,31 @@ pi
 ├── memory/                         # Runtime LTM storage (gitignored)
 │   └── observations.json
 │
-├── artifacts/                      # Task output directories
-│   ├── .gitkeep                    # (or .active marker)
-│   ├── example/                    # 4 example templates (plan/progress/research/spec)
-│   └── history/                    # Migration history (mapping-compact.md)
+├── artifacts/                      # Task output + template examples
+│   └── example/                    # 4 template examples (plan/progress/research/spec)
 │
 └── tasks/                          # Runtime task list (json)
 ```
+
+---
+
+## Slash commands
+
+11 pi-native slash commands (full detail + lifecycle in [`prompts/INDEX.md`](./prompts/INDEX.md)):
+
+| Command | Purpose |
+|---------|---------|
+| `/init` | Bootstrap project context (AGENTS.md + templates + user profile) |
+| `/create` | Create spec (PRD) + workspace + task outline |
+| `/plan` | Detailed implementation plan + tasks.json |
+| `/ship` | Execute tasks, verify, review, close |
+| `/verify` | Check completeness/correctness against PRD |
+| `/fix` | Debug + fix a bug or failing test |
+| `/research` | Gather info before implementation |
+| `/audit` | Find all occurrences of a pattern, review, remediate |
+| `/gc` | Fallow analysis + quality grades + cleanup |
+| `/status` | Show active feature, progress, blockers |
+| `/close` | Finalize active feature, clear `.active` |
 
 ---
 
@@ -405,7 +423,7 @@ The kit still follows Addy Osmani's 4 memory-type model (*Lesson 5: memory and c
 - **LLM-subprocess cost** — every background review / correction / consolidation spawns `pi.exec("pi",["-p","--no-session",…])` → real token cost + latency + non-determinism per session.
 - **Vendor dependency** — core memory component is maintained by `chandra447` (9 contributors, active). The kit no longer owns its memory layer.
 - **Policy-only injection** — memory only surfaces if the agent chooses to call `memory_search`; can miss relevant memory if the agent "forgets" to search.
-- **Lost (vs former in-house extensions)** — `/decision`, `/intent`, `/summary` commands + the always-injected "Session Summary (anchored)" block. Gained: `session_search`, learning loop, secret scan, consolidation, two-tier, 368 tests.
+- **Lost (vs former in-house extensions)** — the former `decision`, `intent`, `summary` commands + the always-injected "Session Summary (anchored)" block. Gained: `session_search`, learning loop, secret scan, consolidation, two-tier, 368 tests.
 - **Retrieval is lexical** — FTS5 BM25 + literal-phrase match, case-insensitive. No embeddings/synonymy ("deploy" ≈ "ship" still needs embeddings — same gap as before, just indexed).
 
 ### Integration notes (verified against installed v0.7.17 source)
