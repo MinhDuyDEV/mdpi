@@ -54,7 +54,7 @@ pi
 ├── extensions/                     # 4 custom TypeScript extensions
 │   ├── workflows-runner.ts         # DAG workflow executor
 │   ├── templates-injector.ts       # Auto-inject project templates
-│   ├── pi-memory.ts                # 4-tier long-term memory (JSON)
+│   ├── pi-memory.ts                # long-term memory: observations (JSON)
 │   └── pi-session-summary.ts       # Anchored session summary
 │
 ├── prompts/                        # 11 slash commands (pi-native)
@@ -224,7 +224,7 @@ This kit ships **4 custom TypeScript extensions** and uses **2 external npm pack
 |-----------|---------|--------|
 | `workflows-runner` | Parses DAG workflows from `.pi/workflows/*.md`, returns execution plan with `subagent()` calls | Production |
 | `templates-injector` | Auto-injects `project.md`, `tech-stack.md`, `state.md` into system prompt | Production |
-| `pi-memory` | 4-tier LTM (Capture → Distill → Curate → Inject) with JSON persistence | Production (JSON, ~1000 obs max) |
+| `pi-memory` | LTM observations: manual capture + Promoter (session→LTM) + TF-IDF retrieval + injection (JSON) | Production (JSON; FTS5/SQLite deferred) |
 | `pi-session-summary` | Anchored iterative summarization across compaction cycles | Production |
 
 ### External packages (auto-loaded from global)
@@ -367,11 +367,39 @@ Then `/reload` in pi.
 | External research | `webclaw` + `grepsearch` + `context7` | Uses `pi-search` (5 tools, Exa web) |
 | Subagent dispatch | `task()` in agent body | Same — `pi-subagents` extension |
 | Workflows | DAG markdown + plugin | Same DAG, but `workflows-runner` returns execution plan for LLM to execute |
-| Memory | 4-tier LTM (SQLite + FTS5) | 4-tier LTM (JSON, ~1000 obs max) |
+| Memory | LTM (SQLite + FTS5) | LTM observations (JSON; manual capture + Promoter + TF-IDF; FTS5/SQLite deferred) |
 | Mid-session compression | Full DCP (LLM-invoked) | `@davecodes/pi-dcp` (npm package, auto-loaded) |
 | Safety | `guard.ts` plugin (regex) | `pi-guard` (jdiamond, bash AST parser) |
 | Settings | `opencode.json` (503 lines) | `settings.json` (~30 lines, lean) |
 | Scope | OpenCode runtime | Pi coding agent |
+
+---
+
+## Memory
+
+The kit's memory follows Addy Osmani's 4 memory-type model (*Lesson 5: memory and context*), not a "tier pipeline":
+
+| Type | Duration | Kit component |
+|------|----------|---------------|
+| Short-term | one session | context window + pi-vcc compaction |
+| Episodic | across sessions (on-disk anchor) | `pi-session-summary` → `.pi/state/session-summary.*` |
+| Long-term | across sessions (retrieved on demand) | `pi-memory` → `.pi/memory/observations.json` |
+| Procedural | permanent | Agent Skills (`.pi/skills/*`) |
+| Declarative | varies (RAG) | `templates/` + `context/` + `semantic_*` / `websearch` / `context7` |
+
+**`pi-memory` (long-term layer) implements:**
+
+1. **Capture** — manual via the `observation` tool.
+2. **Promoter** — distills `pi-session-summary` decisions into LTM observations at `session_shutdown` / `session_compact` (`source:"auto-distill"`, `confidence:"low"`), guarded by a `lastPromotedDecisionTs` watermark. This is the memory-update layer (durable knowledge after a session).
+3. **Retrieval** — `memory_search` with TF-IDF scoring (lexical).
+4. **Injection** — `before_agent_start` injects top relevant observations, skipping auto-distilled decisions already in the session summary (no double injection).
+
+**Memory vs RAG** — don't conflate:
+
+- **Memory** (`observation` / `memory_search`): personal — this project, this agent, written during sessions.
+- **RAG** (`semantic_*` / `websearch` / `codesearch` / `context7`): general knowledge, looked up on demand.
+
+**Deferred** (re-evaluate when triggered): FTS5/SQLite storage (>500 obs + measured search failure), embeddings for semantic synonymy (observed synonymy gap), pattern-curator, config block, decay curve. Retrieval is lexical; "deploy" ≈ "ship to production" needs embeddings (not FTS5/TF-IDF).
 
 ---
 

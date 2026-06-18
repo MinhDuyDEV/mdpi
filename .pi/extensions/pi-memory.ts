@@ -1,19 +1,30 @@
 /**
- * Pi Memory Extension
+ * Pi Memory Extension — Long-Term Memory (LTM) for observations.
  *
- * 4-tier Long-Term Memory (LTM) system inspired by opencodekit's memory plugin.
- * Captures observations, distills sessions, curates patterns, injects relevant knowledge.
+ * Memory-type model (after Addy Osmani, "Lesson 5: memory and context"):
+ *   short-term   — current session context window (pi-vcc compaction)
+ *   episodic     — on-disk session anchor, survives across sessions
+ *                  (pi-session-summary → .pi/state/session-summary.*)
+ *   long-term    — this extension: observations persisted across sessions
+ *                  (.pi/memory/observations.json), retrieved on demand
+ *   procedural   — Agent Skills (.pi/skills/*) — separate system
+ *   declarative  — templates/context + semantic_* and websearch (RAG) — separate
  *
- * Systems:
- * 1. Capture — session events → temporal_messages
- * 2. Distillation — session.idle → compressed summaries
- * 3. Curator — pattern-matched observation creation
- * 4. LTM Injection — system.transform → relevance-scored knowledge
+ * What this extension actually implements (the long-term layer):
+ *   1. Capture      — manual via the `observation` tool.
+ *   2. Promoter     — distills session decisions into LTM observations at
+ *                     session_shutdown / session_compact (source:"auto-distill"),
+ *                     guarded by a lastPromotedDecisionTs watermark. This is the
+ *                     "memory-update layer" (extract durable knowledge after a session).
+ *   3. Retrieval    — `memory_search` with TF-IDF scoring (lexical; no synonymy).
+ *   4. Injection    — `before_agent_start` injects the top relevant observations,
+ *                     skipping auto-distilled decisions already in the session summary.
  *
- * Tools: observation, memory-search, memory-admin
+ * Tools: observation, memory_search, memory_admin.
  *
- * Note: This is a minimal implementation using JSON files. For production
- * use with thousands of observations, migrate to SQLite + FTS5.
+ * Retrieval is lexical (TF-IDF). Semantic synonymy ("deploy" ≈ "ship to production")
+ * needs embeddings and is deferred. FTS5/SQLite storage is deferred until the
+ * observation count grows and substring search is measured failing.
  */
 
 import * as fs from "node:fs";
@@ -39,6 +50,9 @@ interface Observation {
 
 interface MemoryState {
 	observations: Observation[];
+	// Watermark: highest decision ts already promoted to LTM. Prevents re-promoting
+	// decisions from a session-summary that persists across sessions.
+	lastPromotedDecisionTs?: number;
 }
 
 const MEMORY_DIR = ".pi/memory";
@@ -67,35 +81,91 @@ function loadMemory(cwd: string): MemoryState {
 function saveMemory(cwd: string, state: MemoryState): void {
 	const dir = getMemoryDir(cwd);
 	fs.mkdirSync(dir, { recursive: true });
-	fs.writeFileSync(getMemoryFile(cwd), JSON.stringify(state, null, 2));
+	// Atomic write: temp file + rename to avoid half-written JSON on interrupt.
+	const finalPath = getMemoryFile(cwd);
+	const tmpPath = `${finalPath}.tmp`;
+	fs.writeFileSync(tmpPath, JSON.stringify(state, null, 2));
+	fs.renameSync(tmpPath, finalPath);
 }
 
 function generateId(): string {
 	return `obs_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function scoreObservation(obs: Observation, query: string): number {
-	const q = query.toLowerCase();
-	const tokens = q.split(/\s+/).filter((t) => t.length > 2);
-	if (tokens.length === 0) return 0;
+function tokenize(s: string): string[] {
+	return s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((t) => t.length > 2);
+}
 
-	let score = 0;
-	const titleLower = obs.title.toLowerCase();
-	const narrativeLower = obs.narrative.toLowerCase();
-	const conceptsLower = obs.concepts.map((c) => c.toLowerCase()).join(" ");
-
-	for (const token of tokens) {
-		if (titleLower.includes(token)) score += 3;
-		if (narrativeLower.includes(token)) score += 1;
-		if (conceptsLower.includes(token)) score += 2;
+function buildIdf(obsList: Observation[]): Map<string, number> {
+	const N = obsList.length || 1;
+	const df = new Map<string, number>();
+	for (const o of obsList) {
+		const tokens = new Set(tokenize(`${o.title} ${o.narrative} ${o.concepts.join(" ")}`));
+		for (const t of tokens) df.set(t, (df.get(t) ?? 0) + 1);
 	}
+	const idf = new Map<string, number>();
+	for (const [t, d] of df) idf.set(t, Math.log(1 + N / d));
+	return idf;
+}
 
+function scoreObservation(obs: Observation, query: string, idf: Map<string, number>): number {
+	const qTokens = tokenize(query);
+	if (qTokens.length === 0) return 0;
+	const docTokens = tokenize(`${obs.title} ${obs.narrative} ${obs.concepts.join(" ")}`);
+	const docLen = docTokens.length || 1;
+	const tf = new Map<string, number>();
+	for (const t of docTokens) tf.set(t, (tf.get(t) ?? 0) + 1);
+	const titleTokens = new Set(tokenize(obs.title));
+	let score = 0;
+	for (const q of qTokens) {
+		const f = tf.get(q) ?? 0;
+		if (f === 0) continue;
+		const w = (f / docLen) * (idf.get(q) ?? 0);
+		score += titleTokens.has(q) ? w * 2 : w;
+	}
 	// Boost by feedback and recency
 	score *= 1 + obs.feedbackScore * 0.1;
 	const ageDays = (Date.now() - obs.createdAt) / (1000 * 60 * 60 * 24);
 	if (ageDays < 7) score *= 1.2;
-
 	return score;
+}
+
+function getSessionSummaryDecisions(cwd: string): Array<{ ts: number; text: string }> {
+	const file = path.join(cwd, ".pi", "state", "session-summary.json");
+	if (!fs.existsSync(file)) return [];
+	try {
+		const j = JSON.parse(fs.readFileSync(file, "utf-8"));
+		return Array.isArray(j.decisions) ? j.decisions : [];
+	} catch {
+		return [];
+	}
+}
+
+function promoteDecisions(cwd: string): number {
+	const state = loadMemory(cwd);
+	const decisions = getSessionSummaryDecisions(cwd);
+	const watermark = state.lastPromotedDecisionTs ?? 0;
+	const toPromote = decisions.filter((d) => d && typeof d.ts === "number" && d.ts > watermark);
+	if (toPromote.length === 0) return 0;
+	for (const d of toPromote) {
+		const text = String(d.text ?? "");
+		state.observations.push({
+			id: generateId(),
+			type: "decision",
+			title: text.slice(0, 80) || "(decision)",
+			narrative: text,
+			concepts: [],
+			confidence: "low",
+			feedbackScore: 0,
+			retrievalCount: 0,
+			source: "auto-distill",
+			createdAt: d.ts,
+			updatedAt: Date.now(),
+		});
+	}
+	state.lastPromotedDecisionTs = Math.max(...toPromote.map((d) => d.ts));
+	saveMemory(cwd, state);
+	return toPromote.length;
 }
 
 export default function piMemory(pi: ExtensionAPI) {
@@ -206,8 +276,9 @@ export default function piMemory(pi: ExtensionAPI) {
 				candidates = candidates.filter((o) => o.type === params.type);
 			}
 
+			const idf = buildIdf(state.observations.filter((o) => !o.archivedAt));
 			const scored = candidates
-				.map((o) => ({ obs: o, score: scoreObservation(o, params.query) }))
+				.map((o) => ({ obs: o, score: scoreObservation(o, params.query, idf) }))
 				.filter((s) => s.score > 0)
 				.sort((a, b) => b.score - a.score)
 				.slice(0, params.limit ?? 5);
@@ -346,10 +417,19 @@ export default function piMemory(pi: ExtensionAPI) {
 		const state = loadMemory(ctx.cwd);
 		if (state.observations.length === 0) return;
 
+		// Injection dedup: skip auto-distilled decisions already present in the
+		// current session summary (injected there as summary text) to avoid
+		// surfacing the same decision twice.
+		const summaryTitles = new Set(
+			getSessionSummaryDecisions(ctx.cwd).map((d) => String(d.text ?? "").slice(0, 80)),
+		);
+		const idf = buildIdf(state.observations.filter((o) => !o.archivedAt));
+
 		const scored = state.observations
 			.filter((o) => !o.archivedAt)
-			.map((o) => ({ obs: o, score: scoreObservation(o, event.prompt) }))
-			.filter((s) => s.score > 2)
+			.filter((o) => !(o.source === "auto-distill" && summaryTitles.has(o.title)))
+			.map((o) => ({ obs: o, score: scoreObservation(o, event.prompt, idf) }))
+			.filter((s) => s.score > 0)
 			.sort((a, b) => b.score - a.score)
 			.slice(0, 3);
 
@@ -367,5 +447,18 @@ export default function piMemory(pi: ExtensionAPI) {
 				event.systemPrompt +
 				`\n\n## Relevant Past Observations\n\nThe following long-term observations may be relevant to this task:\n\n${relevant}\n\nUse memory_search tool for deeper context.`,
 		};
+	});
+
+	// Memory-update layer: distill session decisions into LTM.
+	// Fires at session_shutdown (runtime teardown: quit/reload/new/resume/fork) and
+	// session_compact (mid-session, crash-safety). The state.lastPromotedDecisionTs
+	// watermark prevents re-promoting decisions from a session-summary that persists
+	// across sessions. NOTE: session_end/session_idle are not in the ExtensionAPI
+	// event surface — session_shutdown + session_compact are the real hooks.
+	pi.on("session_shutdown", (_event, ctx) => {
+		promoteDecisions(ctx.cwd);
+	});
+	pi.on("session_compact", (_event, ctx) => {
+		promoteDecisions(ctx.cwd);
 	});
 }
