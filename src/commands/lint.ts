@@ -42,7 +42,7 @@ const KNOWN_PI_BUILTINS = new Set([
   "dcp", "vcc", "observation", "session",
 ]);
 
-function parseFrontmatter(content: string): Record<string, unknown> | null {
+export function parseFrontmatter(content: string): Record<string, unknown> | null {
   const m = content.match(/^---\n([\s\S]*?)\n---/);
   if (!m) return null;
   const fields: Record<string, unknown> = {};
@@ -56,7 +56,7 @@ function parseFrontmatter(content: string): Record<string, unknown> | null {
   return fields;
 }
 
-function skillDirNames(skillsDir: string): Set<string> {
+export function skillDirNames(skillsDir: string): Set<string> {
   if (!existsSync(skillsDir)) return new Set();
   return new Set(
     readdirSync(skillsDir).filter(
@@ -66,7 +66,7 @@ function skillDirNames(skillsDir: string): Set<string> {
 }
 
 /** Extract skill names referenced in body: `/skill:<n>`, `skill:<n>`, `` `<n>` skill ``. */
-function findCrossRefs(content: string): string[] {
+export function findCrossRefs(content: string): string[] {
   const refs = new Set<string>();
   for (const m of content.matchAll(/(?:\/skill:|skill:)([a-z0-9][a-z0-9-]*)/g)) refs.add(m[1]);
   for (const m of content.matchAll(/`([a-z0-9][a-z0-9-]*)`\s+skill\b/g)) refs.add(m[1]);
@@ -231,12 +231,13 @@ export function lintDocs(piDir: string): Result {
       ? readdirSync(join(piDir, sub)).filter((f) => f.endsWith(".md")).map((f) => f.replace(/\.md$/, ""))
       : [];
   const actualPrompts = list("prompts").filter((n) => n !== "INDEX").sort();
-  const actualAgents = list("agents").length;
+  const actualAgents = list("agents").filter((n) => n !== "INDEX").length;
   const actualSkills = existsSync(join(piDir, "skills"))
     ? readdirSync(join(piDir, "skills")).filter((n) => statSync(join(piDir, "skills", n)).isDirectory())
         .length
     : 0;
-  const actualWorkflows = list("workflows").length;
+  const actualWorkflows = list("workflows").filter((n) => n !== "INDEX").length;
+  const actualTemplates = list("templates").filter((n) => n !== "INDEX").length;
 
   // slash-command refs in README vs actual prompts
   const documented = new Set<string>();
@@ -259,8 +260,12 @@ export function lintDocs(piDir: string): Result {
       });
 
   // count claims vs reality
+  // Match the README kit-summary format: `label/` (N) or `label/` (N + INDEX).
+  // Allows any non-(/non-newline chars between label and the count paren,
+  // so backtick-wrapped paths like `agents/` (7) are matched. Captures the
+  // first integer inside the parens (ignoring " + INDEX" suffixes).
   const countCheck = (label: string, actual: number) => {
-    const m = readme.match(new RegExp(`\\b${label}s?\\s*\\((\\d+)\\)`));
+    const m = readme.match(new RegExp(`\\b${label}s?[^\\(\\n]*\\((\\d+)[^)]*\\)`));
     if (m) {
       const doc = Number.parseInt(m[1], 10);
       if (doc !== actual)
@@ -277,6 +282,7 @@ export function lintDocs(piDir: string): Result {
   countCheck("prompt", actualPrompts.length);
   countCheck("agent", actualAgents);
   countCheck("workflow", actualWorkflows);
+  countCheck("template", actualTemplates);
 
   return {
     ok: issues.length === 0,

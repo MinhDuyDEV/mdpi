@@ -23,6 +23,7 @@ import {
   generateManifest,
   loadManifest,
   MANIFEST_FILE,
+  type TemplateManifest,
 } from "../utils/manifest.js";
 import { getPackageVersion, getTemplateRoot, listFilesRel } from "../utils/template.js";
 
@@ -33,6 +34,60 @@ export interface UpgradeOptions {
 }
 
 const SKIP_DIRS = ["node_modules", ".git", "dist", "coverage", ".next", ".turbo"];
+
+/**
+ * Classify each template file against the install-time manifest.
+ * Pure logic (no fs writes) — extracted so it can be unit-tested.
+ *
+ *   unmodified → toUpdate (hash matches manifest)
+ *   modified   → preserved unless force (user edited it)
+ *   unknown    → toAdd if a manifest exists (new template file); with no
+ *               manifest, preserved unless force (can't detect edits)
+ */
+export function classifyFiles(
+  newFiles: string[],
+  piDir: string,
+  manifest: TemplateManifest | null,
+  force: boolean,
+): { toUpdate: string[]; toAdd: string[]; preserved: string[] } {
+  const toUpdate: string[] = [];
+  const toAdd: string[] = [];
+  const preserved: string[] = [];
+  for (const rel of newFiles) {
+    const dest = join(piDir, rel);
+    const status = fileModificationStatus(dest, rel, manifest);
+    if (status === "unmodified") {
+      toUpdate.push(rel);
+    } else if (status === "modified") {
+      if (force) toUpdate.push(rel);
+      else preserved.push(rel);
+    } else {
+      // unknown: new template file (if manifest exists) or no-manifest case
+      if (manifest) toAdd.push(rel);
+      else if (force) toAdd.push(rel);
+      else preserved.push(rel);
+    }
+  }
+  return { toUpdate, toAdd, preserved };
+}
+
+/**
+ * Orphans: files in the manifest but no longer in the new template
+ * (template-removed since install). Excludes `.version` — it is mdpi-managed
+ * (regenerated each init/upgrade), not a template file, so it must never be a
+ * prune candidate. Returns [] when there is no manifest.
+ */
+export function findOrphans(
+  installedFiles: string[],
+  newFiles: string[],
+  manifest: TemplateManifest | null,
+): string[] {
+  if (!manifest) return [];
+  const newSet = new Set(newFiles);
+  return installedFiles.filter(
+    (f) => !newSet.has(f) && f in manifest.files && f !== ".version",
+  );
+}
 
 export async function upgradeCommand(options: UpgradeOptions = {}): Promise<void> {
   const quiet = process.argv.includes("--quiet");
@@ -67,35 +122,9 @@ export async function upgradeCommand(options: UpgradeOptions = {}): Promise<void
   const newFiles = listFilesRel(srcPi, SKIP_DIRS, [MANIFEST_FILE]);
   const installedFiles = listFilesRel(piDir, SKIP_DIRS, [MANIFEST_FILE]);
 
-  // Classify each template file.
-  const toUpdate: string[] = [];
-  const toAdd: string[] = [];
-  const preserved: string[] = [];
-  for (const rel of newFiles) {
-    const dest = join(piDir, rel);
-    const status = fileModificationStatus(dest, rel, manifest);
-    if (status === "unmodified") {
-      toUpdate.push(rel);
-    } else if (status === "modified") {
-      if (options.force) toUpdate.push(rel);
-      else preserved.push(rel);
-    } else {
-      // unknown: new template file (if manifest exists) or no-manifest case
-      if (manifest) toAdd.push(rel);
-      else if (options.force) toAdd.push(rel);
-      else preserved.push(rel);
-    }
-  }
-
-  // Orphans: in manifest but not in new template (template-removed).
-  // Exclude .version — it is mdpi-managed (regenerated each init/upgrade),
-  // not a template file, so it must never count as a prune candidate.
-  const newSet = new Set(newFiles);
-  const orphans = manifest
-    ? installedFiles.filter(
-        (f) => !newSet.has(f) && f in manifest.files && f !== ".version",
-      )
-    : [];
+  // Classify each template file + find orphans (pure helpers, unit-tested).
+  const { toUpdate, toAdd, preserved } = classifyFiles(newFiles, piDir, manifest, !!options.force);
+  const orphans = findOrphans(installedFiles, newFiles, manifest);
 
   if (!quiet) {
     p.log.info(`v${currentVersion} → v${targetVersion}`);

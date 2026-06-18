@@ -34,6 +34,8 @@
   "scripts": {
     "build": "tsdown && node scripts/bundle-template.mjs",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "dev": "tsx src/index.ts"
   },
   "dependencies": {
@@ -45,6 +47,7 @@
     "@types/node": "^22.19.11",
     "tsdown": "latest",
     "tsx": "latest",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.9"
   }
 }

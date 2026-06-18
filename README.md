@@ -27,4 +27,4 @@ npm install -g mdpi     # or one-off: npx mdpi init
 
 ## What's in the kit
 
-`agents/` (7) · `prompts/` (9) · `skills/` (67 + INDEX) · `templates/` (10) · `workflows/` (5) · `context/` (2) · `extensions/` (2 TS) · `settings.json` · `AGENTS.md` · `README.md` · `QUALITY.md` · `.env.example` · `guard.example.json` · `subagents.json` · `artifacts/example/` (template examples).
+`agents/` (7) · `prompts/` (11) · `skills/` (67 + INDEX) · `templates/` (11) · `workflows/` (6) · `context/` (2) · `extensions/` (2 TS) · `settings.json` · `AGENTS.md` · `README.md` · `QUALITY.md` · `.env.example` · `guard.example.json` · `subagents.json` · `artifacts/example/` (template examples).

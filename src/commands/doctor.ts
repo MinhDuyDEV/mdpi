@@ -47,7 +47,7 @@ export async function doctorCommand(): Promise<void> {
   }
 
   const countMd = (sub: string) =>
-    existsSync(join(piDir, sub)) ? readdirSync(join(piDir, sub)).filter((f) => f.endsWith(".md")).length : 0;
+    existsSync(join(piDir, sub)) ? readdirSync(join(piDir, sub)).filter((f) => f.endsWith(".md") && f !== "INDEX.md").length : 0;
   const countExt = (sub: string, ext: string) =>
     existsSync(join(piDir, sub)) ? readdirSync(join(piDir, sub)).filter((f) => f.endsWith(ext)).length : 0;
   const skillCount = existsSync(join(piDir, "skills"))
