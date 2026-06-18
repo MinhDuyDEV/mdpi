@@ -1,6 +1,6 @@
 ---
 purpose: User identity, preferences, communication style
-updated: 2024-12-21
+updated: <auto — last modified>
 ---
 
 # User Profile

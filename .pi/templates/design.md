@@ -1,6 +1,8 @@
 # Design Document
 
-**Bead ID:** [bead-id]
+> **Purpose:** Optional design doc for non-trivial features. Used manually, or produced by `development-lifecycle-workflow` Phase 3 (plan) when an approach has structural implications worth documenting before implementation. Lives at `.pi/artifacts/$SLUG/design.md`.
+
+**Feature Slug:** [feature-slug]   
 **Created:** [date]
 **Status:** Draft | Validated
 

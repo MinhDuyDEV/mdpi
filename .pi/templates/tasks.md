@@ -1,7 +1,11 @@
 # Implementation Tasks
 
-**Bead:** [bead-id]
-**Spec:** [link to spec]
+> **Purpose:** Body template for the `## Tasks` section of `.pi/artifacts/$SLUG/plan.md` (produced by `/plan`).
+> The runtime mirror of these tasks lives in `.pi/artifacts/$SLUG/tasks.json`, which `/ship` consumes.
+> See `.pi/templates/prd.md` for the high-level task outline that lives inside the PRD (spec).
+
+**Feature:** <feature-slug>   
+**Spec:** [link to spec]   
 **Date:** [YYYY-MM-DD]
 
 ---

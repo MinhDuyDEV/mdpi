@@ -1,6 +1,6 @@
 ---
 purpose: Project vision, goals, and success criteria (loaded into all AI contexts)
-updated: 2024-12-21
+updated: <auto — last modified>
 ---
 
 # Project Vision

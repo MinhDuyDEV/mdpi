@@ -1,8 +1,10 @@
 # ADR: [short title of decision]
 
-**Status:** [proposed | accepted | deprecated | superseded]
+> **Purpose:** Record an architectural decision worth preserving. Created manually or by `/init --deep` when a real decision surfaces. Not every change needs an ADR — only decisions with lasting tradeoffs.
+
+**Status:** [proposed | accepted | deprecated | superseded]   
 **Date:** [YYYY-MM-DD]
-**Context:** [bead-id, issue/Linear ticket, or session reference]
+**Context:** [feature-slug, issue/Linear ticket, or session reference]
 
 ## Context
 

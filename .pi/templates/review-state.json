@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft-2020-12/schema",
+  "$comment": "Runtime state for the quality-loop workflow. Created/updated at .pi/artifacts/$SLUG/review-state.json by quality-loop Phase 1. Not a context template — a runtime artifact schema.",
+  "slug": "<feature-slug>",
+  "rounds": 0,
+  "maxRounds": 5,
+  "lastScore": 0,
+  "sameScoreCount": 0,
+  "findingsResolved": 0,
+  "findingsRemaining": 0,
+  "status": "active",
+  "history": [
+    {
+      "round": 1,
+      "score": 0,
+      "findings": 0,
+      "timestamp": "<ISO 8601>"
+    }
+  ]
+}

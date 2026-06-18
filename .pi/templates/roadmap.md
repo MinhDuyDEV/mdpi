@@ -1,6 +1,6 @@
 ---
-purpose: Project roadmap with phases, milestones, and bead organization
-updated: 2024-12-21
+purpose: Project roadmap with phases, milestones, and feature organization
+updated: <auto — last modified>
 ---
 
 # Roadmap
@@ -9,7 +9,7 @@ updated: 2024-12-21
 
 <!-- High-level project breakdown -->
 
-| Phase     | Goal                | Status        | Beads |
+| Phase     | Goal                | Status        | Features |
 | --------- | ------------------- | ------------- | ----- |
 | [Phase 1] | [One-sentence goal] | [Not Started] | [#]   |
 | [Phase 2] | [One-sentence goal] | [Not Started] | [#]   |
@@ -25,11 +25,11 @@ updated: 2024-12-21
 - [ ] [Criterion 2]
 - [ ] [Criterion 3]
 
-**Beads:**
+**Features:**
 | ID | Title | Type | Status | Depends On |
 |----|-------|------|--------|------------|
-| br-xxx | [Title] | task | open | - |
-| br-xxx | [Title] | task | open | br-xxx |
+| <slug> | [Title] | task | open | - |
+| <slug> | [Title] | task | open | <slug> |
 
 **Out of Scope:**
 
@@ -46,10 +46,10 @@ updated: 2024-12-21
 - [ ] [Criterion 1]
 - [ ] [Criterion 2]
 
-**Beads:**
+**Features:**
 | ID | Title | Type | Status | Depends On |
 |----|-------|------|--------|------------|
-| br-xxx | [Title] | feature | open | Phase 1 |
+| <slug> | [Title] | feature | open | Phase 1 |
 
 **Dependencies:**
 
@@ -65,10 +65,10 @@ updated: 2024-12-21
 
 - [ ] [Criterion 1]
 
-**Beads:**
+**Features:**
 | ID | Title | Type | Status | Depends On |
 |----|-------|------|--------|------------|
-| br-xxx | [Title] | epic | open | Phase 2 |
+| <slug> | [Title] | epic | open | Phase 2 |
 
 ---
 

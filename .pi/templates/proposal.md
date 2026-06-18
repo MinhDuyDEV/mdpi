@@ -1,6 +1,8 @@
 # Proposal
 
-**Bead:** [bead-id]
+> **Purpose:** Lightweight change proposal used manually for small/routine changes that don't warrant a full PRD. Pair with `.pi/templates/adr.md` when the proposal locks in a decision. Not wired into a command by default.
+
+**Feature:** [feature-slug]   
 **Author:** [author]
 **Date:** [YYYY-MM-DD]
 

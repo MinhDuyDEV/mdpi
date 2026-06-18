@@ -1,6 +1,6 @@
 ---
 purpose: Current project state, active decisions, blockers, and position tracking
-updated: 2024-12-21
+updated: <auto — last modified>
 ---
 
 # State
@@ -9,7 +9,7 @@ updated: 2024-12-21
 
 <!-- Where are we right now? What just happened? -->
 
-**Active Bead:** br-xxx - [Title]
+**Active Feature:** <slug> - [Title]
 **Status:** [In Progress / Blocked / Review]
 **Started:** [Date]
 **Phase:** [Phase name from roadmap.md]
@@ -18,10 +18,10 @@ updated: 2024-12-21
 
 <!-- Last 3-5 completed tasks -->
 
-| Bead   | Title   | Completed | Summary            |
+| Feature | Title   | Completed | Summary            |
 | ------ | ------- | --------- | ------------------ |
-| br-xxx | [Title] | [Date]    | [One-line summary] |
-| br-xxx | [Title] | [Date]    | [One-line summary] |
+| <slug> | [Title] | [Date]    | [One-line summary] |
+| <slug> | [Title] | [Date]    | [One-line summary] |
 
 ## Active Decisions
 
@@ -35,9 +35,9 @@ updated: 2024-12-21
 
 <!-- What's preventing progress? -->
 
-| Bead   | Blocker                  | Since  | Owner               |
+| Feature | Blocker                  | Since  | Owner               |
 | ------ | ------------------------ | ------ | ------------------- |
-| br-xxx | [Description of blocker] | [Date] | [Who's responsible] |
+| <slug> | [Description of blocker] | [Date] | [Who's responsible] |
 
 ## Open Questions
 

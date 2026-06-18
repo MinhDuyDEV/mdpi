@@ -1,4 +1,4 @@
-# Beads PRD Template
+# PRD Template
 
 > **Template Instructions:**
 >
@@ -7,17 +7,18 @@
 > - Any `[NEEDS CLARIFICATION]` markers MUST be resolved before planning can proceed
 > - Delete this instruction block after filling the template
 
-**Bead:** br-[id]  
-**Created:** [date]  
+**Slug:** <feature-slug>   
+**Created:** [date]   
 **Status:** Draft | In Review | Approved
 
-## Bead Metadata
+## Feature Metadata
 
 ```yaml
-depends_on: [] # Bead IDs that must complete before this one
-parallel: true # Can run concurrently with other parallel tasks
-conflicts_with: [] # Bead IDs that modify same files (cannot parallelize)
-blocks: [] # Bead IDs waiting on this one
+slug: <feature-slug>          # kebab-case, written to .pi/artifacts/.active
+depends_on: [] # Feature slugs that must complete before this one
+parallel: true # Can run concurrently with other parallel features
+conflicts_with: [] # Feature slugs that modify same files (cannot parallelize)
+blocks: [] # Feature slugs waiting on this one
 estimated_hours: 2 # Time estimate for planning
 ```
 
@@ -112,7 +113,7 @@ Brief description of what must be true.
 
 ### Affected Files
 
-Files this bead will modify (for conflict detection):
+Files this feature will modify (for conflict detection):
 
 ```yaml
 files:
@@ -142,7 +143,7 @@ files:
 
 ## Tasks
 
-Write tasks in a machine-convertible format for `prd-task` skill.
+High-level task outline only. Authoritative decomposition is `/plan`'s job (writes `plan.md` + `tasks.json`). Use `.pi/templates/tasks.md` for the detailed task body format.
 
 **Rules:**
 
