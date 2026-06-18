@@ -62,13 +62,13 @@ Start by understanding the current project context, then ask questions one at a 
 **Next Phase (if continuing):**
 
 - Ask: "Ready to create the PRD?"
-- Load next skill: `prd` (auto-discovered from `.pi/skills/`)
+- Load next skill: `spec-driven-development` (auto-discovered from `.pi/skills/`)
 - This moves to Phase 2: Specification
 
 **Alternative paths:**
 
 - Use `using-git-worktrees` skill to create isolated workspace first
-- Use `writing-plans` skill if skipping formal PRD
+- Use `planning-and-task-breakdown` skill if skipping formal PRD
 
 **Full lifecycle reference:**
 
@@ -107,8 +107,8 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## See Also
 
-- `writing-plans` - Turn validated direction into zero-ambiguity implementation tasks
-- `prd` - Capture behavioral requirements before implementation
+- `planning-and-task-breakdown` - Turn validated direction into zero-ambiguity implementation tasks
+- `spec-driven-development` - Capture behavioral requirements before implementation
 
 ## Common Rationalizations
 

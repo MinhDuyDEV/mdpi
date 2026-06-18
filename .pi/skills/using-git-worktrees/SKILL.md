@@ -252,8 +252,8 @@ Ready to implement auth feature
 
 **Pairs with:**
 
-- **finishing-a-development-branch** - REQUIRED for cleanup after work complete
-- **executing-plans** or **subagent-driven-development** - Work happens in this worktree
+- **shipping-and-launch** - REQUIRED for cleanup after work complete
+- **incremental-implementation** or **subagent-driven-development** - Work happens in this worktree
 
 ## Common Rationalizations
 

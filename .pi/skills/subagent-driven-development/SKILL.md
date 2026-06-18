@@ -14,7 +14,7 @@ description: Use when executing implementation plans with independent tasks in t
 
 ## When NOT to Use
 
-- The plan requires review or revisions first (use executing-plans)
+- The plan requires review or revisions first (use `incremental-implementation`)
 - Tasks are tightly coupled and need manual sequencing
 
 ## Overview
@@ -69,7 +69,7 @@ Task tool (general-purpose):
 
 **Dispatch review subagent:**
 
-Use template at requesting-code-review/review.md
+Use the review format from the `code-review-and-quality` skill (severity-ranked findings: P0/P1/P2/P3 with file:line + suggestion). Pass to the review subagent:
 
 WHAT_WAS_IMPLEMENTED: [from subagent's report]
 PLAN_OR_REQUIREMENTS: Task N from [plan-file]
@@ -115,8 +115,8 @@ After all tasks complete, dispatch final review:
 
 After final review passes:
 
-- Announce: "I'm using finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Load `finishing-a-development-branch` skill (auto-discovered from `.pi/skills/`)
+- Announce: "I'm using `shipping-and-launch` skill to complete this work."
+- **REQUIRED SUB-SKILL:** Load `shipping-and-launch` skill (auto-discovered from `.pi/skills/`)
 - Follow that skill to verify tests, present options, execute choice
 
 ## Example Workflow
@@ -212,9 +212,9 @@ Done!
 
 **Required workflow skills:**
 
-- **writing-plans** - REQUIRED: Creates the plan that this skill executes
-- **requesting-code-review** - REQUIRED: Review after each task (see Step 3)
-- **finishing-a-development-branch** - REQUIRED: Complete development after all tasks (see Step 7)
+- **planning-and-task-breakdown** - REQUIRED: Creates the plan that this skill executes
+- **code-review-and-quality** - REQUIRED: Review after each task (see Step 3)
+- **shipping-and-launch** - REQUIRED: Complete development after all tasks (see Step 7)
 
 **Subagents must use:**
 
@@ -222,16 +222,16 @@ Done!
 
 **Alternative workflow:**
 
-- **executing-plans** - Use for parallel session instead of same-session execution
+- **incremental-implementation** - Use for same-session slice-by-slice execution instead of parallel subagent dispatch
 
-See review template: requesting-code-review/review.md
+See review format in the `code-review-and-quality` skill.
 ```
 
 ## See Also
 
-- **dispatching-parallel-agents** — for parallel investigation
-- **executing-plans** — for batch execution with checkpoints
-- **requesting-code-review** — for review between subagent tasks
+- **subagent-driven-development** — for parallel investigation (this skill)
+- **incremental-implementation** — for batch execution with checkpoints
+- **code-review-and-quality** — for review between subagent tasks
 
 ## Common Rationalizations
 

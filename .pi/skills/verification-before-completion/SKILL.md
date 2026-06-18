@@ -277,8 +277,8 @@ For each file listed in PRD `Affected Files`:
 | Level              | Check                  | How                                                                                          |
 | ------------------ | ---------------------- | -------------------------------------------------------------------------------------------- |
 | **1: Exists**      | File is present        | `ls path/to/file.ts`                                                                         |
-| **2: Substantive** | Not a stub/placeholder | `grep -v "TODO\|FIXME\|return null\|placeholder" path/to/file.ts` — verify real logic exists |
-| **3: Wired**       | Connected and used     | `grep -r "import.*ExportName" src/` — verify other files import/use it                       |
+| **2: Substantive** | Not a stub/placeholder | `semantic_grep "TODO\|FIXME\|return null\|placeholder" --glob path/to/file.ts` — verify real logic exists |
+| **3: Wired**       | Connected and used     | `semantic_grep "import.*ExportName" --glob "src/**"` — verify other files import/use it       |
 
 ### Key Link Verification
 

@@ -14,7 +14,7 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 ## When NOT to Use
 
-- Routine code implementation (use executing-plans instead)
+- Routine code implementation (use `incremental-implementation` instead)
 - One-off instructions that don't need to be reusable
 - Quick configuration changes that don't warrant a skill
 

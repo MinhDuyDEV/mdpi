@@ -184,7 +184,7 @@ npm run typecheck && npm run lint && npm test
 
 ## See Also
 
-- **writing-plans** — Creates the plan that this skill executes slice-by-slice
-- **executing-plans** — Orchestrates parallel execution of independent slices
+- **planning-and-task-breakdown** — Creates the plan that this skill executes slice-by-slice
+- **subagent-driven-development** — Orchestrates parallel execution of independent slices via subagents
 - `behavioral-kernel` skill
 - `verification-before-completion` skill
