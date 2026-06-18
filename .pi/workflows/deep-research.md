@@ -1,3 +1,7 @@
+---
+description: Fan out web searches across multiple angles, cross-check sources for contradictions, produce a cited report with confidence levels
+---
+
 # deep-research
 
 Fan out web searches across multiple angles on a question, cross-check sources for contradictions, and produce a cited report with confidence levels. Use when you need multi-source verification or current-events coverage.
@@ -12,6 +16,7 @@ Fan out web searches across multiple angles on a question, cross-check sources f
 
 - **Agent:** scout
 - **Concurrency:** Dynamic (1 agent per distinct angle, min 3, max 10)
+- **Depends on:** —
 - **Tool:** `subagent` (parallel mode)
 
 **Prompt:**

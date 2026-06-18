@@ -1,12 +1,19 @@
+---
+description: Fallow structural analysis, quality grade update, prioritized findings, and optional cleanup PRs
+---
+
 # garbage-collection
 
 **Pattern:** Fallow analysis → review findings → file issues → optional auto-fix PRs
 **Trigger:** Manual via `/gc` command or scheduled cadence
 
+## Phases
+
 ### Phase 1: Fallow Scan
 
 - **Agent:** general
 - **Concurrency:** 1
+- **Depends on:** —
 
 **Prompt:**
 
@@ -77,27 +84,26 @@ Report prioritized findings to {phase_3_output}.
 - **Agent:** general
 - **Concurrency:** Dynamic (estimate 1-2 per P0/P1, min 1, max 5)
 - **Depends on:** Phase 3
+- **Gate:** Defaults to dry-run. Only opens PRs when invoked with `--apply`. Without `--apply`, report what would be cleaned and stop.
 
 **Prompt:**
 
-For each P0 and P1 finding from {phase_3_output}, spawn a `general` agent per finding using subagent:
+For each P0 and P1 finding from {phase_3_output}, spawn a `general` agent per finding using subagent (parallel mode). **Only run this phase when invoked with `apply: true`; otherwise report what would be cleaned and skip.**
 
 ```
 subagent({
   agent: "general",
-  task: `
+  prompt: `
     Understand this Fallow finding: [detail]
     Create a fix branch
     Apply the fix
     Verify with: npm run typecheck && npm run lint
-    Open PR with conventional commit message
+    Open PR with conventional commit message (requires user confirmation before push)
   `
 });
 ```
 
-Use subagent with parallel mode to spawn multiple fix agents concurrently.
-
-Report list of opened PRs to {phase_4_output}.
+Report list of opened PRs to {phase_4_output}. When `apply` is false/absent, emit the planned cleanup list only.
 
 ### Phase 5: Report
 

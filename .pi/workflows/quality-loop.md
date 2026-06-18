@@ -1,3 +1,7 @@
+---
+description: Score-gated review-driven feedback loop for high-risk features; iterates review cycles until quality threshold (5/5) or escalation
+---
+
 # Quality Loop Workflow
 
 Score-gated, review-driven feedback loop for high-risk features. Runs iterative review cycles until the implementation reaches quality threshold (5/5) or escalation is triggered.
@@ -5,11 +9,12 @@ Score-gated, review-driven feedback loop for high-risk features. Runs iterative 
 > **When to use:** High-risk features, explicit user quality gating requests, complex cross-cutting changes.
 > **Invoked by:** `/ship` Phase 5 (Iterative Quality Loop mode)
 
----
+## Phases
 
 ### Phase 1: Setup
-- **Agent:** @general
+- **Agent:** general
 - **Concurrency:** 1
+- **Depends on:** —
 - **Prompt:**
   Initialize the review loop state. Create or update `.pi/artifacts/$SLUG/review-state.json`:
 
@@ -31,7 +36,7 @@ Score-gated, review-driven feedback loop for high-risk features. Runs iterative 
 ---
 
 ### Phase 2: Review
-- **Agent:** @review
+- **Agent:** review
 - **Concurrency:** 1
 - **Depends on:** Phase 1
 - **Prompt:**
@@ -71,7 +76,7 @@ Score-gated, review-driven feedback loop for high-risk features. Runs iterative 
 ---
 
 ### Phase 3: Gate
-- **Agent:** @general
+- **Agent:** general
 - **Concurrency:** 1
 - **Depends on:** Phase 2
 - **Prompt:**
@@ -91,7 +96,7 @@ Score-gated, review-driven feedback loop for high-risk features. Runs iterative 
 ---
 
 ### Phase 4: Stall Check
-- **Agent:** @general
+- **Agent:** general
 - **Concurrency:** 1
 - **Depends on:** Phase 3
 - **Prompt:**
@@ -113,7 +118,7 @@ Score-gated, review-driven feedback loop for high-risk features. Runs iterative 
 ---
 
 ### Phase 5: Filter
-- **Agent:** @general
+- **Agent:** general
 - **Concurrency:** 1
 - **Depends on:** Phase 4
 - **Prompt:**
@@ -136,7 +141,7 @@ Score-gated, review-driven feedback loop for high-risk features. Runs iterative 
 ---
 
 ### Phase 6: Fix
-- **Agent:** @general
+- **Agent:** general
 - **Concurrency:** Dynamic (1 per actionable finding, max 3 parallel)
 - **Depends on:** Phase 5
 - **Prompt:**
@@ -161,7 +166,7 @@ Score-gated, review-driven feedback loop for high-risk features. Runs iterative 
 ---
 
 ### Phase 7: Re-Review
-- **Agent:** @general
+- **Agent:** general
 - **Concurrency:** 1
 - **Depends on:** Phase 6
 - **Prompt:**
@@ -196,3 +201,11 @@ After loop exit, report:
 3. Findings resolved / remaining
 4. Exit reason
 5. Recommendation: proceed, revise, or manual review
+
+## Invocation
+
+```
+run_workflow({ name: "quality-loop", args: { slug: "<slug>" } })
+```
+
+Typically invoked by `/ship` Phase 5 when high-risk mode is selected.

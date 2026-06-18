@@ -1,10 +1,14 @@
+---
+description: Take a plan with independent tasks, dispatch one subagent per task in parallel, review each, and merge results
+---
+
 # batch-implement
 
 Take a plan with independent tasks and dispatch one subagent per task in parallel. Each task result is reviewed, then merged. Use for multi-file feature implementation where tasks don't share file dependencies.
 
 ## Args
 
-- `plan` (required) — The implementation plan or PRD
+- `plan` (required) — The implementation plan (from `/plan` output or `plan.md`)
 
 ## Phases
 
@@ -12,6 +16,7 @@ Take a plan with independent tasks and dispatch one subagent per task in paralle
 
 - **Agent:** review
 - **Concurrency:** 1
+- **Depends on:** —
 - **Tool:** `subagent` (single mode)
 
 **Prompt:**
@@ -39,11 +44,12 @@ Keep each task description under 100 words.
 - **Agent:** general
 - **Concurrency:** Dynamic (1 agent per task, min 2, max 10)
 - **Tool:** `subagent` (parallel mode)
+- **Skill:** `test-driven-development` (load when task has `tdd: true`)
 
 **Prompt:**
 
 ```
-Implement the following task from the plan: {phase_1_output}. Write production-quality code following project conventions. Include type definitions, error handling, and unit tests. Keep changes scoped to the task — do not refactor unrelated code. Return a summary in this format:
+Implement the following task from the plan: {phase_1_output}. Write production-quality code following project conventions. Include type definitions, error handling, and unit tests. If the task is marked `tdd: true`, follow RED-GREEN-REFACTOR: write the failing test first, then minimal code to pass, then refactor. Keep changes scoped to the task — do not refactor unrelated code. Return a summary in this format:
 
 ## Task: [name]
 - **Files modified:** [list]
@@ -82,6 +88,8 @@ Ensure:
 - Consistent naming conventions
 - Proper module boundaries
 - No broken imports between modules
+
+**Conflict fallback:** If two subagents edited the same file and the merge conflicts, fall back to sequential execution for the conflicting tasks (re-run them one at a time, then re-merge).
 
 Report any merge conflicts or integration issues. Return a summary:
 

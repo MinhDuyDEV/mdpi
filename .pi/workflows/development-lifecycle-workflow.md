@@ -81,6 +81,8 @@ Keep each section under 200 words.
 ```
 Based on the validated requirements: {phase_2_output}, create a detailed implementation plan for the recommended approach. Break down into independent tasks that can be implemented in parallel.
 
+If the recommended approach has structural implications (new components, data flow changes, boundary shifts), also produce a design doc using `.pi/templates/design.md` written to `.pi/artifacts/$SLUG/design.md`.
+
 Return the plan in this format:
 
 ## Implementation Plan
@@ -105,11 +107,13 @@ Keep each task description under 100 words.
 - **Workflow:** batch-implement
 - **Args:** plan from Phase 3
 
-Execute the `batch-implement` workflow (`.pi/workflows/batch-implement.md`) with the implementation plan from Phase 3. This will:
-1. Review the plan for task independence
-2. Implement tasks in parallel
-3. Verify each implementation
-4. Merge the results
+Execute the `batch-implement` workflow via recursive composition:
+
+```
+run_workflow({ name: "batch-implement", args: { plan: phase_3_output } })
+```
+
+This will: 1) review the plan for task independence, 2) implement tasks in parallel, 3) verify each implementation, 4) merge the results.
 
 **Implementation note**: This composes with the batch-implement workflow by passing the plan output from Phase 3 as input.
 
@@ -153,10 +157,10 @@ Keep each finding under 150 words.
 ## Invocation
 
 ```
-/development-lifecycle <feature>
+run_workflow({ name: "development-lifecycle-workflow", args: { feature: "<feature>" } })
 ```
 
-Or compose with batch-implement:
+Or compose manually:
 
 ```
 subagent({
@@ -164,8 +168,7 @@ subagent({
     { agent: "scout", task: "Phase 1 prompt per approach for: {feature}" },
     { agent: "review", task: "Phase 2 prompt validating approaches" },
     { agent: "plan", task: "Phase 3 prompt creating implementation plan" },
-    // Phase 4 composes batch-implement workflow
-    { agent: "general", task: "Phase 4 batch-implement with {phase_3_output}" },
+    // Phase 4 composes batch-implement via run_workflow({ name: "batch-implement", ... })
     { agent: "review", task: "Phase 5 verifying implementation" },
   ]
 });

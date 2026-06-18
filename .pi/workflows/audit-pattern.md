@@ -1,3 +1,7 @@
+---
+description: Find all occurrences of a code pattern, review each for correctness/security/edge-cases, and produce prioritized remediation recommendations
+---
+
 # audit-pattern
 
 Find all occurrences of a code pattern in the codebase, review each match for correctness/security/edge-cases, and produce prioritized remediation recommendations. Use for cross-cutting concerns like auth checks, error handling, or API patterns.
@@ -12,6 +16,7 @@ Find all occurrences of a code pattern in the codebase, review each match for co
 
 - **Agent:** explore
 - **Concurrency:** 1
+- **Depends on:** —
 - **Tool:** `subagent` (single mode)
 
 **Prompt:**
@@ -32,6 +37,8 @@ Keep each entry under 50 words.
 - **Agent:** review
 - **Concurrency:** Dynamic (estimate ~10 occurrences per agent, min 2, max 15)
 - **Tool:** `subagent` (parallel mode)
+
+**Guard:** If Phase 1 returns 0 occurrences, **skip Phase 2** and synthesize a clean report directly.
 
 **Prompt:**
 
