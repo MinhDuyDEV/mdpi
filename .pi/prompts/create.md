@@ -24,7 +24,7 @@ Before creating, verify:
 - Check `.pi/artifacts/.active` for existing work in progress
 - If active slug exists with a `spec.md`, ask user: continue with `/ship` or start new?
 - Check `git status --porcelain` — if uncommitted changes, ask user to stash, commit, or continue
-- Use `vcc_recall` to search session history for prior decisions on this topic
+- Use `vcc_recall` to search session history for prior decisions on this topic — avoid repeating explored/rejected approaches
 
 ## Load Skills
 
@@ -38,32 +38,36 @@ Before creating, verify:
 
 ## Phase 1: Choose Research Depth
 
+Use the same Level 0-3 taxonomy as `/plan` so depth is consistent across commands.
+
 Ask user before spawning agents:
 
-| Option | Description |
-|--------|-------------|
-| **Deep** (Recommended for complex work) | 3-5 agents: patterns, tests, deps, best practices (~2 min) |
-| **Standard** | 2 agents: patterns + tests (~1 min) |
-| **Minimal** | 1 agent: quick file scan (~30 sec) |
-| **Skip** | I know the codebase, use existing knowledge |
+| Level | Name | Description |
+|-------|------|-------------|
+| **0** | Skip | I know the codebase, use existing knowledge (no agents) |
+| **1** | Quick | 1 agent: quick file scan (~30 sec) — single known library |
+| **2** | Standard | 2-3 agents: patterns + tests (~1 min) — choosing between options |
+| **3** | Deep | 3-5 agents: patterns, tests, deps, best practices (~2 min) — complex/cross-cutting |
+
+Default: **Level 2** for new features, **Level 1** for bugfixes, **Level 0** when user says "I know the codebase".
 
 ## Phase 2: Gather Context
 
-Based on research depth choice, spawn agents using `subagent` tool:
+Based on the Level chosen in Phase 1, spawn agents using `subagent` tool:
 
-**Deep:**
+**Level 3 (Deep):**
 - 3x subagent with `explore` agent (patterns, tests, deps)
 - 1x subagent with `scout` agent (external best practices)
 - 1x subagent with `review` agent (epic review)
 
-**Standard:**
+**Level 2 (Standard):**
 - 2x subagent with `explore` agent (patterns, tests)
 - 1x subagent with `scout` agent (external research)
 
-**Minimal:**
+**Level 1 (Quick):**
 - 1x subagent with `explore` agent (patterns)
 
-**Skip:** No agents — use existing knowledge.
+**Level 0 (Skip):** No agents — use existing knowledge.
 
 ## Phase 3: Initialize Workspace
 
@@ -83,10 +87,11 @@ echo "$SLUG" > ".pi/artifacts/.active"
 |--------|----------|----------|
 | Scope | Simple, single-concern | Cross-cutting, multi-system |
 | Files affected | 1-3 | 4+ |
-| Research depth | Skip or Minimal | Standard or Deep |
+| Research depth | Level 0-1 | Level 2-3 |
+| Logic complexity | Low (single behavior) | High (multi-step, stateful) |
 | `--lite` flag | ✓ | — |
 
-**Auto-detect:** If research was Skip/Minimal AND description is a single sentence → default to Lite. `--lite` flag overrides to Lite regardless.
+**Auto-detect:** If research was Level 0-1 AND description is a single sentence AND logic complexity is low → default to Lite. `--lite` flag overrides to Lite regardless. File count alone is not enough — a 3-file change with complex stateful logic is Full.
 
 ### Lite PRD Format
 
@@ -136,28 +141,20 @@ git branch --show-current
 
 Create feature branch and install deps if needed.
 
-## Phase 7: Convert PRD to Tasks
+## Phase 7: Leave Task Decomposition to `/plan`
 
-Convert PRD markdown → structured `tasks.json`:
+The PRD (Phase 5) contains a high-level **Tasks** outline ( Lite: checklist; Full: the template's Tasks section). Do **not** generate `tasks.json` here — task decomposition into the runtime `tasks.json` format is `/plan`'s job.
 
-```json
-{
-  "slug": "<slug>",
-  "title": "<title>",
-  "tasks": [
-    {
-      "id": "task-1",
-      "description": "...",
-      "files": ["src/path.ts"],
-      "depends_on": [],
-      "verification": ["npm run typecheck", "npm test -- path"],
-      "tdd": false
-    }
-  ]
-}
+**Artifact chain (authoritative):**
+
+```
+/create  → .pi/artifacts/$SLUG/spec.md   (the PRD; high-level task outline only)
+/plan    → .pi/artifacts/$SLUG/plan.md   (authoritative task decomposition)
+         → .pi/artifacts/$SLUG/tasks.json (runtime, derived from plan.md)
+/ship    → reads tasks.json (primary) or plan.md (fallback)
 ```
 
-Write to `.pi/artifacts/$SLUG/tasks.json`.
+If the user skips `/plan` and goes straight to `/ship` for a Lite PRD, `/ship` derives `tasks.json` from the PRD's task outline on the fly.
 
 ## Failure Handling
 
@@ -177,10 +174,10 @@ Write to `.pi/artifacts/$SLUG/tasks.json`.
 
 ## Phase 8: Report
 
-1. Summary: task count, success criteria count, affected files count
+1. Summary: PRD type (Lite/Full), success criteria count, affected files count, task outline count
 2. Branch name and workspace
-3. Artifact location: `.pi/artifacts/$SLUG/`
-4. Next step: `/plan` (complex) or `/ship` (simple)
+3. Artifact location: `.pi/artifacts/$SLUG/spec.md`
+4. Next step: `/plan` (complex — produces `plan.md` + `tasks.json`) or `/ship` (simple Lite — derives `tasks.json` on the fly)
 
 ## Related Commands
 

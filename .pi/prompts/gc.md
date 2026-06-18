@@ -11,9 +11,12 @@ Run structural analysis, update quality grades, and open cleanup PRs.
 
 | Argument    | Default | Description                               |
 | ----------- | ------- | ----------------------------------------- |
-| `--dry-run` | false   | Run analysis and report without creating cleanup PRs |
+| `--dry-run` | false   | Run analysis and report without creating cleanup PRs (default behavior for cleanup) |
+| `--apply`   | false   | Actually open cleanup PRs for P0/P1 findings. Without this, Phase 4 reports only. |
 | `--scope`   | `.`     | Limit GC to specific directory            |
 | `--help`    | false   | Show this usage                           |
+
+**Safety:** Cleanup PRs require `--apply` **and** explicit user confirmation. Default is dry-run.
 
 ## Guard Phase
 
@@ -31,7 +34,7 @@ Run structural analysis, update quality grades, and open cleanup PRs.
 
 ## Execution
 
-This command delegates to the `garbage-collection` workflow for multi-phase execution.
+This command delegates to the `garbage-collection` workflow via the `run_workflow` tool for multi-phase execution.
 
 ### Phase 1: Structural Analysis
 
@@ -60,12 +63,15 @@ This command delegates to the `garbage-collection` workflow for multi-phase exec
 ### Phase 4: Cleanup (P0/P1 only)
 
 For each P0/P1 finding:
-1. Spawn `subagent({ agent: "general", prompt: "Fix: [finding description] at [file:line]" })`
-2. After subagent returns, follow Worker Distrust Protocol (read diff, run verification)
+1. Invoke cleanup via the workflow (the workflow's Phase 4 defaults to dry-run; pass `--apply` through args to actually open PRs):
+   ```
+   run_workflow({ name: "garbage-collection", args: { scope: "<--scope value or '.'>", apply: <true only if --apply flag set> } })
+   ```
+2. After any fix subagent returns, follow Worker Distrust Protocol (read diff, run verification)
 3. Load `verification-before-completion` skill — verify typecheck + lint pass
 4. Load `observability-and-instrumentation` skill check if removing instrumented code
 
-If `--dry-run`, skip this phase and report what would be cleaned.
+If `--dry-run` (default), skip actual cleanup and report what would be cleaned. PRs are **never** opened without `--apply` and without explicit user confirmation (AGENTS.md: never push without confirmation).
 
 ### Phase 5: Report
 

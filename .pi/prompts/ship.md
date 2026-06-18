@@ -53,7 +53,7 @@ Before shipping:
 
 ### Decision Logic
 
-1. Read task list from `.pi/artifacts/$SLUG/tasks.json` (or `plan.md` if no tasks.json)
+1. Read task list from `.pi/artifacts/$SLUG/tasks.json` (primary — produced by `/plan`). If `tasks.json` is absent, derive it on the fly from `.pi/artifacts/$SLUG/plan.md` (or the Lite PRD's task outline).
 2. Count independent tasks (no `depends_on`)
 3. Check for file conflicts (any shared files?)
 4. Route:
@@ -105,27 +105,26 @@ When task has `"tdd": true`, load `test-driven-development` skill. Subagents fol
 
 If routed to workflow mode:
 
-1. **Read the workflow:** `.pi/workflows/batch-implement.md`
-2. **Execute all phases:**
-   - Phase 1: Spawn 1 `review` agent to validate task independence
-   - Phase 2: Spawn `general` agents (1 per independent task)
-   - Phase 3: Spawn `review` agents to verify each implementation
-   - Phase 4: Spawn 1 `general` agent to merge results
-3. **Replace placeholders:** `{plan}` → plan, `{phase_N_output}` → actual output
-4. **Load `context-engineering`** — ensures subagents receive focused context
+1. **Invoke the workflow:**
+   ```
+   run_workflow({ name: "batch-implement", args: { plan: "<plan from plan.md or tasks.json>" } })
+   ```
+2. The runner executes all phases (plan-review → implement → verify → merge) and handles placeholder substitution (`{plan}`, `{phase_N_output}`).
+3. Load `context-engineering` — ensures subagents receive focused context.
 
 **Announce:** "This plan has [N] independent tasks. Invoking batch-implement workflow for parallel execution."
 
-**Fallback:** If batch workflow fails, fall back to Direct Execution (Phase 2).
+**Fallback:** If the batch workflow fails, fall back to Direct Execution (Phase 2).
 
 ## Phase 4: Verification Gate
 
-Load `verification-before-completion` skill. Follow its verification protocol:
-- Run typecheck + lint + test gates
-- Use incremental mode by default (<20 changed files), full mode for shipping
-- Record stamp to `.pi/artifacts/verify.log` after all gates pass
-- Run phantom completion detection (from the skill)
-- Goal-backward verification: check observable truths from plan/spec are satisfied
+**Delegate to `/verify` — do not duplicate the gate logic here.** Run the canonical verification protocol defined in `prompts/verify.md` (Phase 1 Completeness → Phase 2 Correctness → Phase 4 Phantom Detection). Concretely:
+
+1. Invoke `/verify all --full` semantics (or run the same steps inline if already mid-session): load `verification-before-completion`, run typecheck + lint + test gates, use **full mode** for shipping (incremental is for iteration only), record stamp to `.pi/artifacts/verify.log` after all gates pass, run phantom completion detection, and do goal-backward verification (observable truths from plan/spec satisfied).
+2. If any gate fails, stop and surface the failure exactly as `/verify` would (don't proceed to Phase 5).
+3. Treat `/verify`'s output as the authoritative result for this phase.
+
+**Why delegate:** `/verify` owns the gate definitions, the verification cache protocol, and phantom detection. Duplicating them here drifts over time. Ship is the consumer; verify is the source of truth for gates.
 
 ## Phase 5: Review
 
@@ -140,7 +139,17 @@ Load `verification-before-completion` skill. Follow its verification protocol:
 
 ### Standard Review
 
-Spawn 5 parallel `review` agents using `code-review-and-quality` skill's 5-axis methodology (security/correctness, performance/architecture, type-safety/tests, conventions/patterns, simplicity/completeness). Synthesize findings.
+Spawn parallel `review` agents using `code-review-and-quality` skill's 5-axis methodology (security/correctness, performance/architecture, type-safety/tests, conventions/patterns, simplicity/completeness). Synthesize findings.
+
+**Budget guard:** Scale reviewer count to diff size — don't blindly spawn 5.
+
+| Changed files | Reviewers | Axes per reviewer |
+|--------------|-----------|------------------|
+| <10 | 2-3 | 2 axes each |
+| 10-30 | 3-4 | 1-2 axes each |
+| >30 | 5 | 1 axis each |
+
+Fewer reviewers on small diffs keeps context cost proportional.
 
 **Auto-fix rule:**
 - Critical issues → fix inline, re-run Phase 4, continue
@@ -155,10 +164,12 @@ For high-risk features: run the score-gated review loop workflow:
 SLUG=$(cat .pi/artifacts/.active)
 ```
 
-1. Read `.pi/workflows/quality-loop.md`
-2. Initialize `review-state.json` as specified in the workflow
-3. Execute the loop (EXECUTE → REVIEW → GATE → FILTER → FIX → RE-REVIEW)
-4. Exit when score ≥ 5/5 or escalate per workflow rules
+1. Invoke the workflow:
+   ```
+   run_workflow({ name: "quality-loop", args: { slug: "$SLUG" } })
+   ```
+2. The runner initializes `review-state.json` and executes the loop (REVIEW → GATE → STALL CHECK → FILTER → FIX → RE-REVIEW) per the workflow.
+3. Exit when score ≥ 5/5 or escalate per workflow rules (stall / max rounds / architecture finding).
 
 ## Phase 6: Close
 

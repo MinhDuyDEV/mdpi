@@ -7,6 +7,8 @@ argument-hint: "[path|all] [--quick] [--full] [--fix] [--no-cache] [--dry-run] [
 
 Check implementation against PRD before shipping.
 
+> **Canonical gate owner:** This command owns the verification protocol (gates, cache, phantom detection). `/ship` Phase 4 delegates here — do not redefine gates elsewhere.
+
 ## Parse Arguments
 
 | Argument     | Default  | Description                                    |
@@ -85,7 +87,7 @@ Report results with mode column:
 
 After all gates pass, load `testing-anti-patterns` skill and audit tests for mock-only coverage, fragile assertions, and production code pollution.
 
-If `--fix` flag provided, run the project's auto-fix command (e.g., `npm run lint:fix`, `ruff check --fix`, `cargo clippy --fix`).
+If `--fix` flag provided, run the project's auto-fix command (e.g., `npm run lint:fix`, `ruff check --fix`, `cargo clippy --fix`), then **re-run the failed gate(s)**. Loop up to 2 times: fix → re-verify → fix → re-verify. If the gate still fails after 2 fix attempts, stop and report the remaining errors with file:line evidence. Do not claim a fix succeeded without a re-verified green gate.
 
 **After all gates pass**, record to verification cache per `verification-before-completion` skill's cache protocol.
 

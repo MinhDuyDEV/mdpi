@@ -15,6 +15,7 @@ Find all occurrences of a code pattern in the codebase, review each for issues, 
 | ------------ | -------- | ------------------------------------ |
 | `<pattern>`  | required | Code pattern to search for           |
 | `--scope`    | `.`      | Limit audit to specific directory    |
+| `--format`   | markdown | Output format: `markdown` (default), `json`, `inline` |
 | `--dry-run`  | false    | Search and count without reviewing or reporting |
 | `--help`     | false    | Show this usage                      |
 
@@ -41,7 +42,7 @@ Find all occurrences of a code pattern in the codebase, review each for issues, 
 
 ## Execution
 
-This command invokes the `audit-pattern` workflow for multi-agent parallel execution.
+This command invokes the `audit-pattern` workflow via the `run_workflow` tool for multi-agent parallel execution.
 
 ### Direct Execution (≤5 occurrences)
 
@@ -52,16 +53,13 @@ For small audits, execute directly without workflow overhead:
 
 ### Workflow Execution (>5 occurrences)
 
-1. **Read the workflow:** `.pi/workflows/audit-pattern.md`
-2. **Execute all phases:**
-   - Phase 1: `subagent({ agent: "explore", prompt: "Search codebase for all occurrences of pattern: {pattern}. Return file:line with brief context." })`
-   - Phase 2: Spawn parallel `subagent({ agent: "review", prompt: "Audit occurrences for correctness/security/edge-cases..." })` (dynamic count)
-   - Phase 3: `subagent({ agent: "general", prompt: "Synthesize audit findings from Phase 1+2 into prioritized report." })`
-3. **Replace placeholders:**
-   - `{pattern}` → the pattern from $ARGUMENTS
-   - `{phase_N_output}` → actual output from completed phases
-4. **Aggregate results** between phases
-5. **Write final report** to `.pi/artifacts/$SLUG/audit.md` (or inline if no active slug)
+1. **Invoke the workflow:**
+   ```
+   run_workflow({ name: "audit-pattern", args: { pattern: "<pattern from $ARGUMENTS>", scope: "<--scope value or '.'>" } })
+   ```
+2. The workflow runner handles phase dispatch (explore → review) and placeholder substitution (`{pattern}`, `{phase_N_output}`).
+3. **Aggregate results** between phases as returned by the runner.
+4. **Write final report** to `.pi/artifacts/$SLUG/audit.md` (or inline if no active slug)
 
 **Announce:** "Auditing codebase for pattern: [pattern]. Invoking audit-pattern workflow."
 

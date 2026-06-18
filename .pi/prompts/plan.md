@@ -24,7 +24,7 @@ Create a detailed implementation plan with TDD steps. Optional deep-planning bet
 Before planning:
 - Verify `.pi/artifacts/$(cat .pi/artifacts/.active)/spec.md` exists (if not, tell user to run `/create` first)
 - If `plan.md` already exists, ask user: overwrite or skip?
-- Read `tasks.json` if it exists (from `/create` Phase 7) to understand task structure
+- If `tasks.json` already exists (from a prior `/plan` run), read it to understand existing task structure — avoid re-decomposing
 
 ## Load Skills
 
@@ -64,16 +64,16 @@ subagent({
 
 ## Phase 1: Discovery Assessment
 
-Determine discovery level:
+Determine discovery level (same Level 0-3 taxonomy as `/create`):
 
-| Level | Scope | Action |
-|-------|-------|--------|
-| **0** | Skip — pure internal work, existing patterns only | Skip external research |
-| **1** | Quick (2-5 min) — single known library | `context7` resolve + query |
-| **2** | Standard (15-30 min) — choosing between 2-3 options | Spawn `scout` subagent for research |
-| **3** | Deep (1+ hour) — architectural decision | Full research with parallel `scout` subagents |
+| Level | Name | Scope | Action |
+|-------|------|-------|--------|
+| **0** | Skip | Pure internal work, existing patterns only | Skip external research |
+| **1** | Quick | Single known library (~30 sec) | `context7` resolve + query |
+| **2** | Standard | Choosing between 2-3 options (~1 min) | Spawn `scout` subagent for research |
+| **3** | Deep | Architectural decision (~2 min) | Full research with parallel `scout` subagents |
 
-Force with `--level N` flag.
+Force with `--level N` flag. Default: auto-detect from spec complexity.
 
 ## Phase 2: Research (Level 1-3)
 
@@ -154,6 +154,28 @@ Wave 2: B
 [Task definitions with TDD steps]
 ```
 
+After writing `plan.md`, derive the runtime `tasks.json` from it and write to `.pi/artifacts/$SLUG/tasks.json`:
+
+```json
+{
+  "slug": "<slug>",
+  "title": "<title>",
+  "tasks": [
+    {
+      "id": "task-1",
+      "description": "...",
+      "files": ["src/path.ts"],
+      "depends_on": [],
+      "verification": ["npm run typecheck", "npm test -- path"],
+      "tdd": false,
+      "checkpoint": null
+    }
+  ]
+}
+```
+
+`plan.md` remains the **authoritative** decomposition; `tasks.json` is the runtime mirror consumed by `/ship`. Keep them in sync.
+
 ### Task Standards
 
 - **Exact file paths** — never "add to the relevant file"
@@ -163,6 +185,8 @@ Wave 2: B
 - **Each step is 2-5 minutes** — one action per step
 - **UI state coverage** — empty/loading/error/success states when applicable
 - **Thin vertical slices** — per `incremental-implementation` skill
+
+Use `.pi/templates/tasks.md` as the body template for the `## Tasks` section (task IDs, YAML metadata blocks, verification bullets).
 
 ## Phase 7: Constitutional Compliance Gate
 

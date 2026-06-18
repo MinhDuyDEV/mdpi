@@ -19,7 +19,7 @@ Gather information before implementation. Find answers, document findings, stop 
 | `--dry-run`   | false    | Report research plan without executing |
 | `--help`      | false    | Show this usage                     |
 
-Default depth: ~30 tool calls for moderate exploration.
+Default depth: ~30 tool calls for moderate exploration. **Track call count and stop when you hit the depth budget** (`--quick` ≈10, default ≈30, `--thorough` ≈100+) — don't blow past it silently.
 
 ## Guard Phase
 
@@ -88,16 +88,17 @@ If within active work, write findings to `.pi/artifacts/$SLUG/research.md`. Othe
 
 **Announce:** "This is complex research requiring multi-angle analysis. Invoking deep-research workflow."
 
-1. Read `.pi/workflows/deep-research.md`
-2. Spawn multiple `scout` agents for different perspectives
-3. Cross-check findings with `review` agents
-4. Synthesize into report
+1. Invoke the workflow:
+   ```
+   run_workflow({ name: "deep-research", args: { question: "<topic from $ARGUMENTS>" } })
+   ```
+2. The runner fans out `scout` agents per angle, then cross-checks with `review` agents, then synthesizes.
+3. Receive the synthesized cited report from the runner.
 
 ## Stop Conditions
 
 - All questions answered with medium+ confidence → stop research, proceed
 - Tool budget exhausted for depth level → stop, report findings
-- Last 5 tool calls yielded no new insights → stop, avoid diminishing returns
 - Network/API repeatedly unavailable → stop, report partial results
 
 ## Failure Handling

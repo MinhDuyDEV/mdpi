@@ -23,7 +23,7 @@ Initialize project setup. Run once per project.
 
 | Argument   | Default | Description |
 |------------|---------|-------------|
-| `--deep`   | false   | Comprehensive research for AGENTS.md (~100+ tool calls) |
+| `--deep`   | false   | Comprehensive research for AGENTS.md (~100+ tool calls). **Context-heavy** — prefer a dedicated session, or split across phases (history → structure → patterns) |
 | `--context`| false   | Init planning context (roadmap.md, state.md) |
 | `--user`   | false   | Init user profile (user.md) |
 | `--all`    | false   | Full init: AGENTS.md + context + user profile |
@@ -88,6 +88,8 @@ Create `./AGENTS.md` — target <60 lines (max 150). Include:
 - Testing conventions, boundaries, gotchas
 
 **Principles:** Examples > explanations. Pointers > copies. If AGENTS.md exists, improve it — don't overwrite blindly.
+
+**Architectural decisions:** If `--deep` surfaces a non-obvious architectural choice (framework selection, state strategy, data layer), load `documentation-and-adrs` and propose an ADR using `.pi/templates/adr.md`. Don't force it — only when a real decision worth recording exists.
 
 ### Phase 4: Create tech-stack.md
 

@@ -13,6 +13,7 @@ Systematically debug and fix the reported issue.
 | --------------- | -------- | ----------------------------------------- |
 | `<description>` | required | What to fix (bug description, error message, or failing test) |
 | `--attach`      | —        | Path to log file, crash report, or screenshot |
+| `--artifact`   | —        | Write the fix report into the active feature's artifact dir (`.pi/artifacts/$SLUG/fix.md`) if `.active` exists |
 | `--dry-run`     | false    | Diagnose and report root cause without applying fix |
 | `--help`        | false    | Show this usage                           |
 
@@ -96,6 +97,8 @@ Then, load `defense-in-depth` skill and add validation at the data entry layer.
 3. Verification results (typecheck, lint, test)
 4. Defense-in-depth layer added (if applicable)
 5. What else was considered and rejected
+
+If `--artifact` was passed (or `.pi/artifacts/.active` exists and the fix belongs to that feature), write the report to `.pi/artifacts/$SLUG/fix.md` and append a one-line summary to `progress.md`. Otherwise report inline.
 
 ## Related Commands
 
