@@ -8,10 +8,15 @@
  *     fixed manually in commit 0a20e46 — skills referencing non-existent skills).
  *   - docs-drift: .pi/README.md counts + slash-command refs vs actual content.
  *
- * Usage: mdpi lint [skills|docs|all] [--json]
- * Exit code: 1 if any error-severity issue, else 0.
+ * Usage: mdpi lint [skills|docs|all] [--json] [--fix]
+ *   --fix auto-applies the safely-fixable rules:
+ *     - name-match   → set frontmatter `name:` to the skill directory name
+ *     - count-*      → rewrite the README kit-summary counts to match reality
+ *   Non-fixable rules (dead-cross-ref, missing H1/frontmatter, missing/unknown
+ *   prompt refs, max-lines, refs-depth) are still reported.
+ * Exit code: 1 if any error-severity issue remains, else 0.
  */
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import color from "picocolors";
 
@@ -26,13 +31,16 @@ interface Issue {
 interface Result {
   ok: boolean;
   issues: Issue[];
-  stats: { total: number; passed: number; failed: number; warnings: number };
+  stats: { total: number; passed: number; failed: number; warnings: number; fixed: number };
 }
 
 // ── Constants (pi-adapted) ──────────────────────────────────────────────
 const REQUIRED_FRONTMATTER = ["name", "description"] as const;
 const MAX_LINES = 500;
 const MAX_LINES_WARNING = 400;
+
+/** Kit categories whose README "(N)" counts are verified + auto-fixable. */
+const COUNT_LABELS = ["skill", "prompt", "agent", "workflow", "template"] as const;
 
 // pi-native commands that READMEs legitimately reference but are NOT kit prompts.
 // Exempt from the 'unknown-prompt' rule so we don't false-flag pi builtins.
@@ -73,8 +81,13 @@ export function findCrossRefs(content: string): string[] {
   return [...refs];
 }
 
-function lintSkill(skillsDir: string, name: string, valid: Set<string>): Issue[] {
+/** Lint one skill. With `fix=true`, rewrites the frontmatter `name:` to match the dir. */
+function lintSkill(skillsDir: string, name: string, valid: Set<string>, fix: boolean): {
+  issues: Issue[];
+  fixed: number;
+} {
   const issues: Issue[] = [];
+  let fixed = 0;
   const skillPath = join(skillsDir, name, "SKILL.md");
   if (!existsSync(skillPath)) {
     issues.push({
@@ -84,7 +97,7 @@ function lintSkill(skillsDir: string, name: string, valid: Set<string>): Issue[]
       message: "Missing SKILL.md",
       fix: "Create SKILL.md with name + description frontmatter",
     });
-    return issues;
+    return { issues, fixed };
   }
   const content = readFileSync(skillPath, "utf-8");
   const lineCount = content.split("\n").length;
@@ -125,13 +138,27 @@ function lintSkill(skillsDir: string, name: string, valid: Set<string>): Issue[]
           fix: `Add '${f}:'`,
         });
     const nm = fm.name;
-    if (typeof nm === "string" && nm !== name)
-      issues.push({
-        scope: name,
-        rule: "name-match",
-        severity: "warning",
-        message: `frontmatter name '${nm}' ≠ directory '${name}'`,
-      });
+    if (typeof nm === "string" && nm !== name) {
+      if (fix) {
+        // Rewrite the `name:` line inside the frontmatter block only.
+        const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        if (fmMatch) {
+          const fmBody = fmMatch[1].replace(/^(\s*name:\s*).*$/m, `$1${name}`);
+          if (fmBody !== fmMatch[1]) {
+            writeFileSync(skillPath, content.replace(fmMatch[0], `---\n${fmBody}\n---`));
+            fixed++;
+          }
+        }
+      } else {
+        issues.push({
+          scope: name,
+          rule: "name-match",
+          severity: "warning",
+          message: `frontmatter name '${nm}' ≠ directory '${name}'`,
+          fix: `Set frontmatter name: ${name} (or run: mdpi lint --fix)`,
+        });
+      }
+    }
   }
 
   if (!/^#\s+\S/m.test(content))
@@ -183,10 +210,10 @@ function lintSkill(skillsDir: string, name: string, valid: Set<string>): Issue[]
       });
   }
 
-  return issues;
+  return { issues, fixed };
 }
 
-export function lintSkills(piDir: string): Result {
+export function lintSkills(piDir: string, fix = false): Result {
   const skillsDir = join(piDir, "skills");
   if (!existsSync(skillsDir))
     return {
@@ -199,30 +226,51 @@ export function lintSkills(piDir: string): Result {
           message: `skills/ not found: ${skillsDir}`,
         },
       ],
-      stats: { total: 0, passed: 0, failed: 0, warnings: 0 },
+      stats: { total: 0, passed: 0, failed: 0, warnings: 0, fixed: 0 },
     };
   const valid = skillDirNames(skillsDir);
   const names = [...valid].sort();
   const issues: Issue[] = [];
   let failed = 0;
   let warns = 0;
+  let fixed = 0;
   for (const n of names) {
-    const si = lintSkill(skillsDir, n, valid);
-    issues.push(...si);
-    if (si.some((i) => i.severity === "error")) failed++;
-    warns += si.filter((i) => i.severity === "warning").length;
+    const si = lintSkill(skillsDir, n, valid, fix);
+    issues.push(...si.issues);
+    if (si.issues.some((i) => i.severity === "error")) failed++;
+    warns += si.issues.filter((i) => i.severity === "warning").length;
+    fixed += si.fixed;
   }
   return {
     ok: failed === 0,
     issues,
-    stats: { total: names.length, passed: names.length - failed, failed, warnings: warns },
+    stats: { total: names.length, passed: names.length - failed, failed, warnings: warns, fixed },
   };
 }
 
-export function lintDocs(piDir: string): Result {
+/**
+ * Rewrite the README kit-summary counts to match reality. For each label, finds
+ * the first `` `label/` (N…) `` form and replaces N with the actual count,
+ * preserving any suffix (e.g. ` + INDEX`). Only matches the backtick-wrapped
+ * kit-summary form — leaves prose mentions of counts untouched.
+ */
+export function fixReadmeCounts(readme: string, counts: Record<string, number>): string {
+  let out = readme;
+  for (const [label, actual] of Object.entries(counts)) {
+    const re = new RegExp("(`" + label + "s?/?`\\s*\\()(\\d+)([^)]*\\))");
+    out = out.replace(re, (_m, pre: string, _n: string, suf: string) => `${pre}${actual}${suf}`);
+  }
+  return out;
+}
+
+export function lintDocs(piDir: string, fix = false): Result {
   const readmePath = join(piDir, "README.md");
   if (!existsSync(readmePath))
-    return { ok: true, issues: [], stats: { total: 0, passed: 0, failed: 0, warnings: 0 } };
+    return {
+      ok: true,
+      issues: [],
+      stats: { total: 0, passed: 0, failed: 0, warnings: 0, fixed: 0 },
+    };
   const readme = readFileSync(readmePath, "utf-8");
   const issues: Issue[] = [];
 
@@ -238,6 +286,14 @@ export function lintDocs(piDir: string): Result {
     : 0;
   const actualWorkflows = list("workflows").filter((n) => n !== "INDEX").length;
   const actualTemplates = list("templates").filter((n) => n !== "INDEX").length;
+
+  const counts: Record<string, number> = {
+    skill: actualSkills,
+    prompt: actualPrompts.length,
+    agent: actualAgents,
+    workflow: actualWorkflows,
+    template: actualTemplates,
+  };
 
   // slash-command refs in README vs actual prompts
   const documented = new Set<string>();
@@ -264,43 +320,60 @@ export function lintDocs(piDir: string): Result {
   // Allows any non-(/non-newline chars between label and the count paren,
   // so backtick-wrapped paths like `agents/` (7) are matched. Captures the
   // first integer inside the parens (ignoring " + INDEX" suffixes).
-  const countCheck = (label: string, actual: number) => {
+  // Detect drifted counts per label, then apply ALL fixes in a single pass.
+  // (fixReadmeCounts rewrites every label at once, so we must not write once
+  // per label — earlier writes would be clobbered by later ones.)
+  const drift = (label: string): { doc: number; actual: number } | null => {
+    const actual = counts[label];
     const m = readme.match(new RegExp(`\\b${label}s?[^\\(\\n]*\\((\\d+)[^)]*\\)`));
-    if (m) {
-      const doc = Number.parseInt(m[1], 10);
-      if (doc !== actual)
-        issues.push({
-          scope: "README",
-          rule: `count-${label}`,
-          severity: "warning",
-          message: `${label} count (${doc}) ≠ actual (${actual})`,
-          fix: `Update README ${label} count to ${actual}`,
-        });
-    }
+    if (!m) return null;
+    const doc = Number.parseInt(m[1], 10);
+    return doc === actual ? null : { doc, actual };
   };
-  countCheck("skill", actualSkills);
-  countCheck("prompt", actualPrompts.length);
-  countCheck("agent", actualAgents);
-  countCheck("workflow", actualWorkflows);
-  countCheck("template", actualTemplates);
+  const driftedLabeled = COUNT_LABELS
+    .map((label) => ({ label, d: drift(label) }))
+    .filter((x) => x.d) as { label: string; d: { doc: number; actual: number } }[];
+
+  let fixed = 0;
+  if (fix) {
+    if (driftedLabeled.length) {
+      const fixedReadme = fixReadmeCounts(readme, counts);
+      if (fixedReadme !== readme) {
+        writeFileSync(readmePath, fixedReadme);
+        fixed = driftedLabeled.length;
+      }
+    }
+  } else {
+    for (const { label, d } of driftedLabeled) {
+      issues.push({
+        scope: "README",
+        rule: `count-${label}`,
+        severity: "warning",
+        message: `${label} count (${d.doc}) ≠ actual (${d.actual})`,
+        fix: `Update README ${label} count to ${d.actual} (or run: mdpi lint --fix)`,
+      });
+    }
+  }
 
   return {
     ok: issues.length === 0,
     issues,
-    stats: { total: 1, passed: issues.length === 0 ? 1 : 0, failed: 0, warnings: issues.length },
+    stats: { total: 1, passed: issues.length === 0 ? 1 : 0, failed: 0, warnings: issues.length, fixed },
   };
 }
 
 export interface LintOptions {
   target?: "skills" | "docs" | "all";
   json?: boolean;
+  fix?: boolean;
 }
 
 export function lintAll(piDir: string, opts: LintOptions = {}): void {
   const target = opts.target ?? "all";
+  const fix = opts.fix ?? false;
   const results: { name: string; r: Result }[] = [];
-  if (target === "skills" || target === "all") results.push({ name: "skills", r: lintSkills(piDir) });
-  if (target === "docs" || target === "all") results.push({ name: "docs", r: lintDocs(piDir) });
+  if (target === "skills" || target === "all") results.push({ name: "skills", r: lintSkills(piDir, fix) });
+  if (target === "docs" || target === "all") results.push({ name: "docs", r: lintDocs(piDir, fix) });
 
   if (opts.json) {
     console.log(JSON.stringify(results, null, 2));
@@ -309,9 +382,11 @@ export function lintAll(piDir: string, opts: LintOptions = {}): void {
     return;
   }
 
+  const totalFixed = results.reduce((s, { r }) => s + r.stats.fixed, 0);
   for (const { name, r } of results) {
+    const fixedNote = r.stats.fixed ? color.green(` · ${r.stats.fixed} fixed`) : "";
     console.log(
-      `\n${color.bold(color.cyan(name))}: ${r.stats.total} total · ${r.stats.passed} passed · ${r.stats.failed} failed · ${r.stats.warnings} warnings`,
+      `\n${color.bold(color.cyan(name))}: ${r.stats.total} total · ${r.stats.passed} passed · ${r.stats.failed} failed · ${r.stats.warnings} warnings${fixedNote}`,
     );
     const byScope = new Map<string, Issue[]>();
     for (const i of r.issues) {
@@ -330,6 +405,7 @@ export function lintAll(piDir: string, opts: LintOptions = {}): void {
       }
     }
   }
+  if (totalFixed) console.log(`\n${color.green("✓")} auto-fixed ${totalFixed} issue(s)`);
   const anyFail = results.some(({ r }) => !r.ok);
   process.exitCode = anyFail ? 1 : 0;
 }

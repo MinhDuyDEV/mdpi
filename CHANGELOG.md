@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bundle integrity check, on Node 20 & 22, for push/PR to `main`.
 - `mdpi lint docs` now verifies **template counts** too (`countCheck("template", …)`),
   closing a gap where the README `templates/` (N) claim was never checked.
+- `mdpi lint --fix` — auto-applies the safely-fixable rules: `name-match` rewrites
+  the skill frontmatter `name:` to match the directory, and `count-*` rewrites the
+  README kit-summary counts to match reality (preserving ` + INDEX` suffixes). All
+  fixes are applied in a single pass (no clobbering); non-fixable rules are still
+  reported.
+- `mdpi doctor --fix` — regenerates a missing/invalid `.template-manifest.json`
+  so `mdpi upgrade` can detect user edits again.
 - `CHANGELOG.md` (this file).
 
 ### Changed

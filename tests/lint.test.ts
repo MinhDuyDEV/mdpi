@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { findCrossRefs, lintDocs, parseFrontmatter, skillDirNames } from "../src/commands/lint.js";
+import { findCrossRefs, fixReadmeCounts, lintDocs, lintSkills, parseFrontmatter, skillDirNames } from "../src/commands/lint.js";
 
 let dir: string;
 
@@ -192,5 +192,96 @@ describe("lintDocs — prompt reference drift", () => {
     const r = lintDocs(piDir);
     const unknown = r.issues.filter((i) => i.rule === "readme-unknown-prompt");
     expect(unknown).toEqual([]);
+  });
+});
+
+describe("fixReadmeCounts", () => {
+  it("rewrites the count integer, preserving the label and any suffix", () => {
+    const out = fixReadmeCounts(
+      "`agents/` (7) · `prompts/` (9) · `skills/` (55 + INDEX)",
+      { agent: 11, prompt: 11, skill: 67 },
+    );
+    expect(out).toBe("`agents/` (11) · `prompts/` (11) · `skills/` (67 + INDEX)");
+  });
+
+  it("only matches the backtick-wrapped kit-summary form (leaves prose counts alone)", () => {
+    const out = fixReadmeCounts("we have agents (7) in prose", { agent: 99 });
+    expect(out).toBe("we have agents (7) in prose");
+  });
+
+  it("is a no-op when the count already matches", () => {
+    const src = "`agents/` (7)";
+    expect(fixReadmeCounts(src, { agent: 7 })).toBe(src);
+  });
+});
+
+describe("lintDocs — fix", () => {
+  it("rewrites the README file so counts match reality and reports the fix", () => {
+    const piDir = buildKit({
+      readme:
+        "## What's in the kit\n`agents/` (9) · `prompts/` (9) · `skills/` (9) · `templates/` (9) · `workflows/` (9)\n\n## Commands\n`/p1` `/p2`\n",
+      agents: ["a"],
+      prompts: ["p1", "p2"],
+      skills: ["s1"],
+      templates: ["t"],
+      workflows: ["w1"],
+    });
+    const r = lintDocs(piDir, true);
+    expect(r.stats.fixed).toBe(5);
+    expect(r.issues.filter((i) => i.rule.startsWith("count-"))).toEqual([]);
+    const after = readFileSync(join(piDir, "README.md"), "utf-8");
+    expect(after).toContain("`agents/` (1)");
+    expect(after).toContain("`prompts/` (2)");
+    expect(after).toContain("`skills/` (1)");
+    expect(after).toContain("`templates/` (1)");
+    expect(after).toContain("`workflows/` (1)");
+    expect(lintDocs(piDir).issues.filter((i) => i.rule.startsWith("count-"))).toEqual([]);
+  });
+
+  it("without --fix leaves the README untouched and reports drift", () => {
+    const piDir = buildKit({
+      readme: "`agents/` (9)\n\n## Commands\n`/p1`\n",
+      agents: ["a"],
+      prompts: ["p1"],
+    });
+    const before = readFileSync(join(piDir, "README.md"), "utf-8");
+    const r = lintDocs(piDir, false);
+    expect(r.stats.fixed).toBe(0);
+    expect(readFileSync(join(piDir, "README.md"), "utf-8")).toBe(before);
+    expect(r.issues.map((i) => i.rule)).toContain("count-agent");
+  });
+});
+
+describe("lintSkills — fix (name-match)", () => {
+  it("rewrites the frontmatter name to match the skill directory", () => {
+    mkdirSync(join(dir, ".pi", "skills", "my-skill"), { recursive: true });
+    const skillPath = join(dir, ".pi", "skills", "my-skill", "SKILL.md");
+    writeFileSync(
+      skillPath,
+      "---\nname: wrong-name\ndescription: x\n---\n# my-skill\n## When to Use\n## When NOT to Use\n",
+    );
+    const piDir = join(dir, ".pi");
+    const before = lintSkills(piDir, false);
+    expect(before.issues.map((i) => i.rule)).toContain("name-match");
+
+    const fixed = lintSkills(piDir, true);
+    expect(fixed.stats.fixed).toBe(1);
+    expect(fixed.issues.map((i) => i.rule)).not.toContain("name-match");
+
+    const after = readFileSync(skillPath, "utf-8");
+    expect(after).toContain("name: my-skill");
+    expect(after).not.toContain("name: wrong-name");
+    expect(lintSkills(piDir, false).issues.map((i) => i.rule)).not.toContain("name-match");
+  });
+
+  it("does not touch a skill whose name already matches", () => {
+    mkdirSync(join(dir, ".pi", "skills", "good"), { recursive: true });
+    const skillPath = join(dir, ".pi", "skills", "good", "SKILL.md");
+    const body =
+      "---\nname: good\ndescription: x\n---\n# good\n## When to Use\n## When NOT to Use\n";
+    writeFileSync(skillPath, body);
+    const r = lintSkills(join(dir, ".pi"), true);
+    expect(r.stats.fixed).toBe(0);
+    expect(readFileSync(skillPath, "utf-8")).toBe(body);
   });
 });

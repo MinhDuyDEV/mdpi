@@ -58,14 +58,18 @@ cli
 cli
   .command("lint [target]", "Governance checks (skills|docs|all)")
   .option("--json", "Output machine-readable JSON")
+  .option("--fix", "Auto-fix fixable issues (name-match, README counts)")
   .action(async (target: "skills" | "docs" | "all" | undefined, options) => {
-    lintAll(join(process.cwd(), ".pi"), { target: target ?? "all", json: options?.json });
+    lintAll(join(process.cwd(), ".pi"), { target: target ?? "all", json: options?.json, fix: options?.fix });
   });
 
 // ── doctor ───────────────────────────────────────────────────────────────
-cli.command("doctor", "Check .pi/ health").action(async () => {
-  await doctorCommand();
-});
+cli
+  .command("doctor", "Check .pi/ health")
+  .option("--fix", "Auto-fix: regenerate manifest if missing/invalid")
+  .action(async (options) => {
+    await doctorCommand({ fix: options?.fix });
+  });
 
 // ── default (no args) → help ─────────────────────────────────────────────
 cli.command("", "Show help").action(() => {
