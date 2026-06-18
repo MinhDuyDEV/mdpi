@@ -1,30 +1,23 @@
 ---
 description: Verify implementation completeness, correctness, and coherence
-argument-hint: "[path|all] [--quick] [--full] [--fix] [--no-cache]"
+argument-hint: "[path|all] [--quick] [--full] [--fix] [--no-cache] [--dry-run] [--help]"
 ---
 
 # Verify: $ARGUMENTS
 
 Check implementation against PRD before shipping.
 
-## Load Skills
-
-Before verifying, load these skills from `.pi/skills/`:
-
-| Skill | Why |
-|-------|-----|
-| `verification-before-completion` | Evidence-before-claims; phantom detection; verification cache protocol |
-| `code-review-and-quality` | Phase 4 coherence check: cross-reference artifacts for correctness |
-
 ## Parse Arguments
 
 | Argument     | Default  | Description                                    |
 | ------------ | -------- | ---------------------------------------------- |
-| `<path\|all>`| required | The path or keyword to verify                  |
+| `<path|all>` | required | The path or keyword to verify (use `all` for in-progress work) |
 | `--quick`    | false    | Gates only, skip coherence check               |
 | `--full`     | false    | Force full verification mode (non-incremental) |
 | `--fix`      | false    | Auto-fix lint/format issues                    |
 | `--no-cache` | false    | Bypass verification cache, force fresh run     |
+| `--dry-run`  | false    | Report what would be verified without executing |
+| `--help`     | false    | Show this usage                                |
 
 ## Determine Input Type
 
@@ -33,49 +26,29 @@ Before verifying, load these skills from `.pi/skills/`:
 | Path       | File/directory path | Verify that specific path  |
 | `all`      | Keyword             | Verify all in-progress work |
 
-## Before You Verify
+## Guard Phase
 
-- **Be certain**: Only flag issues you can verify with tools
-- **Don't invent problems**: If an edge case isn't in the PRD, don't flag it
-- **Run the gates**: Build, test, lint, typecheck are non-negotiable
-- **Use project conventions**: Check `package.json` scripts first
+- Load `verification-before-completion` skill
+- Read `.pi/artifacts/$(cat .pi/artifacts/.active)/spec.md` (if active slug exists)
+- Verify guards: spec exists, you have read the full spec
 
-## Phase 0: Check Verification Cache
+## Load Skills
 
-Before running any gates, check if a recent verification is still valid:
+| Skill | When | Why |
+|-------|------|-----|
+| `verification-before-completion` | Always | Evidence-before-claims; phantom detection; verification cache protocol; Worker Distrust Protocol |
+| `code-review-and-quality` | Phase 4 coherence check | Cross-reference artifacts for correctness |
+| `testing-anti-patterns` | Phase 3 after tests pass | Detect mock-only tests, production pollution, and fragile assertions |
 
-```bash
-CURRENT_STAMP=$(printf '%s\n%s' \
-  "$(git rev-parse HEAD)" \
-  "$(git diff HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx')" \
-  | shasum -a 256 | cut -d' ' -f1)
-LAST_STAMP=$(tail -1 .pi/artifacts/verify.log 2>/dev/null | awk '{print $1}')
-```
+## Phase 0: Verification Cache
 
-| Condition                                 | Action                                                 |
-| ----------------------------------------- | ------------------------------------------------------ |
-| `--no-cache` or `--full`                  | Skip cache check, run fresh                            |
-| `CURRENT_STAMP == LAST_STAMP`             | Report **cached PASS**, skip to Phase 2                |
-| `CURRENT_STAMP != LAST_STAMP` or no cache | Run gates normally                                     |
+Load `verification-before-completion` skill. Follow its verification cache protocol:
 
-When cache hits, report:
+- If `--no-cache` or `--full` → skip cache, run fresh
+- If cache stamp matches current state → report **cached PASS**, skip to Phase 2
+- If cache miss or mismatch → run gates normally
 
-```text
-Verification: cached PASS (no changes since <timestamp from verify.log>)
-```
-
-## Phase 1: Gather Context
-
-Read `.pi/artifacts/$(cat .pi/artifacts/.active)/spec.md` to understand the requirements.
-
-Read the PRD and any other artifacts (plan.md, research.md, design.md).
-
-**Verify guards:**
-
-- [ ] Plan/spec exists and is up to date
-- [ ] You have read the full spec
-
-## Phase 2: Completeness
+## Phase 1: Completeness
 
 Extract all requirements/tasks from the PRD and verify each is implemented:
 
@@ -83,9 +56,9 @@ Extract all requirements/tasks from the PRD and verify each is implemented:
 - Mark as: complete, partial, or missing
 - Report completeness score (X/Y requirements met)
 
-## Phase 3: Correctness
+## Phase 2: Correctness
 
-Follow the Verification Protocol (see verification-before-completion skill):
+Follow the Verification Protocol from `verification-before-completion` skill:
 
 **Default: incremental mode** (changed files only, parallel gates).
 
@@ -110,15 +83,13 @@ Report results with mode column:
 | Build     | SKIP   | —           | —      |
 ```
 
-**After all gates pass**, record to verification cache:
-
-```bash
-echo "$CURRENT_STAMP $(date -u +%Y-%m-%dT%H:%M:%SZ) PASS" >> .pi/artifacts/verify.log
-```
+After all gates pass, load `testing-anti-patterns` skill and audit tests for mock-only coverage, fragile assertions, and production code pollution.
 
 If `--fix` flag provided, run the project's auto-fix command (e.g., `npm run lint:fix`, `ruff check --fix`, `cargo clippy --fix`).
 
-## Phase 4: Coherence (skip with --quick)
+**After all gates pass**, record to verification cache per `verification-before-completion` skill's cache protocol.
+
+## Phase 3: Coherence (skip with --quick)
 
 Cross-reference artifacts for contradictions:
 
@@ -127,6 +98,15 @@ Cross-reference artifacts for contradictions:
 - Research recommendations vs actual approach (if different, is it justified?)
 
 Flag contradictions with specific file references.
+
+## Phase 4: Phantom Detection
+
+Load `verification-before-completion` skill. Follow its phantom completion detection protocol:
+
+- Scan modified files for stub patterns (TODO, FIXME, return null, placeholder, etc.)
+- Run three-level artifact verification (exists → substantive → wired)
+- Run key link verification (component→API, API→DB, form→handler, state→render, route→page)
+- Report phantom score: CLEAN | SUSPECT | PHANTOM
 
 ## Failure Handling
 
@@ -146,25 +126,27 @@ Flag contradictions with specific file references.
 
 ## Phase 5: Report
 
-Append to `.pi/artifacts/$(cat .pi/artifacts/.active)/progress.md`: `Verification: [PASS|PARTIAL|FAIL] - [summary]`
-
-Output:
+Append to `.pi/artifacts/$SLUG/progress.md`: `Verification: [PASS|PARTIAL|FAIL] - [summary]`
 
 1. **Result**: READY TO SHIP / NEEDS WORK / BLOCKED
 2. **Completeness**: score and status
 3. **Correctness**: gate results (with mode column)
 4. **Coherence**: contradictions found (if not --quick)
-5. **Blocking issues** to fix before shipping
-6. **Next step**: `/ship $ARGUMENTS` if ready, or list fixes needed
+5. **Phantom Score**: CLEAN | SUSPECT | PHANTOM
+6. **Blocking issues** to fix before shipping
+7. **Next step**: `/ship` if ready, or list fixes needed
 
 ## Related Commands
 
 | Need              | Command       |
 | ----------------- | ------------- |
-| Ship after verify | `/ship <id>`  |
+| Ship after verify | `/ship`       |
 | Plan a feature    | `/plan`       |
 | Fix a bug         | `/fix`        |
+| Audit codebase    | `/audit`      |
 
 ## Related Skills
 
-See `.pi/skills/INDEX.md` for the complete task → skill routing table.
+- `verification-before-completion` — evidence gate, cache protocol, phantom detection, Worker Distrust Protocol (all phases)
+- `code-review-and-quality` — coherence cross-reference (Phase 3)
+- `testing-anti-patterns` — mock-only test detection (Phase 2 post-gate)

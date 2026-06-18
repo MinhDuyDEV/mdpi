@@ -1,6 +1,6 @@
 ---
 description: Audit codebase for a specific pattern
-argument-hint: "<pattern>"
+argument-hint: "<pattern> [--scope <dir>] [--dry-run] [--help]"
 ---
 
 # Audit: $ARGUMENTS
@@ -11,38 +11,46 @@ Find all occurrences of a code pattern in the codebase, review each for issues, 
 
 ## Parse Arguments
 
-| Argument | Default  | Description                          |
-| -------- | -------- | ------------------------------------ |
-| Pattern  | required | Code pattern to search for           |
+| Argument     | Default  | Description                          |
+| ------------ | -------- | ------------------------------------ |
+| `<pattern>`  | required | Code pattern to search for           |
+| `--scope`    | `.`      | Limit audit to specific directory    |
+| `--dry-run`  | false    | Search and count without reviewing or reporting |
+| `--help`     | false    | Show this usage                      |
 
 **Examples:**
 - `/audit console.log` — Find all console.log statements
 - `/audit app.use(` — Find all middleware registrations
 - `/audit fetch(` — Find all fetch calls
 - `/audit try {` — Find all try-catch blocks
+- `/audit "await.*catch" --scope src/api` — Limit to src/api directory
+
+## Guard Phase
+
+- Check `.pi/artifacts/.active` — if active slug exists, write report to that artifact directory
+- If `.active` is missing, write report inline
+- If `--dry-run`, skip guard and proceed to search only
 
 ## Load Skills
 
-Before auditing, load these skills from `.pi/skills/`:
-
-| Skill | Why |
-|-------|-----|
-| `security-and-hardening` | Identify vulnerability patterns in audited code |
-| `code-review-and-quality` | Assess correctness and structural quality |
-| `fallow` | Structural analysis for dead code, duplication, complexity |
-
-## Before You Audit
-
-- **Be certain**: Choose a specific pattern — broad searches produce noise
-- **Don't over-audit**: Focus on correctness, security, and edge cases — not style
-- **Use the workflow**: The audit-pattern workflow handles multi-agent parallel execution
-- **Prioritize findings**: Critical issues first, minor notes last
+| Skill | When | Why |
+|-------|------|-----|
+| `security-and-hardening` | Pattern involves auth, secrets, validation, input | Identify vulnerability patterns in audited code |
+| `code-review-and-quality` | Occurrences > 5 | Assess correctness and structural quality across results |
+| `fallow` | Occurrences > 20 or scope is project-wide | Structural analysis for dead code, duplication, complexity |
 
 ## Execution
 
 This command invokes the `audit-pattern` workflow for multi-agent parallel execution.
 
-### Workflow Execution
+### Direct Execution (≤5 occurrences)
+
+For small audits, execute directly without workflow overhead:
+1. Search with `semantic_grep`
+2. Read each occurrence
+3. Report findings inline
+
+### Workflow Execution (>5 occurrences)
 
 1. **Read the workflow:** `.pi/workflows/audit-pattern.md`
 2. **Execute all phases:**
@@ -53,7 +61,7 @@ This command invokes the `audit-pattern` workflow for multi-agent parallel execu
    - `{pattern}` → the pattern from $ARGUMENTS
    - `{phase_N_output}` → actual output from completed phases
 4. **Aggregate results** between phases
-5. **Write final report** to `.pi/artifacts/$(cat .pi/artifacts/.active)/audit.md`
+5. **Write final report** to `.pi/artifacts/$SLUG/audit.md` (or inline if no active slug)
 
 **Announce:** "Auditing codebase for pattern: [pattern]. Invoking audit-pattern workflow."
 
@@ -71,11 +79,9 @@ This command invokes the `audit-pattern` workflow for multi-agent parallel execu
 - Pattern returns 0 occurrences → report, stop (not an error)
 - Workflow phase fails 2x → stop, escalate with partial results
 - Audit timeout → report partial findings, note uncovered scope
-- `.active` slug missing → report, suggest running `/create` first
+- `.active` slug missing → write inline report (not an error)
 
 ## Output
-
-Report:
 
 1. **Pattern:** [pattern searched]
 2. **Occurrences found:** [count]
@@ -87,17 +93,19 @@ Report:
 5. **Recommended fixes:** [list with file:line refs]
 6. **Correct patterns:** [list of occurrences that are already correct]
 
-> **Post-audit routing:** For individual issue remediation → `/fix`. For systematic cross-cutting fixes → `/create`.
+> **Post-audit routing:** Individual issue remediation → `/fix`. Systematic cross-cutting fixes → `/create`.
 
 ## Related Commands
 
-| Need              | Command       |
-| ----------------- | ------------- |
-| Research a topic  | `/research`   |
-| Create feature    | `/create`     |
-| Ship feature      | `/ship`       |
-| Verify gates      | `/verify`     |
+| Need           | Command      |
+| -------------- | ------------ |
+| Research topic | `/research`  |
+| Create feature | `/create`    |
+| Fix a bug      | `/fix`       |
+| Verify gates   | `/verify`    |
 
 ## Related Skills
 
-See `.pi/skills/INDEX.md` for the complete task → skill routing table.
+- `security-and-hardening` — vulnerability detection in audited code
+- `code-review-and-quality` — correctness assessment of findings
+- `fallow` — structural analysis for large-scale audits

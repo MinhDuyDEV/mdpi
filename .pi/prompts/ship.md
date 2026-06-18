@@ -1,325 +1,171 @@
 ---
 description: Ship a plan - implement specs, verify, review, close
+argument-hint: "[--skip-review] [--dry-run] [--help]"
 ---
 
 # Ship
 
 Execute spec tasks, verify each passes, run review, mark complete.
 
-> **Workflow:** `/create` → **`/ship`**
+> **Workflow:** `/create` → **`/ship`** (or `/create` → `/plan` → `/ship`)
+
+## Parse Arguments
+
+| Argument        | Default | Description                               |
+| --------------- | ------- | ----------------------------------------- |
+| `--skip-review` | false   | Skip Phase 5 review (low-risk changes only) |
+| `--dry-run`     | false   | Validate plan and preview execution without implementing |
+| `--help`        | false   | Show this usage                           |
+
+## Guard Phase
+
+Before shipping:
+- Use `vcc_recall` to search for failed approaches to avoid repeating
+- Verify `.pi/artifacts/$(cat .pi/artifacts/.active)/spec.md` exists (if not, tell user to run `/create` first)
+- If `plan.md` exists, verify it references the current spec
+- Workspace check: create branch if needed, install deps if needed
 
 ## Load Skills
 
-Before shipping, load these skills from `.pi/skills/`:
+| Skill | When | Why |
+|-------|------|-----|
+| `verification-before-completion` | Always | Evidence-before-claims; phantom detection; Worker Distrust Protocol |
+| `shipping-and-launch` | Always | Pre-ship checklist, rollback planning, handoff protocols |
+| `subagent-driven-development` | ≥2 independent tasks | Fresh subagent per task with review gates |
+| `test-driven-development` | Tasks marked `tdd: true` | RED-GREEN-REFACTOR workflow (delegate to subagents) |
+| `git-workflow-and-versioning` | After each task completes | Atomic commits, branch strategy, conventional commits |
+| `code-review-and-quality` | Phase 5 review | 5-axis review: correctness, readability, architecture, security, performance |
+| `doubt-driven-development` | High-risk features | In-flight adversarial review before merge |
+| `context-engineering` | Batch workflow (≥5 independent tasks) | Context budget management for parallel subagent handoffs |
 
-| Skill | Why |
-|-------|-----|
-| `verification-before-completion` | Evidence-before-claims discipline; phantom completion detection |
-| `shipping-and-launch` | Pre-ship checklist, rollback planning, handoff protocols |
-| `subagent-driven-development` | Fresh subagent per task with review gates |
-| `test-driven-development` | RED-GREEN-REFACTOR workflow for TDD tasks |
-| `git-workflow-and-versioning` | Atomic commits, branch strategy, conventional commits |
-| `code-review-and-quality` | Five-axis review: correctness, readability, architecture, security, performance |
-
-## Before You Ship
-
-- **Be certain**: Only ship if all tasks pass verification
-- **Don't skip gates**: Build, test, lint, typecheck are non-negotiable
-- **Run the review**: Always spawn review agent before closing
-- **Verify goals**: Tasks completing ≠ goals achieved (use goal-backward verification)
-- **Commit before close**: Per-task commits required, don't ship without git history
-- **Ask before closing**: Never close without user confirmation
-
-## Available Tools
-
-| Tool                 | Use When                                            |
-| -------------------- | --------------------------------------------------- |
-| `subagent`           | Delegate to `explore`, `scout`, `review`, `general` agents |
-| `semantic_query`     | Find code patterns by natural language              |
-| `semantic_grep`      | Search codebase by regex pattern                    |
-| `semantic_inspect`   | Find symbol definitions, callers, callees           |
-| `semantic_show`      | Read source at path:line                            |
-| `semantic_review`    | Diff review with codebase evidence                  |
-| `websearch`          | Search the web for external references              |
-| `vcc_recall`         | Search session history for prior approaches         |
-| `memory_search`      | Search durable project memory                       |
-
-## Phase 1: Guards
-
-### Session Memory Search
-
-Use `vcc_recall` to search for failed approaches to avoid repeating.
-
-### Plan Validation
-
-> **`.active` convention:** Commands read `$(cat .pi/artifacts/.active)` to resolve the current feature slug. If `.active` is missing or empty, tell user to run `/create` first.
-
-Verify:
-- `.pi/artifacts/$(cat .pi/artifacts/.active)/spec.md` exists (if not, tell user to run `/create` first)
-
-Check what artifacts exist by reading `.pi/artifacts/$(cat .pi/artifacts/.active)/`.
-
-### Workspace Setup
-
-Set up the workspace: create branch, install deps if needed.
-
-## Phase 2: Route to Execution
+## Phase 1: Route to Execution
 
 ### Complexity Detection
 
-Before routing, analyze the plan complexity:
-
-**Direct execution** (use existing logic):
+**Direct execution** (sequential):
 - Plan has <5 tasks
-- Tasks have dependencies (not fully independent)
-- Tasks require sequential execution
-- User explicitly requests sequential execution
+- Tasks have dependencies
+- Tasks edit overlapping files
 
-**Workflow execution** (invoke `batch-implement` workflow at `.pi/workflows/batch-implement.md`):
+**Workflow execution** (parallel):
 - Plan has ≥5 independent tasks
-- Tasks have no file conflicts
-- Tasks can run in parallel
-- User wants maximum parallelism
+- No file conflicts between tasks
 
 ### Decision Logic
 
-1. **Parse the plan** from `.pi/artifacts/$(cat .pi/artifacts/.active)/plan.md` or `tasks.json`
-2. **Count independent tasks** (tasks with no dependencies)
-3. **Check for file conflicts** (do any tasks edit the same files?)
-4. **Route accordingly:**
-   - <5 tasks OR has dependencies OR has file conflicts → Direct execution
-   - ≥5 independent tasks AND no file conflicts → Invoke `batch-implement` workflow
+1. Read task list from `.pi/artifacts/$SLUG/tasks.json` (or `plan.md` if no tasks.json)
+2. Count independent tasks (no `depends_on`)
+3. Check for file conflicts (any shared files?)
+4. Route:
+   - <5 tasks OR has dependencies OR file conflicts → **Direct execution** (Phase 2)
+   - ≥5 independent AND no conflicts → **Workflow execution** (Phase 3)
 
-### Workflow Execution (Parallel Implementation)
+## Phase 2: Direct Execution (Sequential)
 
-If complexity is detected as parallel:
+Execute tasks one at a time, verifying each before proceeding.
 
-1. **Read the workflow:** `.pi/workflows/batch-implement.md`
-2. **Execute all phases:**
-   - Phase 1: Spawn 1 `review` agent to review plan for task independence
-   - Phase 2: Spawn multiple `general` agents (1 per task, dynamic count)
-   - Phase 3: Spawn multiple `review` agents to verify implementations
-   - Phase 4: Spawn 1 `general` agent to merge results
-3. **Replace placeholders:**
-   - `{plan}` → the implementation plan
-   - `{phase_N_output}` → actual output from completed phases
-
-**Announce:** "This plan has [N] independent tasks. Invoking batch-implement workflow for parallel execution."
-
-### Direct Execution
-
-If complexity is simple or tasks have dependencies, use direct sequential execution.
-
-## Phase 3: Wave-Based Execution
-
-If `plan.md` exists with dependency graph:
-
-1. **Parse waves** from dependency graph section
-2. **Execute wave-by-wave:**
-   - Single-task wave → execute directly (no subagent overhead)
-   - Multi-task wave → dispatch parallel `subagent({ agent: "general" })` calls, one per task
-3. **Review after each wave** — run verification gates, report, wait for feedback
-4. **Continue** until all waves complete
-
-**Parallel safety:** Only tasks within same wave run in parallel. Tasks must NOT share files. Tasks in Wave N+1 wait for Wave N.
-
-### Phase 3A: PRD Task Loop (Sequential Fallback)
+### Per-Task Loop
 
 For each task:
 
-1. **Read** the task description, verification steps, and affected files
-2. **Read** the affected files before editing
-3. **Implement** the changes — stay within the task's `files` list
-4. **Handle Deviations:** Apply deviation rules 1-4 as discovered
-5. **Checkpoint Protocol:** If task has `checkpoint:*`, stop and request user input
+1. **Read** the task description, verification steps, affected files
+2. **Read** affected files before editing
+3. **Implement** changes — stay within task's `files` list
+4. **Handle Deviations:** If the implementation reveals scope beyond the task, apply deviation rules:
+   - Rule 1: Trivial fix (<5 lines) in same file → fix inline, note in progress
+   - Rule 2: New small dependency discovered → implement, note
+   - Rule 3: Plan is wrong (task can't be done as specified) → report blocker
+   - Rule 4: Deviance exceeds 20% of task scope → stop, present options
+5. **Checkpoint Protocol:** If task has `checkpoint:*` type:
+
+   | Type | Action |
+   |------|--------|
+   | `checkpoint:human-verify` | Execute automation first, then pause for user verification |
+   | `checkpoint:decision` | Present options, wait for selection |
+   | `checkpoint:human-action` | Request specific action with verification command |
+
 6. **Verify** — run each verification step from the task
 7. **If verification fails**, fix and retry (max 2 attempts per task)
-8. **Commit** — per-task commit
+8. **Commit** — load `git-workflow-and-versioning` skill, follow atomic commit protocol (NEVER `git add .`)
 9. **Mark** `passes: true` in tasks.json
-10. **Append** progress to `.pi/artifacts/$(cat .pi/artifacts/.active)/progress.md`
+10. **Append** progress to `.pi/artifacts/$SLUG/progress.md`
 
-### Checkpoint Protocol
+### TDD Tasks
 
-When task has `checkpoint:*` type:
-
-| Type | Action |
-|------|--------|
-| `checkpoint:human-verify` | Execute automation first, then pause for user verification |
-| `checkpoint:decision` | Present options, wait for selection |
-| `checkpoint:human-action` | Request specific action with verification command |
-
-### TDD Execution Flow
-
-When task specifies TDD, load `test-driven-development` skill and follow its methodology:
-
-**RED Phase:**
-1. Create test file with failing test
-2. Run test → MUST fail
-3. Commit: `test: add failing test for [feature]`
-
-**GREEN Phase:**
-1. Write minimal code to make test pass
-2. Run test → MUST pass
-3. Commit: `feat: implement [feature]`
-
-**REFACTOR Phase:** (if needed)
-1. Clean up code
-2. Run tests → MUST still pass
-3. Commit if changes: `refactor: clean up [feature]`
-
-### Task Commit Protocol
-
-Load `git-workflow-and-versioning` skill. After each task completes (verification passed):
-
-1. **Check modified files:** `git status --short`
-2. **Stage individually** (NEVER `git add .`):
-   ```bash
-   git add src/specific/file.ts
-   git add tests/file.test.ts
-   ```
-3. **Commit with type prefix:**
-
-   ```bash
-   git commit -m "feat: [task description]
-
-   - [key change 1]
-   - [key change 2]"
-   ```
+When task has `"tdd": true`, load `test-driven-development` skill. Subagents follow RED-GREEN-REFACTOR as defined in that skill. The orchestrating agent verifies the red-green cycle after each subagent returns.
 
 ### Stop Conditions
 
 - Verification fails 2x on same task → stop, report blocker
 - Blocked by unfinished dependency → stop, report which one
 - Modifying files outside task scope → stop, ask user
-- Rule 4 deviation encountered → stop, present options
+- Rule 4 deviation → stop, present options
 
-## Phase 4: Verification
+## Phase 3: Workflow Execution (Parallel)
 
-Follow the Verification Protocol (see verification-before-completion skill):
+If routed to workflow mode:
 
-- Use **full mode** (shipping requires all gates)
-- All 4 gates must pass before proceeding to commit/push
-- Also run PRD `Verify:` commands
+1. **Read the workflow:** `.pi/workflows/batch-implement.md`
+2. **Execute all phases:**
+   - Phase 1: Spawn 1 `review` agent to validate task independence
+   - Phase 2: Spawn `general` agents (1 per independent task)
+   - Phase 3: Spawn `review` agents to verify each implementation
+   - Phase 4: Spawn 1 `general` agent to merge results
+3. **Replace placeholders:** `{plan}` → plan, `{phase_N_output}` → actual output
+4. **Load `context-engineering`** — ensures subagents receive focused context
+
+**Announce:** "This plan has [N] independent tasks. Invoking batch-implement workflow for parallel execution."
+
+**Fallback:** If batch workflow fails, fall back to Direct Execution (Phase 2).
+
+## Phase 4: Verification Gate
+
+Load `verification-before-completion` skill. Follow its verification protocol:
+- Run typecheck + lint + test gates
+- Use incremental mode by default (<20 changed files), full mode for shipping
+- Record stamp to `.pi/artifacts/verify.log` after all gates pass
+- Run phantom completion detection (from the skill)
+- Goal-backward verification: check observable truths from plan/spec are satisfied
 
 ## Phase 5: Review
 
-```bash
-BASE_SHA=$(git rev-parse origin/main 2>/dev/null || git rev-parse HEAD~1)
-HEAD_SHA=$(git rev-parse HEAD)
-```
+> Skip with `--skip-review` for low-risk changes.
 
 ### Mode Selection
 
 | Condition | Mode |
 |-----------|------|
-| Routine change, low risk | Standard Review |
-| High-risk feature, explicit user request for quality gating | Iterative Quality Loop |
+| Routine change, low risk | **Standard Review** |
+| High-risk feature, explicit quality gating request | **Iterative Quality Loop** (`.pi/workflows/quality-loop.md`) |
 
-### UI Quality Gate (always — both modes)
+### Standard Review
 
-Detect changed UI files:
-
-```bash
-git diff --name-only $BASE_SHA...HEAD -- \
-  '*.tsx' '*.jsx' '*.css' '*.scss' '*.sass' '*.less' '*.html' '*.mdx'
-```
-
-If any UI files changed, verify UX gates:
-- One primary action per view/section
-- Empty/loading/error/success states for async/data flows
-- Retry/undo/confirm paths for errors and destructive actions
-- Form labels, helper text, validation, and error association
-- Semantic HTML, keyboard path, visible focus, reduced motion
-- Component family consistency for related controls
-
-### Standard Review Mode
-
-Run **5 parallel agents** for review using subagent parallel mode:
-
-```typescript
-// Spawn 5 parallel review agents (one per concern area):
-subagent({ agent: "review", prompt: "Security/correctness review: ${WHAT_WAS_IMPLEMENTED} against ${PLAN}" });
-subagent({ agent: "review", prompt: "Performance/architecture review: ${WHAT_WAS_IMPLEMENTED} against ${PLAN}" });
-subagent({ agent: "review", prompt: "Type-safety/tests review: ${WHAT_WAS_IMPLEMENTED} against ${PLAN}" });
-subagent({ agent: "review", prompt: "Conventions/patterns review: ${WHAT_WAS_IMPLEMENTED} against ${PLAN}" });
-subagent({ agent: "review", prompt: "Simplicity/completeness review: ${WHAT_WAS_IMPLEMENTED} against ${PLAN}" });
-```
-
-Wait for all 5 agents to return. Synthesize findings.
+Spawn 5 parallel `review` agents using `code-review-and-quality` skill's 5-axis methodology (security/correctness, performance/architecture, type-safety/tests, conventions/patterns, simplicity/completeness). Synthesize findings.
 
 **Auto-fix rule:**
-- Critical issues → fix inline, re-run Phase 4 verification, continue
+- Critical issues → fix inline, re-run Phase 4, continue
 - Important issues → fix inline, continue
-- Minor issues → note in `.pi/artifacts/$(cat .pi/artifacts/.active)/progress.md`
+- Minor issues → log to `.pi/artifacts/$SLUG/progress.md`
 
-### Iterative Quality Loop Mode
+### Iterative Quality Loop
 
-Score-gated feedback loop for high-risk features.
-
-#### Setup
-
-Initialize loop state:
+For high-risk features: run the score-gated review loop workflow:
 
 ```bash
 SLUG=$(cat .pi/artifacts/.active)
-cat > ".pi/artifacts/$SLUG/review-state.json" << EOF
-{
-  "slug": "$SLUG",
-  "rounds": 0,
-  "maxRounds": 5,
-  "lastScore": 0,
-  "sameScoreCount": 0,
-  "findingsResolved": 0,
-  "findingsRemaining": 0,
-  "status": "active"
-}
-EOF
 ```
 
-#### Loop
-
-Repeat steps 2-8 until exit or escalation:
-
-| Step | Action |
-|------|--------|
-| **1. EXECUTE** | Implement per spec/plan (already done in Phase 3) |
-| **2. REVIEW** | Spawn one review subagent with spec + diff + review-state.json. Returns: score (X/5), findings array, suggested next action |
-| **3. GATE** | Score ≥ 5 → mark done (status: "passed"), exit loop. Score 4 → ask user. Score <4 → continue |
-| **4. STALL?** | If `sameScoreCount ≥ 2` → escalate |
-| **5. MAX?** | If `rounds ≥ maxRounds` → escalate |
-| **6. FILTER** | Split findings: actionable vs informational vs architecture |
-| **7. FIX** | For each actionable finding, spawn fix subagent |
-| **8. RE-REVIEW** | Update review-state.json: increment rounds, update score |
-
-### Goal-Backward Verification (if plan.md exists)
-
-Verify that tasks completed ≠ goals achieved:
-
-**Three-Level Verification:**
-
-| Level | Check | Command/Action |
-|-------|-------|----------------|
-| **1: Exists** | File is present | `ls path/to/file.ts` |
-| **2: Substantive** | Not a stub/placeholder | `grep -v "TODO\|FIXME\|return null\|placeholder" path/to/file.ts` |
-| **3: Wired** | Connected and used | `grep -r "import.*ComponentName" src/` |
-
-**Stub Detection:**
-
-Red flags indicating incomplete implementation:
-- `return <div>Component</div>` (Placeholder)
-- `return <div>{/* TODO */}</div>` (Empty)
-- `return null` (Empty)
-- `onClick={() => {}}` (No-op handler)
-- `fetch('/api/...')` (No await, ignored)
-- `return Response.json({ok: true})` (Static, not query result)
-
-If any artifact fails Level 2 or 3 → fix → re-verify.
+1. Read `.pi/workflows/quality-loop.md`
+2. Initialize `review-state.json` as specified in the workflow
+3. Execute the loop (EXECUTE → REVIEW → GATE → FILTER → FIX → RE-REVIEW)
+4. Exit when score ≥ 5/5 or escalate per workflow rules
 
 ## Phase 6: Close
 
-Ask user before closing.
-
-If confirmed, update `.pi/artifacts/todo.md` to mark all tasks complete and append summary to `.pi/artifacts/$(cat .pi/artifacts/.active)/progress.md`.
+Ask user before closing. If confirmed:
+- Update `tasks.json` to mark all tasks complete
+- Append completion summary to `.pi/artifacts/$SLUG/progress.md`
+- Clear `.pi/artifacts/.active`
 
 ## Failure Handling
 
@@ -327,51 +173,36 @@ If confirmed, update `.pi/artifacts/todo.md` to mark all tasks complete and appe
 |----------|--------|
 | Task verification fails 2x | Stop, report blocker with file:line evidence |
 | Subagent returns failure | Read error, retry once with adjusted prompt, then escalate |
-| Review finds critical issue | Fix inline, re-run verification, continue |
+| Review finds critical issue | Fix inline, re-run Phase 4, continue |
 | Batch workflow failure | Fall back to sequential execution |
 | Missing `.active` slug | Report: "No active feature. Run `/create` first." |
 
-## Output
+## Phase 7: Report
 
-Report:
-
-1. **Execution Summary:**
-   - Tasks completed/total
-   - Waves executed
-   - Deviations applied (Rules 1-3)
-   - Checkpoints encountered
-   - Commits made
-
-2. **PRD Task Results:**
-   - Each task status
-   - Files modified per task
-   - Commit hashes
-
-3. **Verification Gate Results:**
-   - Build, Test, Lint, Typecheck: pass/fail
-
-4. **Goal-Backward Verification:**
-   - Artifacts verified: N exists, M substantive, K wired
-   - Key links checked
-   - Stubs detected
-
-5. **Review Summary:**
-   - Critical, Important, Minor issues
-   - Overall assessment
-
-6. **Next Steps:**
-   - Ask user if they want a PR created — always ask, never push without confirmation
+1. **Execution Summary:** tasks completed/total, waves executed, commits made
+2. **Task Results:** per-task status, files modified, commit hashes
+3. **Verification Gate Results:** typecheck, lint, test, build — pass/fail
+4. **Goal-Backward:** artifacts verified (exists/substantive/wired), key links checked
+5. **Review Summary:** critical/important/minor issues, overall assessment
+6. **Next Steps:** Ask user if they want a PR created — always ask, never push without confirmation
 
 ## Related Commands
 
-| Need              | Command       |
-| ----------------- | ------------- |
-| Create feature    | `/create`     |
-| Plan execution    | `/plan`       |
-| Research a topic  | `/research`   |
-| Fix a bug         | `/fix`        |
-| Verify gate       | `/verify`     |
+| Need           | Command      |
+| -------------- | ------------ |
+| Create feature | `/create`    |
+| Plan execution | `/plan`      |
+| Research topic | `/research`  |
+| Fix a bug      | `/fix`       |
+| Verify gates   | `/verify`    |
 
 ## Related Skills
 
-See `.pi/skills/INDEX.md` for the complete task → skill routing table.
+- `verification-before-completion` — phantom detection, evidence gate, cache protocol (Phases 4-5)
+- `shipping-and-launch` — pre-ship checklist, rollback planning (Phases 4, 6)
+- `test-driven-development` — RED-GREEN-REFACTOR for TDD tasks (Phase 2)
+- `git-workflow-and-versioning` — atomic commit protocol (Phase 2)
+- `code-review-and-quality` — 5-axis review methodology (Phase 5)
+- `subagent-driven-development` — subagent dispatch pattern (Phase 2-3)
+- `doubt-driven-development` — adversarial review for high-risk work (Phase 5)
+- `context-engineering` — context budgets for parallel subagents (Phase 3)

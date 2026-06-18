@@ -1,64 +1,42 @@
 ---
 description: Create a specification with PRD, tasks, and workspace setup
-argument-hint: "<description>"
+argument-hint: "<description> [--lite] [--dry-run] [--help]"
 ---
 
 # Create: $ARGUMENTS
 
-Create a specification (PRD), set up workspace, and define executable tasks — ready for `/ship`.
+Create a specification (PRD), set up workspace, and define executable tasks — ready for `/plan` or `/ship`.
 
-> **Workflow:** **`/create`** → `/ship`
+> **Workflow:** `/init` → **`/create`** → `/plan` (optional) → `/ship`
 
 ## Parse Arguments
 
-| Argument        | Default       | Description                               |
-| --------------- | ------------- | ----------------------------------------- |
-| `<description>` | required      | What to build/fix (quoted string)         |
+| Argument        | Default  | Description                               |
+| --------------- | -------- | ----------------------------------------- |
+| `<description>` | required | What to build/fix (quoted string)         |
+| `--lite`        | false    | Force Lite PRD (skip auto-detection)      |
+| `--dry-run`     | false    | Preview research depth and PRD format without writing |
+| `--help`        | false    | Show this usage                           |
 
-## Before You Create
+## Guard Phase
 
-- **Be certain**: Only create specs you're confident have clear scope
-- **Don't over-spec**: If the description is vague, ask clarifying questions first
-- **Check duplicates**: Always check for existing work
-- **No implementation**: This command creates specs and workspace — don't write implementation code
-- **Verify PRD**: Before saving, verify all sections are filled (no placeholders)
-- **Flag uncertainty**: Use `[NEEDS CLARIFICATION]` markers for unknowns — never guess silently
+Before creating, verify:
+- Check `.pi/artifacts/.active` for existing work in progress
+- If active slug exists with a `spec.md`, ask user: continue with `/ship` or start new?
+- Check `git status --porcelain` — if uncommitted changes, ask user to stash, commit, or continue
+- Use `vcc_recall` to search session history for prior decisions on this topic
 
 ## Load Skills
 
-Before creating the spec, load these skills from `.pi/skills/`:
+| Skill | When | Why |
+|-------|------|-----|
+| `brainstorming` | Description is vague | Refine into concrete designs before spec |
+| `spec-driven-development` | Always | Convert clarified idea into well-structured PRD |
+| `context-engineering` | Deep or Standard research | Context budget management, selective loading for subagent handoffs |
+| `doubt-driven-development` | Before saving PRD | Adversarial validation — challenge assumptions before committing |
+| `grill-me` | Complex or cross-cutting | Adversarial interrogation of spec decisions |
 
-| Skill | Why |
-|-------|-----|
-| `brainstorming` | Refine vague descriptions into concrete designs before spec |
-| `spec-driven-development` | Convert clarified idea into well-structured PRD |
-| `grill-me` | Adversarial validation of spec decisions before committing |
-
-## Available Tools
-
-| Tool               | Use When                                              |
-| ------------------ | ----------------------------------------------------- |
-| `subagent`         | Delegate to `explore`, `scout`, `review`, `general` agents |
-| `semantic_query`   | Find code patterns by natural language                |
-| `semantic_grep`    | Search codebase by regex pattern                      |
-| `semantic_inspect` | Inspect symbol definitions, callers, callees          |
-| `semantic_show`    | Read source at path:line                              |
-| `websearch`        | Search the web for external references                |
-| `context7`         | Look up official library documentation                |
-| `memory_search`    | Search durable project memory (decisions, patterns)   |
-| `observation`      | Persist findings to long-term memory                  |
-
-## Phase 1: Duplicate Check
-
-### Session Memory Search
-
-Use `vcc_recall` to search session history for prior decisions, similar work.
-
-### Existing Work Check
-
-Check `.pi/artifacts/.active` for existing work in progress. If active slug exists with a `spec.md`, ask user if they want to continue with `/ship` instead.
-
-## Phase 2: Choose Research Depth
+## Phase 1: Choose Research Depth
 
 Ask user before spawning agents:
 
@@ -69,28 +47,27 @@ Ask user before spawning agents:
 | **Minimal** | 1 agent: quick file scan (~30 sec) |
 | **Skip** | I know the codebase, use existing knowledge |
 
-## Phase 3: Gather Context
+## Phase 2: Gather Context
 
 Based on research depth choice, spawn agents using `subagent` tool:
 
-**If Deep:**
-   - 3x subagent calls with `explore` agent (patterns, tests, deps)
-   - 1x subagent call with `scout` agent (feature/epic)
-   - 1x subagent call with `review` agent (epic)
+**Deep:**
+- 3x subagent with `explore` agent (patterns, tests, deps)
+- 1x subagent with `scout` agent (external best practices)
+- 1x subagent with `review` agent (epic review)
 
-**If Standard:**
-   - 2x subagent calls with `explore` agent (patterns, tests)
-   - 1x subagent call with `scout` agent (feature/epic only)
+**Standard:**
+- 2x subagent with `explore` agent (patterns, tests)
+- 1x subagent with `scout` agent (external research)
 
-**If Minimal:**
-   - 1x subagent call with `explore` agent (patterns)
+**Minimal:**
+- 1x subagent with `explore` agent (patterns)
 
-**If Skip:**
-- No agents, use existing AGENTS.md context
+**Skip:** No agents — use existing knowledge.
 
-## Phase 4: Initialize Plan
+## Phase 3: Initialize Workspace
 
-Extract title and description from `$ARGUMENTS`. Derive a kebab-case slug:
+Extract title from `$ARGUMENTS`. Derive a kebab-case slug:
 
 ```bash
 SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9 ]//g' | tr ' ' '-' | sed 's/--*/-/g; s/^-//; s/-$//')
@@ -98,17 +75,18 @@ mkdir -p ".pi/artifacts/$SLUG"
 echo "$SLUG" > ".pi/artifacts/.active"
 ```
 
-> **`.active` convention:** The active slug is written to `.pi/artifacts/.active`. All downstream commands (`/plan`, `/ship`, `/verify`) read this file to know which feature is current. If `.active` is missing or stale, the agent should ask the user to re-run `/create`.
+> **`.active` convention:** The active slug is written to `.pi/artifacts/.active`. All downstream commands (`/plan`, `/ship`, `/verify`) read this file to know which feature is current.
 
-## Phase 5: Determine PRD Rigor
+## Phase 4: Determine PRD Rigor
 
 | Signal | Lite PRD | Full PRD |
 |--------|----------|----------|
 | Scope | Simple, single-concern | Cross-cutting, multi-system |
 | Files affected | 1-3 | 4+ |
 | Research depth | Skip or Minimal | Standard or Deep |
+| `--lite` flag | ✓ | — |
 
-**Auto-detect:** If research was Skip/Minimal AND description is a single sentence → default to Lite.
+**Auto-detect:** If research was Skip/Minimal AND description is a single sentence → default to Lite. `--lite` flag overrides to Lite regardless.
 
 ### Lite PRD Format
 
@@ -136,40 +114,50 @@ echo "$SLUG" > ".pi/artifacts/.active"
 
 Use the full template from `.pi/templates/prd.md`.
 
-## Phase 6: Write PRD
+## Phase 5: Write & Validate PRD
 
-Copy and fill the PRD template (lite or full) using context from Phase 3.
+Copy and fill the PRD template (lite or full) using context from Phase 2.
 
-## Phase 7: Validate PRD
-
-Before saving, verify:
+**Before saving, verify:**
 - No placeholder text remains
 - Success criteria include `Verify:` commands
 - Technical context references actual `src/` paths
 - Affected files list real paths
-- Tasks have `[category]` headings
 - Each task has verification
 - No implementation code in the PRD
 - No unresolved `[NEEDS CLARIFICATION]` markers
 
-## Phase 8: Prepare Workspace
-
-### Workspace Check
+## Phase 6: Create Workspace Branch
 
 ```bash
 git status --porcelain
 git branch --show-current
 ```
 
-- If uncommitted changes: ask user to stash, commit, or continue
-
-### Create Branch
-
 Create feature branch and install deps if needed.
 
-## Phase 9: Convert PRD to Tasks
+## Phase 7: Convert PRD to Tasks
 
-Convert PRD markdown → executable JSON (`prd.json`).
+Convert PRD markdown → structured `tasks.json`:
+
+```json
+{
+  "slug": "<slug>",
+  "title": "<title>",
+  "tasks": [
+    {
+      "id": "task-1",
+      "description": "...",
+      "files": ["src/path.ts"],
+      "depends_on": [],
+      "verification": ["npm run typecheck", "npm test -- path"],
+      "tdd": false
+    }
+  ]
+}
+```
+
+Write to `.pi/artifacts/$SLUG/tasks.json`.
 
 ## Failure Handling
 
@@ -179,29 +167,34 @@ Convert PRD markdown → executable JSON (`prd.json`).
 | Subagent research fails | Retry once with adjusted prompt, then proceed with existing knowledge |
 | PRD validation fails | Fix issues inline, re-validate, max 2 retries |
 | Missing template file | Report exact missing path, suggest running `/init` first |
+| Uncommitted changes in workspace | Ask: stash, commit, or continue? |
 
 ## Stop Conditions
 
 - Active slug exists with valid spec → ask: continue existing or start new?
 - PRD has unresolved `[NEEDS CLARIFICATION]` markers → block, resolve first
-- Uncommitted changes in workspace → ask: stash, commit, or continue?
 - Verification fails 2x on same approach → stop, escalate
 
-## Phase 10: Report
+## Phase 8: Report
 
 1. Summary: task count, success criteria count, affected files count
 2. Branch name and workspace
-3. Active feature: `.pi/artifacts/$(cat .pi/artifacts/.active)/`
-4. Next step: `/ship` (or `/plan` for complex work)
+3. Artifact location: `.pi/artifacts/$SLUG/`
+4. Next step: `/plan` (complex) or `/ship` (simple)
 
 ## Related Commands
 
-| Need               | Command      |
-| ------------------ | ------------ |
-| Research first     | `/research`  |
-| Plan after spec    | `/plan`      |
-| Implement and ship | `/ship`      |
+| Need           | Command      |
+| -------------- | ------------ |
+| Research first | `/research`  |
+| Plan execution | `/plan`      |
+| Ship feature   | `/ship`      |
+| Verify gates   | `/verify`    |
 
 ## Related Skills
 
-See `.pi/skills/INDEX.md` for the complete task → skill routing table.
+- `spec-driven-development` — PRD structure and vocabulary concepts used in Phase 5
+- `brainstorming` — idea refinement before spec writing
+- `context-engineering` — subagent context budgets for Phase 2
+- `doubt-driven-development` — adversarial validation in Phase 5
+- `planning-and-task-breakdown` — task decomposition patterns (next step)

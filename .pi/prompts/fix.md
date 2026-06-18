@@ -1,46 +1,64 @@
 ---
 description: Debug and fix a bug or failing test
-argument-hint: "<description of bug or error>"
+argument-hint: "<description of bug or error> [--attach <file>] [--dry-run] [--help]"
 ---
 
 # Fix: $ARGUMENTS
 
 Systematically debug and fix the reported issue.
 
+## Parse Arguments
+
+| Argument        | Default  | Description                               |
+| --------------- | -------- | ----------------------------------------- |
+| `<description>` | required | What to fix (bug description, error message, or failing test) |
+| `--attach`      | —        | Path to log file, crash report, or screenshot |
+| `--dry-run`     | false    | Diagnose and report root cause without applying fix |
+| `--help`        | false    | Show this usage                           |
+
+## Guard Phase
+
+Before fixing:
+- Use `vcc_recall` to search for prior fix attempts on the same issue — avoid repeating failed approaches
+- Check that the codebase builds/tests pass at baseline (confirm the bug is not a pre-existing state)
+
 ## Load Skills
 
-- `root-cause-tracing` skill
-- `verification-before-completion` skill
+| Skill | When | Why |
+|-------|------|-----|
+| `root-cause-tracing` | Always | Trace bug backward through call stack to source |
+| `debugging-and-error-recovery` | Always | Systematic 5-step triage: reproduce → localize → reduce → fix → guard |
+| `verification-before-completion` | Always | Evidence-before-claims; verify fix actually resolves the bug |
+| `defense-in-depth` | After fix is verified | Harden the layer so the bug becomes structurally impossible |
+| `testing-anti-patterns` | If writing tests | Ensure regression test isn't a mock-only test |
 
-## Before You Fix
+## Phase 1: Reproduce
 
-- **Be certain**: Reproduce the issue before touching code
-- **Don't guess**: Trace to root cause — never fix symptoms
-- **Verify the fix**: Always reproduce the original issue first, then confirm it's gone
-- **Escalate if stuck**: After 2 failed verification attempts, escalate with learnings
-
-## Process
-
-### Phase 1: Reproduce
+Reproduce the issue with the exact steps or command. Use the project's test command:
 
 ```bash
-# Reproduce the issue with the exact steps or command
+npm test -- -t "<test name pattern>"   # or equivalent
 ```
 
-### Phase 2: Isolate
+If `--attach` provided, read the attached log/error file for context.
 
-- Search for the error message or symptom in the codebase using `semantic_grep`
-- Trace the execution path to find the root cause using `semantic_inspect`
-- Read the 2-4 most relevant files
-- Distinguish symptom from root cause
+## Phase 2: Isolate
 
-### Phase 3: Fix
+1. Search for the error message or symptom using `semantic_grep`
+2. Trace the execution path to find the root cause using `semantic_inspect`
+3. Read the 2-4 most relevant files
+4. Distinguish symptom from root cause — follow `root-cause-tracing` skill methodology
 
-- Apply the minimal fix for the root cause
-- Do not add speculative guards, tolerant readers, or defensive copies
-- Prefer making the bad state impossible over handling all bad states
+## Phase 3: Fix
 
-### Phase 4: Verify
+1. Apply the **minimal** fix for the root cause
+2. Do not add speculative guards, tolerant readers, or defensive copies
+3. Prefer making the bad state impossible over handling all bad states (`defense-in-depth`:
+   validate at the layer where invalid data enters)
+
+## Phase 4: Verify
+
+Run verification gates:
 
 ```bash
 npm run typecheck
@@ -48,7 +66,12 @@ npm run lint
 npm test            # or vitest relevant test
 ```
 
-If verification fails twice on the same approach, escalate with learnings.
+**Regression check:** If writing a regression test, verify the red-green cycle:
+1. Write test → run → MUST fail (confirm it catches the bug)
+2. Apply fix → run → MUST pass
+3. Revert fix → run → MUST fail again → restore fix
+
+Then, load `defense-in-depth` skill and add validation at the data entry layer.
 
 ## Failure Handling
 
@@ -66,14 +89,26 @@ If verification fails twice on the same approach, escalate with learnings.
 - Verification fails 2x on same approach → stop, escalate with learnings
 - Root cause is in third-party dependency → stop, report with upstream reference
 
-## Output
+## Phase 5: Report
 
-Report:
 1. Root cause (with file:line)
 2. Fix applied
-3. Verification results
-4. What else was considered and rejected
+3. Verification results (typecheck, lint, test)
+4. Defense-in-depth layer added (if applicable)
+5. What else was considered and rejected
+
+## Related Commands
+
+| Need           | Command      |
+| -------------- | ------------ |
+| Create feature | `/create`    |
+| Verify gates   | `/verify`    |
+| Ship fix       | `/ship`      |
 
 ## Related Skills
 
-See `.pi/skills/INDEX.md` for the complete task → skill routing table.
+- `root-cause-tracing` — backward call-stack tracing in Phase 2
+- `debugging-and-error-recovery` — full 5-step triage methodology
+- `verification-before-completion` — evidence gate in Phase 4
+- `defense-in-depth` — structural hardening after fix
+- `testing-anti-patterns` — regression test quality

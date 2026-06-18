@@ -1,5 +1,6 @@
 ---
 description: Create detailed implementation plan with TDD steps
+argument-hint: "[--level 0-3] [--dry-run] [--help]"
 ---
 
 # Plan
@@ -10,29 +11,37 @@ Create a detailed implementation plan with TDD steps. Optional deep-planning bet
 >
 > **When to use:** Complex tasks where spec verification steps aren't enough guidance. Skip for simple tasks.
 
-## Before You Plan
+## Parse Arguments
 
-- **Be certain**: Only create tasks you're confident about
-- **Don't over-plan**: If the spec is clear, trust it
-- **Budget context**: Target ~50% context per execution
-- **Vertical slices**: Each task should cover one feature end-to-end
+| Argument    | Default | Description                               |
+| ----------- | ------- | ----------------------------------------- |
+| `--level`   | auto    | Force discovery level: 0 (skip), 1 (quick), 2 (standard), 3 (deep) |
+| `--dry-run` | false   | Preview plan without writing to disk       |
+| `--help`    | false   | Show this usage                           |
+
+## Guard Phase
+
+Before planning:
+- Verify `.pi/artifacts/$(cat .pi/artifacts/.active)/spec.md` exists (if not, tell user to run `/create` first)
+- If `plan.md` already exists, ask user: overwrite or skip?
+- Read `tasks.json` if it exists (from `/create` Phase 7) to understand task structure
 
 ## Load Skills
 
-Before creating the plan, load these skills from `.pi/skills/`:
-
-| Skill | Why |
-|-------|-----|
-| `planning-and-task-breakdown` | Goal-backward methodology, task decomposition, dependency graphing |
-| `context-engineering` | Context budget management, packing strategies for subagent handoffs |
+| Skill | When | Why |
+|-------|------|-----|
+| `planning-and-task-breakdown` | Always | Goal-backward methodology, dependency graphing, wave assignment |
+| `context-engineering` | Always | Context budget management — plans target ~50% context per execution |
+| `test-driven-development` | Always | Structure tasks as RED-GREEN-REFACTOR steps |
+| `incremental-implementation` | Always | Thin vertical slice discipline — each task is verify-after-each |
+| `subagent-driven-development` | Multi-wave plan | Plan tasks for fresh subagent dispatch per task |
+| `source-driven-development` | Level 1-3 | Ground decisions in official docs when researching dependencies |
 
 ## Phase 0: Institutional Research (Mandatory)
 
-Before touching the PRD or planning anything, load what the codebase already knows.
-
 ### Step 1: Search institutional memory
 
-Use `vcc_recall` to search for bugfixes, existing plans. If relevant observations found, incorporate them.
+Use `vcc_recall` to search for bugfixes and existing plans. If relevant observations found, incorporate them.
 
 ### Step 2: Mine git history
 
@@ -44,7 +53,7 @@ git log --oneline --all | head -30
 
 Look for: commit conventions, recent changes (merge conflict risk), similar features, footgun zones.
 
-### Step 3: Spawn learnings-researcher (if Level 2-3 work)
+### Step 3: Spawn learnings-researcher (Level 2-3 work)
 
 ```typescript
 subagent({
@@ -53,35 +62,31 @@ subagent({
 });
 ```
 
-## Phase 1: Guards
+## Phase 1: Discovery Assessment
 
-Verify:
-- `.pi/artifacts/$(cat .pi/artifacts/.active)/spec.md` exists (if not, tell user to run `/create` first)
-- If `plan.md` already exists, ask user: overwrite or skip?
-
-## Phase 2: Discovery Assessment
-
-Before research, determine discovery level:
+Determine discovery level:
 
 | Level | Scope | Action |
 |-------|-------|--------|
-| **0** | Skip — pure internal work, existing patterns only | Skip research |
-| **1** | Quick (2-5 min) — single known library | `context7 resolve-library-id + query-docs` |
-| **2** | Standard (15-30 min) — choosing between 2-3 options | Spawn subagent with `scout` agent for research |
-| **3** | Deep (1+ hour) — architectural decision | Full research with parallel subagents using `scout` agent |
+| **0** | Skip — pure internal work, existing patterns only | Skip external research |
+| **1** | Quick (2-5 min) — single known library | `context7` resolve + query |
+| **2** | Standard (15-30 min) — choosing between 2-3 options | Spawn `scout` subagent for research |
+| **3** | Deep (1+ hour) — architectural decision | Full research with parallel `scout` subagents |
 
-## Phase 3: Research (if Level 1-3)
+Force with `--level N` flag.
 
-Spawn parallel agents to gather implementation context:
+## Phase 2: Research (Level 1-3)
+
+Spawn parallel agents:
 
 | Agent     | Purpose                                                              |
 | --------- | -------------------------------------------------------------------- |
 | `explore` | Codebase patterns, affected file structure, test patterns, conflicts |
-| `scout`   | Best practices, common patterns, pitfalls                            |
+| `scout`   | External best practices, common patterns, pitfalls                   |
 
-## Phase 4: Goal-Backward Analysis
+## Phase 3: Goal-Backward Analysis
 
-Load `planning-and-task-breakdown` skill. Follow its goal-backward methodology:
+Load `planning-and-task-breakdown` skill. Follow its methodology:
 
 **Step 1: Extract Goal from PRD** — outcome-shaped, not task-shaped.
 
@@ -91,9 +96,9 @@ Load `planning-and-task-breakdown` skill. Follow its goal-backward methodology:
 
 **Step 4: Identify Key Links** — critical connections where breakage causes cascading failures.
 
-## Phase 5: Decompose with Context Budget
+## Phase 4: Decompose with Context Budget
 
-Target ~50% context per execution. More plans, smaller scope = consistent quality.
+Load `context-engineering` skill. Target ~50% context per execution.
 
 | Task Complexity | Max Tasks | Context/Task | Total |
 |------------------|-----------|--------------|-------|
@@ -101,20 +106,18 @@ Target ~50% context per execution. More plans, smaller scope = consistent qualit
 | Complex (auth)   | 2         | ~20-30%      | ~40-50% |
 | Very complex     | 1-2       | ~30-40%      | ~30-50% |
 
-## Phase 6: Dependency Graph & Wave Assignment
+## Phase 5: Dependency Graph & Wave Assignment
 
 For each task, record:
 - `needs`: What must exist before this runs
 - `creates`: What this produces
 - `has_checkpoint`: Requires user interaction?
 
-Build wave analysis for parallel execution.
+Build wave analysis for parallel execution. Reference `subagent-driven-development` skill for task formats compatible with subagent dispatch.
 
-## Phase 7: Write Plan
+## Phase 6: Write Plan
 
-Write `.pi/artifacts/$(cat .pi/artifacts/.active)/plan.md`:
-
-### Required Plan Header
+Write `.pi/artifacts/$SLUG/plan.md`:
 
 ```markdown
 # [Feature] Implementation Plan
@@ -128,13 +131,16 @@ Write `.pi/artifacts/$(cat .pi/artifacts/.active)/plan.md`:
 ### Observable Truths
 1. [Truth 1]
 2. [Truth 2]
+...
 
 ### Required Artifacts
 | Artifact | Provides | Path |
 |----------|----------|------|
+...
 
 ### Key Links
 | From | To | Via | Risk |
+...
 
 ## Dependency Graph
 
@@ -145,6 +151,7 @@ Wave 1: A
 Wave 2: B
 
 ## Tasks
+[Task definitions with TDD steps]
 ```
 
 ### Task Standards
@@ -152,17 +159,14 @@ Wave 2: B
 - **Exact file paths** — never "add to the relevant file"
 - **Complete code** — never "add validation logic here"
 - **Exact commands with expected output**
-- **TDD order** — test first, then implementation
+- **TDD order** — test first, then implementation (per `test-driven-development` skill)
 - **Each step is 2-5 minutes** — one action per step
 - **UI state coverage** — empty/loading/error/success states when applicable
+- **Thin vertical slices** — per `incremental-implementation` skill
 
-## Phase 8: Constitutional Compliance Gate
+## Phase 7: Constitutional Compliance Gate
 
-Before executing, scan the plan against AGENTS.md hard constraints.
-
-### Automated Checks
-
-Scan `plan.md` content for these patterns:
+Scan plan against AGENTS.md hard constraints:
 
 | Violation Pattern                                 | AGENTS.md Rule                              | Severity     |
 | ------------------------------------------------- | ------------------------------------------- | ------------ |
@@ -197,7 +201,7 @@ Scan `plan.md` content for these patterns:
 - Constitutional violation found (CRITICAL) → remove violation from plan, report to user
 - Verification fails 2x on same approach → stop, escalate
 
-## Phase 9: Report
+## Phase 8: Report
 
 1. **Discovery Level:** [0-3] with rationale
 2. **Must-Haves:** [N] observable truths, [M] required artifacts, [K] key links
@@ -205,7 +209,7 @@ Scan `plan.md` content for these patterns:
 4. **Dependency Waves:** [N] waves for parallel execution
 5. **Task count:** [N] tasks, [M] TDD steps
 6. **Files affected:** [List]
-7. **Plan location:** `.pi/artifacts/$(cat .pi/artifacts/.active)/plan.md`
+7. **Plan location:** `.pi/artifacts/$SLUG/plan.md`
 8. **Next step:** `/ship`
 
 ## Related Commands
@@ -218,4 +222,9 @@ Scan `plan.md` content for these patterns:
 
 ## Related Skills
 
-See `.pi/skills/INDEX.md` for the complete task → skill routing table.
+- `planning-and-task-breakdown` — goal-backward decomposition, dependency graphing (Phases 3-5)
+- `context-engineering` — context budget management (Phases 0, 4)
+- `test-driven-development` — RED-GREEN-REFACTOR task structuring (Phase 6)
+- `incremental-implementation` — thin vertical slice discipline (Phase 6)
+- `subagent-driven-development` — task format for subagent dispatch (Phase 5)
+- `source-driven-development` — doc-backed research (Phase 2)
