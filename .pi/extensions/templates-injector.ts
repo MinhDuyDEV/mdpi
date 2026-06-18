@@ -1,13 +1,18 @@
 /**
  * Templates Injector Extension
  *
- * Auto-injects project context templates (.pi/templates/*.md) into system prompt.
+ * Auto-injects project context files into system prompt.
  * Mimics opencodekit's `instructions[]` mechanism via pi's before_agent_start hook.
  *
- * Templates auto-injected:
- * - project.md (always, if exists)
- * - tech-stack.md (always, if exists)
- * - state.md (always, if exists)
+ * Resolution: prefer the LIVE file at `.pi/{name}` (filled by /init, the project's
+ * real state/stack/vision); fall back to the blank seed at `.pi/templates/{name}`
+ * when no live file exists. This keeps templates/ pristine as deliverables while
+ * ensuring real project state is what the agent actually sees.
+ *
+ * Auto-injected (always, whichever resolves):
+ * - project.md
+ * - tech-stack.md
+ * - state.md   ← the "you are here" marker; live version injected once /init fills it
  *
  * User can opt-in to inject more via /inject-template command.
  */
@@ -19,7 +24,11 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 const ALWAYS_INJECT = ["project.md", "tech-stack.md", "state.md"];
 
 function readTemplate(cwd: string, name: string): string | null {
-	const filePath = path.join(cwd, ".pi", "templates", name);
+	// Prefer live file at .pi/{name} (filled by /init — real project state);
+	// fall back to blank seed at .pi/templates/{name} when no live file exists.
+	const livePath = path.join(cwd, ".pi", name);
+	const seedPath = path.join(cwd, ".pi", "templates", name);
+	const filePath = fs.existsSync(livePath) ? livePath : seedPath;
 	if (!fs.existsSync(filePath)) return null;
 	const content = fs.readFileSync(filePath, "utf-8");
 	// Strip frontmatter for injection
@@ -43,7 +52,7 @@ export default function templatesInjector(pi: ExtensionAPI) {
 		return {
 			systemPrompt:
 				event.systemPrompt +
-				`\n\n## Project Context (auto-injected from .pi/templates/)\n\n${injected.join("\n\n---\n\n")}`,
+				`\n\n## Project Context (auto-injected from .pi/ — live state/stack/vision, seeded by .pi/templates/)\n\n${injected.join("\n\n---\n\n")}`,
 		};
 	});
 
