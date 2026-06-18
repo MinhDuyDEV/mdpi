@@ -1,0 +1,50 @@
+{
+  "name": "mdpi",
+  "version": "0.1.0",
+  "description": "CLI to scaffold and manage a Pi coding-agent kit (.pi/) in any repo",
+  "keywords": [
+    "pi",
+    "pi-coding-agent",
+    "cli",
+    "scaffold",
+    "template",
+    "agent-kit"
+  ],
+  "homepage": "https://github.com/MinhDuyDEV/ockit-mapping#readme",
+  "bugs": {
+    "url": "https://github.com/MinhDuyDEV/ockit-mapping/issues"
+  },
+  "license": "MIT",
+  "author": "MinhDuyDEV <buub1309120@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MinhDuyDEV/ockit-mapping.git"
+  },
+  "type": "module",
+  "bin": {
+    "mdpi": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsdown && node scripts/bundle-template.mjs",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7.0",
+    "cac": "^6.7.14",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.11",
+    "tsdown": "latest",
+    "tsx": "latest",
+    "typescript": "^5.9.3"
+  }
+}

@@ -14,3 +14,9 @@
 .pi/memory/
 .pi/artifacts/
 .pi/tasks/
+.pi/npm/
+
+# mdpi CLI build artifacts
+node_modules/
+dist/
+*.log
