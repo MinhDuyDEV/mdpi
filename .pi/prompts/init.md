@@ -93,10 +93,10 @@ Create `./AGENTS.md` — target <60 lines (max 150). Include:
 
 ### Phase 4: Create tech-stack.md
 
-Write detected values to `.pi/tech-stack.md`. Then persist to long-term memory via the `memory` tool (pi-hermes-memory, action: `add`, target: `memory`):
+Write detected values to `.pi/tech-stack.md`. Then persist to long-term memory via the `memory` tool (pi-hermes-memory, action: `add`, target: `failure`, category: `convention`):
 
 - content: "Project initialized — [tech stack summary]"
-- category: convention (project-specific setup norms)
+- (target `failure` holds ALL categorized memories; `convention` = project-specific setup norms)
 
 ### Phase 5: Setup Fallow (if available)
 

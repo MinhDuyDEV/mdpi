@@ -58,9 +58,9 @@ Do **not** `rm` the file (other tooling may expect it to exist).
 
 ## Phase 4: Optional Memory
 
-If `--done` and the outcome is non-trivial, persist a memory entry via the `memory` tool (pi-hermes-memory, action: `add`, target: `memory`):
+If `--done` and the outcome is non-trivial, persist a memory entry via the `memory` tool (pi-hermes-memory, action: `add`, target: `failure`, category: `insight`):
 - content: "Feature <slug> closed — <outcome> — <key learning>"
-- category: insight (durable learning from completing the feature)
+- (target `failure` holds ALL categorized memories — failure/correction/insight/preference/convention/tool-quirk — not just failures; `insight` = durable learning from completing the feature)
 
 ## Stop Conditions
 

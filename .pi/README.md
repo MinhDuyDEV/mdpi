@@ -387,7 +387,7 @@ The kit still follows Addy Osmani's 4 memory-type model (*Lesson 5: memory and c
 
 **`pi-hermes-memory` provides:**
 
-1. **Capture** — `memory` tool (add/replace/remove, target `memory`/`user`) + **background learning loop** (LLM review every 10 turns / 15 tool-calls) + **correction detection** (saves when the user corrects the agent).
+1. **Capture** — `memory` tool (add/replace/remove; targets `memory`/`user`/`project` for uncategorized facts, `failure` + `category` for categorized memories) + **background learning loop** (LLM review every 10 turns / 15 tool-calls) + **correction detection** (saves when the user corrects the agent).
 2. **Retrieval** — `memory_search` (SQLite FTS5 BM25, filter by `category`: failure/correction/insight/preference/convention/tool-quirk) + `session_search` (across all past sessions).
 3. **Injection** — **policy-only by default** (a `<memory-policy>` block tells the agent *when* to call `memory_search`); `memoryMode:"legacy-inject"` restores full-content injection.
 4. **Security** — **secret scanning** (blocks API keys/tokens/SSH keys) + XML fencing ("NOT new user input") against prompt injection.
@@ -407,6 +407,12 @@ The kit still follows Addy Osmani's 4 memory-type model (*Lesson 5: memory and c
 - **Policy-only injection** — memory only surfaces if the agent chooses to call `memory_search`; can miss relevant memory if the agent "forgets" to search.
 - **Lost (vs former in-house extensions)** — `/decision`, `/intent`, `/summary` commands + the always-injected "Session Summary (anchored)" block. Gained: `session_search`, learning loop, secret scan, consolidation, two-tier, 368 tests.
 - **Retrieval is lexical** — FTS5 BM25 + literal-phrase match, case-insensitive. No embeddings/synonymy ("deploy" ≈ "ship" still needs embeddings — same gap as before, just indexed).
+
+### Integration notes (verified against installed v0.7.17 source)
+
+- **`memory` tool `target: "failure"` holds ALL categorized memories** — the 6 categories (failure/correction/insight/preference/convention/tool-quirk) all live under `target: "failure"` (the name is historical; not limited to failures). `target: "memory"`/`"user"`/`"project"` are uncategorized facts — passing `category` with those targets is silently ignored. To save a categorized decision/learning, use `target: "failure"` + `category`.
+- **`skill_manage` "project" scope writes to user home, not the repo** — `scope: "project"` saves to `~/.pi/agent/projects-memory/<project>/skills/<name>/SKILL.md` (per-project, in the user's home, NOT committed with the repo). The kit's 67 curated skills live in `.pi/skills/` (repo, portable, shared across kit users). So hermes-saved project skills are user-local and won't ship with the kit — by design (runtime-saved vs curated-shipped).
+- **Config is global-only** — `pi-hermes-memory` reads only `~/.pi/agent/hermes-memory-config.json` (global `AGENT_ROOT`), not a project-local config. Defaults are sane (policy-only injection, background review every 10 turns / 15 tool-calls, auto-consolidation). For cost-conscious use, document a recommended global config: raise `nudgeInterval` / `nudgeToolCalls` (fewer LLM-subprocess reviews) or set `memoryPolicyStyle: "compact"` (leaner policy block). The kit cannot ship a kit-local config — only document recommended global settings.
 
 ---
 
