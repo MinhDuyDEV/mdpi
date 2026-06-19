@@ -4,7 +4,7 @@ All notable changes to **mdpi** are documented here.
 The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.0] — 2026-06-19
 
 ### Added
 - **`mdpi install`** — install the kit's declared npm packages in one command.
@@ -15,6 +15,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `~/.pi/agent/npm/node_modules`), `--yes` (skip confirm). `mdpi init` now
   suggests running `mdpi install` next. Closes the gap where `init` copied kit
   files but left the referenced packages uninstalled.
+- **DCP hygiene skill** (`dcp-hygiene`) — Tier-2 skill documenting the pi-dcp
+  compress protocol (range mode, fact preservation, no-op clause for portability).
+- **DCP closure triggers** (Layer 2) — 8 single-agent prompts now include a
+  `dcp-hygiene` Load Skills row + a DCP hygiene trigger at their Report/closure
+  phase (fix, verify, ship, gc, audit, research, plan, init). All triggers are
+  conditional ("if compress available, skip if unavailable") so the kit stays
+  portable without DCP installed.
+- **DCP mid-command triggers** (Layer 3) — `ship` (Phase 2/3→4), `fix` (Phase
+  3→4), and `quality-loop` (Phase 6→7) compress closed work-streams mid-command
+  to keep context bounded during long operations.
+- **Memory-system skill** (`memory-system`) — Tier-2 skill documenting the
+  pi-hermes-memory auto-flywheel: background review (every ~10 turns), correction
+  detection (real-time user corrections → `target:'failure' category:'correction'`),
+  tools (`memory`, `memory_search`, `session_search`), commands, and best practices.
+- **memory_search in Guard phases** — `fix`, `ship`, `create`, and `plan` now
+  search both `vcc_recall` (session lineage) and `memory_search` (durable
+  cross-session) in their Guard phases for dual recall coverage.
+- **Failure-write triggers** — 5 Failure Handling tables (`fix`, `ship`, `verify`,
+  `plan`, `audit`) now save failed approaches to `memory(action: "add", target:
+  "failure", category: "failure")` on 2x verification failure, wiring the
+  self-learning loop into the kit's failure paths.
+
+### Changed
+- DCP `pruneNotification` default flipped from `"off"` to `"minimal"` so the
+  footer chip ("DCP: idle" / "DCP: ~X saved") is visible.
+
+### Fixed
+- Optimized prompt phase consistency — all triggers use conditional wording
+  ("if available … skip if unavailable") for portability.
+
+## [Unreleased]
+
+(no unreleased changes)
 
 ## [0.3.0] — 2026-06-19
 
