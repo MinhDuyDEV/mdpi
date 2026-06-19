@@ -50,7 +50,8 @@ updated: 2026-06-19
 
 - **Border Radius Scale:** 0/4/8/12/16/24/full
 - **Corner Philosophy:** Sharp (0px) for layout containers, Soft (4px) for interactive elements
-- **Icon Style:** Outline — thin stroke, consistent 1.5px weight
+- **Icon Style:** Outline — thin stroke at 1.5px
+- **Stroke Width:** 1.5px
 
 ## 7. Components
 
