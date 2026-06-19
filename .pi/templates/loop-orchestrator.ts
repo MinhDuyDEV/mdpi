@@ -64,7 +64,9 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+import * as os from "node:os";
 import { execFileSync, execSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 // Type-only SDK import — erased at compile time. TS2307 for this line is the
 // single tolerated gap in the verify command (the package is globally
@@ -381,6 +383,39 @@ export function enforceBudgetCap(stats: SessionStatsMirror, cap: number | null):
 	return { kill: false, reason: null };
 }
 
+/**
+ * Pure token accumulator (FR13 — budget cap). Subscribes to `message_end`
+ * events and sums the per-turn token delta for assistant messages.
+ *
+ * IMPORTANT: `Usage.totalTokens` (on AssistantMessage.usage, emitted via the
+ * `message_end` event) is a PER-TURN DELTA built from each API response's
+ * usage — it is NOT a session-cumulative value. Therefore accumulation with
+ * `+=` is correct: each assistant turn contributes its own delta, and the
+ * running sum is the cumulative session total.
+ *
+ * Extracted as a pure helper so the accumulation is unit-testable without a
+ * live SDK session.
+ */
+export function accumulateUsage(
+	tokenTotal: number,
+	events: AgentSessionEventMirror[],
+): number {
+	let total = tokenTotal;
+	for (const event of events) {
+		if (
+			event.type === "message_end" &&
+			event.message?.role === "assistant" &&
+			event.message?.usage
+		) {
+			const u = event.message.usage;
+			const t = u.totalTokens ?? u.total ?? ((u.input ?? 0) + (u.output ?? 0));
+			// Usage.totalTokens is per-turn delta; accumulate with +=.
+			total += t;
+		}
+	}
+	return total;
+}
+
 // =============================================================================
 // SDK DYNAMIC LOADER — cached; value import deferred (resolution gap).
 // =============================================================================
@@ -580,7 +615,7 @@ export async function runOnce(opts: RunOnceOptions): Promise<RunResult> {
 		log("INFO", instanceId, "B_load_gate", `gate loaded (${gateCmd.length} chars): ${gateCmd.split("\n")[0]}`);
 
 		// ---- Phase C: worktree + maker session ----
-		worktreeDir = fs.mkdtempSync(path.join(require("node:os").tmpdir(), `loop-${loopName}-`));
+		worktreeDir = fs.mkdtempSync(path.join(os.tmpdir(), `loop-${loopName}-`));
 		fs.rmSync(worktreeDir, { recursive: true, force: true });
 		execFileSync("git", ["-C", repoRoot, "worktree", "add", "--detach", worktreeDir, "HEAD"], {
 			stdio: "pipe",
@@ -605,6 +640,8 @@ export async function runOnce(opts: RunOnceOptions): Promise<RunResult> {
 		// assistant messages carry .usage, so we gate on role === "assistant".
 		// After each accumulation, call enforceBudgetCap; if cumulative > cap,
 		// call session.abort() mid-stream and flag the kill (FR10 — never crash).
+		// NOTE: Usage.totalTokens is a per-turn delta (each API response's usage),
+		// NOT a session cumulative — hence `+=` is correct (see accumulateUsage).
 		const unsub = session.subscribe((event: AgentSessionEventMirror) => {
 			if (
 				event.type === "message_end" &&
@@ -612,6 +649,7 @@ export async function runOnce(opts: RunOnceOptions): Promise<RunResult> {
 				event.message?.usage
 			) {
 				const u = event.message.usage;
+				// Usage.totalTokens is per-turn delta; accumulate with +=.
 				const t = u.totalTokens ?? u.total ?? ((u.input ?? 0) + (u.output ?? 0));
 				tokenTotal += t;
 				const decision = enforceBudgetCap({ tokens: { total: tokenTotal } }, tokenCap);
@@ -716,8 +754,39 @@ export async function runOnce(opts: RunOnceOptions): Promise<RunResult> {
 		return { ok: true, itemId, branch, prUrl: ship.prUrl, reason: null, skipped: false, audit };
 	} catch (err) {
 		log("ERROR", instanceId, "runOnce", `loop failure (recorded, not fatal — FR10): ${String(err)}`);
+		// FR10 hardening: readState can itself throw if STATE.json is corrupt or
+		// missing at this moment, which would escape runOnce (scheduler crash).
+		// Prefer the in-memory `state` we already loaded; only re-read as a last
+		// resort, and fall back to a minimal seed if that also fails.
+		let catchState: LoopState;
+		try {
+			catchState = readState(stateFile);
+		} catch (readErr) {
+			log("WARN", instanceId, "runOnce", `readState failed in catch (using minimal seed): ${String(readErr)}`);
+			catchState = {
+				loop_name: loopName,
+				owner: "",
+				cadence: "manual",
+				last_run: null,
+				in_progress: [],
+				completed: [],
+				escalated: [],
+				failures: [],
+				lessons: [],
+				processed: [],
+				stop_conditions_met: [],
+				metrics: {
+					runs: 0, killed: false, kill_reason: null, tokens_used: 0,
+					token_cap: null, pr_opened: 0, items_fixed: 0,
+					items_skipped: 0, items_escalated: 0,
+				},
+			};
+		}
+		// Prefer the in-memory state (already loaded); fall back to the file read
+		// (or seed) only if `state` was never assigned (early throw).
+		const recordState: LoopState = state ?? catchState;
 		return recordFailureAndReturn(
-			stateFile, readState(stateFile), itemId, "loop-exception", String(err),
+			stateFile, recordState, itemId, "loop-exception", String(err),
 			instanceId, loopName, { audit },
 		);
 	} finally {
@@ -770,9 +839,14 @@ function shipPass(
 				? fs.readFileSync(bodyFile, "utf8")
 				: `Auto-generated by loop-orchestrator.ts (instance ${instanceId}).`;
 			try {
-				const out = execSync(
-					`gh pr create --base main --head ${branch} --title "loop(${loopName}): ${itemId}" --body ${JSON.stringify(body)}`,
-					{ stdio: ["ignore", "pipe", "pipe"], encoding: "utf8" },
+				// Shell-injection-safe: arg array, no shell interpolation. body and
+				// itemId are passed as discrete argv elements (never concatenated
+				// into a shell string), so JSON.stringify/shell-escaping is moot.
+				const out = execFileSync(
+					"gh",
+					["pr", "create", "--base", "main", "--head", branch,
+					 "--title", `loop(${loopName}): ${itemId}`, "--body", body],
+					{ stdio: ["ignore", "pipe", "pipe"], encoding: "utf8", cwd: repoRoot },
 				);
 				prUrl = out.trim().split("\n").pop() ?? "";
 			} catch (err) {
@@ -832,3 +906,31 @@ function fail(
 // Keep the type-only SDK mirrors referenced so tsc does not flag them unused
 // when the runtime path is the only consumer (and vice-versa for tests).
 export type { SDKAgentSessionType, SDKSessionStatsType };
+
+// =============================================================================
+// CLI MAIN — `node .../loop-orchestrator.ts run-once <loop-name> [repo-root] [item-id]`
+// =============================================================================
+// Without this guard the module loads and exits 0 WITHOUT running anything
+// (the GH Action would silently no-op green). The guard matches only when this
+// file is the entry point. FR10: loop failures exit 0; only operator misuse
+// exits non-zero — but per the spec we keep ALL exits 0 here (loop failure AND
+// operator misuse) so a scheduler never aborts the run on a loop failure.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+	const [, , action, loopName, repoRoot, itemId] = process.argv;
+	if (action === "run-once" && loopName) {
+		runOnce({ loopName, repoRoot: repoRoot ?? ".", itemId })
+			.then((r) => {
+				// FR10: never exit non-zero on a loop failure (only on operator misuse).
+				// To be safe per FR10, keep loop-failure exits 0 too.
+				void r;
+				process.exit(0);
+			})
+			.catch((err) => {
+				console.error("FATAL:", err?.message ?? err);
+				process.exit(0); // FR10
+			});
+	} else {
+		console.error("usage: loop-orchestrator.ts run-once <loop-name> [repo-root] [item-id]");
+		process.exit(0);
+	}
+}

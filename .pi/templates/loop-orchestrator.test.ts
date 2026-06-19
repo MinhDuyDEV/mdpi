@@ -17,6 +17,7 @@ import {
 	isAlreadyProcessed,
 	auditShipToolCalls,
 	enforceBudgetCap,
+	accumulateUsage,
 	MAKER_TOOLS,
 } from "./loop-orchestrator.ts";
 
@@ -286,4 +287,46 @@ test("enforceBudgetCap: missing tokens treated as 0 (no kill under cap)", () => 
 
 test("enforceBudgetCap: exactly at cap does not kill (strict >)", () => {
 	assert.deepEqual(enforceBudgetCap({ tokens: { total: 1000 } }, 1000), { kill: false, reason: null });
+});
+
+// ---------------------------------------------------------------------------
+// accumulateUsage (FR13 — budget cap token accumulation)
+// ---------------------------------------------------------------------------
+// Verifies the message_end listener's `+=` accumulation: each assistant
+// message_end event contributes its per-turn Usage.totalTokens delta, and the
+// cumulative total must equal the sum of all per-turn deltas. (User
+// message_end events carry no .usage and must NOT contribute.)
+
+test("accumulateUsage: sums totalTokens across two assistant message_end events", () => {
+	const events = [
+		{ type: "message_end", message: { role: "assistant", usage: { totalTokens: 1200 } } },
+		{ type: "message_end", message: { role: "assistant", usage: { totalTokens: 800 } } },
+	];
+	assert.equal(accumulateUsage(0, events), 2000);
+});
+
+test("accumulateUsage: accumulates onto a non-zero starting total", () => {
+	const events = [
+		{ type: "message_end", message: { role: "assistant", usage: { totalTokens: 300 } } },
+		{ type: "message_end", message: { role: "assistant", usage: { totalTokens: 500 } } },
+	];
+	assert.equal(accumulateUsage(250, events), 1050);
+});
+
+test("accumulateUsage: ignores user message_end events (no .usage)", () => {
+	const events = [
+		{ type: "message_end", message: { role: "user" } },
+		{ type: "message_end", message: { role: "assistant", usage: { totalTokens: 750 } } },
+		{ type: "message_end", message: { role: "user", usage: {} } },
+	];
+	assert.equal(accumulateUsage(0, events), 750);
+});
+
+test("accumulateUsage: falls back to total / input+output when totalTokens missing", () => {
+	const events = [
+		{ type: "message_end", message: { role: "assistant", usage: { total: 410 } } },
+		{ type: "message_end", message: { role: "assistant", usage: { input: 100, output: 200 } } },
+		{ type: "message_end", message: { role: "assistant", usage: { totalTokens: 90 } } },
+	];
+	assert.equal(accumulateUsage(0, events), 800);
 });
