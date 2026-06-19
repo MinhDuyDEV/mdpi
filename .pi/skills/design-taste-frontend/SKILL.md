@@ -3,6 +3,8 @@ name: design-taste-frontend
 description: Use when building any web UI as the BASE aesthetic layer to override default LLM design biases. Enforces strict typography, color, spacing, and component architecture rules. Load BEFORE frontend-design when premium visual quality is required.
 ---
 
+**Aesthetic Context:** This is a premium aesthetic layer. Read `.pi/DESIGN.md` first to internalize the project's visual identity — every typographic, color, and spacing rule here is shaped by that mood. Design taste means the design feels intentional, not AI-generated.
+
 ## When to Use
 
 - When building any web UI that needs to override default LLM design biases
@@ -105,36 +107,50 @@ To actively combat generic AI designs, systematically implement these high-end c
 * **4-7 (Daily App Mode):** Normal spacing for standard web apps.
 * **8-10 (Cockpit Mode):** Tiny paddings. No card boxes; just 1px lines to separate data. Everything is packed. **Mandatory:** Use Monospace (`font-mono`) for all numbers.
 
-## 7. AI TELLS (Forbidden Patterns)
-To guarantee a premium, non-generic output, you MUST strictly avoid these common AI design signatures unless explicitly requested:
+## 7. Don't
 
 ### Visual & CSS
-* **NO Neon/Outer Glows:** Do not use default `box-shadow` glows or auto-glows. Use inner borders or subtle tinted shadows.
-* **NO Pure Black:** Never use `#000000`. Use Off-Black, Zinc-950, or Charcoal.
-* **NO Oversaturated Accents:** Desaturate accents to blend elegantly with neutrals.
-* **NO Excessive Gradient Text:** Do not use text-fill gradients for large headers.
-* **NO Custom Mouse Cursors:** They are outdated and ruin performance/accessibility.
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Neon/outer box-shadow glows | Inner borders or subtle tinted shadows | Glows are an instant AI-design signature |
+| Pure black `#000000` | Off-black, Zinc-950, or Charcoal | Pure black destroys visual depth |
+| Oversaturated accent colors | Desaturated accents blending with neutrals | High-saturation colors look amateurish |
+| Gradient text on large headers | Single solid heading color | Gradient text is an AI design cliché |
+| Custom mouse cursors | Default system cursor | Custom cursors hurt performance and accessibility |
 
 ### Typography
-* **NO Inter Font:** Banned. Use `Geist`, `Outfit`, `Cabinet Grotesk`, or `Satoshi`.
-* **NO Oversized H1s:** The first heading should not scream. Control hierarchy with weight and color, not just massive scale.
-* **Serif Constraints:** Use Serif fonts ONLY for creative/editorial designs. **NEVER** use Serif on clean Dashboards.
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Inter as display typeface | Geist, Outfit, Cabinet Grotesk, or Satoshi | Inter signals default AI-generated output |
+| Oversized H1 (>40px without reason) | Control hierarchy with weight and color, not just massive scale | Giant headings scream without communicating |
+| Serif fonts on dashboards or data UIs | Sans-serif for data; serif only for editorial/creative contexts | Serifs on dashboards feel out of place |
 
 ### Layout & Spacing
-* **Align & Space Perfectly:** Ensure padding and margins are mathematically perfect. Avoid floating elements with awkward gaps.
-* **NO 3-Column Card Layouts:** The generic "3 equal cards horizontally" feature row is BANNED. Use a 2-column Zig-Zag, asymmetric grid, or horizontal scrolling approach instead.
 
-### Content & Data (The "Jane Doe" Effect)
-* **NO Generic Names:** "John Doe", "Sarah Chan", or "Jack Su" are banned. Use highly creative, realistic-sounding names.
-* **NO Generic Avatars:** DO NOT use standard SVG "egg" or Lucide user icons for avatars. Use creative, believable photo placeholders or specific styling.
-* **NO Fake Numbers:** Avoid predictable outputs like `99.99%`, `50%`, or basic phone numbers (`1234567`). Use organic, messy data (`47.2%`, `+1 (312) 847-1928`).
-* **NO Startup Slop Names:** "Acme", "Nexus", "SmartFlow". Invent premium, contextual brand names.
-* **NO Filler Words:** Avoid AI copywriting clichés like "Elevate", "Seamless", "Unleash", or "Next-Gen". Use concrete verbs.
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| 3-column identical card layouts | 2-column zig-zag, asymmetric grid, or horizontal scroll | Three equal cards is the #1 AI UI tell |
+| Floating elements with awkward gaps | Mathematically perfect padding and margin alignment | Misaligned spacing reads as sloppy |
 
-### External Resources & Components
-* **NO Broken Unsplash Links:** Do not use Unsplash. Use absolute, reliable placeholders like `https://picsum.photos/seed/{random_string}/800/600` or SVG UI Avatars.
-* **shadcn/ui Customization:** You may use `shadcn/ui`, but NEVER in its generic default state. You MUST customize the radii, colors, and shadows to match the high-end project aesthetic.
-* **Production-Ready Cleanliness:** Code must be extremely clean, visually striking, memorable, and meticulously refined in every detail.
+### Content & Data
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Generic placeholder names (John Doe, Sarah Chan) | Creative, realistic-sounding names (Dr. Sarah Chen, Marcus Okonkwo) | Generic names feel fake and unprofessional |
+| Emoji avatars or Lucide user icons | Creative photo placeholders or styled SVGs | Emoji avatars degrade perceived quality |
+| Fake or predictable numbers (`99.99%`, `50%`, `$99/mo`) | Organic, messy data (`47.2%`, `$12,450`, `+18.3%`) | Round numbers look fabricated |
+| Startup slop names (Acme, Nexus, SmartFlow) | Premium, contextual brand names | Startup-slop names are a dead AI giveaway |
+| Filler words (Elevate, Seamless, Unleash, Next-Gen) | Concrete, specific verbs and descriptions | AI copywriting clichés destroy credibility |
+| Unsplash URLs in image sources | `picsum.photos/seed/{seed}/800/600` or SVG placeholders | Unsplash links break and leave broken images |
+| Default shadcn/ui appearance | Customized radii, colors, and shadows | Default shadcn reads as AI-generated |
+
+### Code Quality
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Sloppy output — misaligned elements, poor spacing, generic feel | Meticulously refined, visually striking, memorable output | Production-ready cleanliness is non-negotiable for premium UI |
 
 ## 8. THE CREATIVE ARSENAL (High-End Inspiration)
 Do not default to generic UI. Pull from this library of advanced concepts to ensure the output is visually striking and memorable. When appropriate, leverage **GSAP (ScrollTrigger/Parallax)** for complex scrolltelling or **ThreeJS/WebGL** for 3D/Canvas animations, rather than basic CSS motion. **CRITICAL:** Never mix GSAP/ThreeJS with Framer Motion in the same component tree. Default to Framer Motion for UI/Bento interactions. Use GSAP/ThreeJS EXCLUSIVELY for isolated full-page scrolltelling or canvas backgrounds, wrapped in strict useEffect cleanup blocks.

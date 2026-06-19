@@ -21,7 +21,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-const ALWAYS_INJECT = ["project.md", "tech-stack.md", "state.md"];
+const ALWAYS_INJECT = ["project.md", "tech-stack.md", "state.md", "DESIGN.md"];
 
 function readTemplate(cwd: string, name: string): string | null {
 	// Prefer live file at .pi/{name} (filled by /init — real project state);

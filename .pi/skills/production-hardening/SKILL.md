@@ -390,6 +390,32 @@ function OfflineBanner() {
 }
 ```
 
+### Must-Use-Real-Data
+
+Every data-display component must receive realistic, domain-appropriate data. This is non-negotiable for production UI.
+
+```tsx
+// BEFORE — generic slop (NEVER do this)
+<TestimonialCard name="Jane Doe" quote="Amazing product! Highly recommended." />
+<StatCard label="Revenue" value="$99/mo" />
+<HeroSection title="Unleash Your Potential with Our Powerful Platform" />
+
+// AFTER — realistic data with domain specificity
+<TestimonialCard name="Dr. Sarah Chen" quote="Reduced our deployment time from 3 days to 45 minutes." />
+<StatCard label="Revenue" value="$12,450" trend="+18.3%" />
+<HeroSection title="Deploy infrastructure changes in under 10 minutes" />
+```
+
+**Rule:** Every text string must be real or realistically plausible for the domain.
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| `Lorem ipsum dolor sit amet...` | Context-aware placeholder text | Lorem ipsum signals demo/throwaway quality |
+| "Jane Doe", "John Smith" | Realistic names with context | Generic names make UI feel fake |
+| "$99/mo", "$49" | Domain-realistic numbers | Fake stock pricing looks like a template |
+| "amazing", "powerful", "unleash", "revolutionary" | Specific, verifiable claims | Filler adjectives are startup clichés |
+| "Highly recommended!" | Specific outcome statement | Generic testimonials destroy credibility |
+
 ---
 
 ## Edge Cases
@@ -581,6 +607,19 @@ body {
 
 ---
 
+## Don't
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Long text breaking layout | Apply `truncate`, `overflow-wrap: break-word`, or `-webkit-line-clamp` | Unbounded text breaks grid layouts |
+| Blank container when no items | Meaningful empty state with icon, message, and CTA | Blank screens confuse users |
+| Generic error ("Something went wrong") | Actionable error: what happened + why + how to fix | Users need to know what to do next |
+| Content flash on load (no loading state) | Skeleton loaders matching final layout | Instant skeleton prevents layout shift |
+| Just grayed-out disabled button | Tooltip explaining why it's disabled | Users need to know why they can't proceed |
+| No input validation | HTML5 + JS validation with `aria-describedby` for errors | Unvalidated input causes data integrity issues |
+| No fallback for broken image src | `onError` handler to swap to default image | Broken image icons look unprofessional |
+| Unsanitized user content rendering | `DOMPurify.sanitize()` or text-only rendering | Raw user content is an XSS vulnerability |
+
 ## Verification
 
 - [ ] All text content handles overflow — truncation or word-break applied
@@ -603,3 +642,11 @@ body {
 - [ ] Font smoothing applied to body
 - [ ] i18n-ready: text allows 30% expansion, uses logical properties, uses `Intl.*` for dates/numbers
 - [ ] `noscript` fallback present in HTML
+
+### Self-Critique (Run Before Output)
+
+1. **State Coverage:** Does every async component handle loading, empty, error, AND success states? No "it just works" assumptions.
+2. **Data Realism:** Are all names, numbers, dates, and text strings realistic? No lorem ipsum, no Jane Doe, no filler content.
+3. **Boundary Check:** Do inputs have maxLength? Do lists handle 0, 1, 100+ items? Do long names/words get truncated?
+4. **Accessibility Resilience:** Is every interactive element keyboard-accessible? No keyboard traps? Focus visible on all elements?
+5. **Error Recovery:** Does every error state explain what happened, why, and how to fix it? No "Something went wrong" alone.
