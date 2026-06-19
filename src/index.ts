@@ -4,6 +4,7 @@
  *
  * Command surface (v0.3.0):
  *   mdpi init      Scaffold curated .pi/ kit into cwd + write manifest
+ *   mdpi install   Install the kit's declared npm packages (core + optional)
  *   mdpi upgrade   Bring .pi/ up to bundled template version (manifest-based)
  *   mdpi new       Scaffold a new kit component (skill|prompt|agent|workflow|template)
  *   mdpi lint      Governance checks (skills frontmatter + dead cross-refs, docs drift)
@@ -19,6 +20,7 @@ import { join } from "node:path";
 import packageInfo from "../package.json" with { type: "json" };
 import { doctorCommand } from "./commands/doctor.js";
 import { initCommand } from "./commands/init.js";
+import { installCommand } from "./commands/install.js";
 import { lintAll } from "./commands/lint.js";
 import { newCommand } from "./commands/new.js";
 import { upgradeCommand } from "./commands/upgrade.js";
@@ -45,6 +47,17 @@ cli
   .option("--only <cats>", "Install only these categories (comma-sep: agents,prompts,skills,templates,workflows,context,extensions)")
   .action(async (options) => {
     await initCommand(options);
+  });
+
+// ── upgrade ─────────────────────────────────────────────────────────────
+cli
+  .command("install", "Install the kit's declared npm packages (core from settings.json + optional from packages.json)")
+  .option("--core", "Only install core packages (settings.json:packages)")
+  .option("--optional", "Only install optional packages (packages.json:optional)")
+  .option("--check", "Dry-run: list declared packages + report installed/missing")
+  .option("-y, --yes", "Skip confirmation prompt (for CI)")
+  .action(async (options) => {
+    await installCommand(options);
   });
 
 // ── upgrade ─────────────────────────────────────────────────────────────

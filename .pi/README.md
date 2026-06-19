@@ -241,22 +241,43 @@ This kit ships **2 custom TypeScript extensions** and uses **2 external npm pack
 | `workflows-runner` | Parses DAG workflows from `.pi/workflows/*.md`, returns execution plan with `subagent()` calls | Production |
 | `templates-injector` | Auto-injects `project.md`, `tech-stack.md`, `state.md` into system prompt | Production |
 
-### External packages (auto-loaded from global)
+### External packages
 
-| Package | Purpose | Why external |
-|---------|---------|--------------|
-| `@davecodes/pi-dcp` | Dynamic context pruning (dedup, error purge, compress tool) | Battle-tested, superset of what we'd write |
-| `jdiamond/pi-guard` | Tool permission system (bash AST parser, path globs, default ruleset) | Proper bash AST parser handles `\|`, `&&`, `xargs` — regex can't |
+The kit depends on external npm packages, split into two sets:
 
-Install with `pi install npm:@davecodes/pi-dcp npm:pi-guard`. The pi-guard config example lives at `.pi/guard.example.json` — copy the `guard` block into `.pi/settings.json` to enable.
+- **Core** — declared in `.pi/settings.json:packages`, auto-loaded by pi at
+  startup. Single source of truth = `settings.json`.
+- **Optional** — declared in `.pi/packages.json`, recommended add-ons you opt
+  into.
+
+| Package | Set | Purpose | Why external |
+|---------|-----|---------|--------------|
+| `@tintinweb/pi-subagents` | core | Subagent dispatch (`subagent()` tool) | Battle-tested pi-native package |
+| `@sting8k/pi-srcwalk` | core | `semantic_*` code navigation tools | Trigram-indexed search, deep |
+| `pi-hermes-memory` | core | Long-term memory (`memory`/`memory_search`/`session_search`/`skill_manage`) | Mature, 368 tests, FTS5 + two-tier |
+| `@davecodes/pi-dcp` | optional | Dynamic context pruning (dedup, error purge, compress tool) | Superset of the kit's former dcp-strategies extension |
+| `pi-guard` | optional | Tool permission system (bash AST parser, path globs) | AST parser handles `\|`, `&&`, `xargs` — regex can't |
+
+Install the full set with one command (idempotent, safe to re-run):
+
+```bash
+mdpi install            # core + optional
+mdpi install --core     # only settings.json:packages
+mdpi install --optional # only packages.json:optional
+mdpi install --check    # dry-run: report installed/missing
+```
+
+`mdpi install` shells out to `pi install npm:<pkg>` for each declared package.
+The pi-guard config example lives at `.pi/guard.example.json` — copy the `guard`
+block into `.pi/settings.json` to enable its rules.
 
 ### Removed (intentionally)
 
 | Extension | Reason | Replaced by |
 |-----------|--------|-------------|
 | `commands-dispatcher` | Pi's built-in prompt template loader already does this | pi core (no install needed) |
-| `dcp-strategies` | Superseded by `@davecodes/pi-dcp` (active globally) | `pi install npm:@davecodes/pi-dcp` |
-| `pi-guard` (local) | Superseded by `jdiamond/pi-guard` (proper AST parser) | `pi install npm:pi-guard` |
+| `dcp-strategies` | Superseded by `@davecodes/pi-dcp` (active globally) | `mdpi install --optional` |
+| `pi-guard` (local) | Superseded by `jdiamond/pi-guard` (proper AST parser) | `mdpi install --optional` |
 
 ---
 

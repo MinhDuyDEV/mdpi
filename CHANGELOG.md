@@ -6,7 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No published changes yet._
+### Added
+- **`mdpi install`** — install the kit's declared npm packages in one command.
+  Reads **core** from `.pi/settings.json:packages` (single source of truth) and
+  **optional** from a new kit file `.pi/packages.json` (lists `@davecodes/pi-dcp`
+  + `pi-guard`). Shells out to `pi install npm:<pkg>` (idempotent, re-runnable).
+  Flags: `--core`, `--optional`, `--check` (dry-run + installed/missing report vs
+  `~/.pi/agent/npm/node_modules`), `--yes` (skip confirm). `mdpi init` now
+  suggests running `mdpi install` next. Closes the gap where `init` copied kit
+  files but left the referenced packages uninstalled.
 
 ## [0.3.0] — 2026-06-19
 

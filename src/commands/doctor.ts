@@ -2,14 +2,16 @@
  * mdpi doctor — .pi/ health check.
  *
  * Verifies: mdpi version match, manifest valid, settings.json valid JSON, kit
- * dirs present (skills/prompts/agents/templates/workflows/extensions), orphan
- * detection (manifest files no longer in template), and a lint summary.
+ * dirs present (skills/prompts/agents/templates/workflows/extensions), package
+ * install status (core settings.json + optional packages.json vs installed),
+ * orphan detection (manifest files no longer in template), and a lint summary.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import * as p from "@clack/prompts";
 import color from "picocolors";
 import { loadManifest, generateManifest } from "../utils/manifest.js";
+import { readCorePackages, readOptionalPackages, isInstalled } from "./install.js";
 import { getPackageVersion, getTemplateRoot, listFilesRel } from "../utils/template.js";
 import { lintSkills } from "./lint.js";
 
@@ -101,6 +103,21 @@ export async function doctorCommand(options: DoctorOptions = {}): Promise<void> 
   row(countMd("templates") > 0, "templates", `${countMd("templates")} templates`);
   row(countMd("workflows") > 0, "workflows", `${countMd("workflows")} workflows`);
   row(countExt("extensions", ".ts") > 0, "extensions", `${countExt("extensions", ".ts")} extensions`);
+
+  // packages: declared (core settings.json + optional packages.json) vs installed
+  const corePkgs = readCorePackages(piDir);
+  const optPkgs = readOptionalPackages(piDir);
+  const allPkgs = [...corePkgs, ...optPkgs];
+  const installedPkgs = allPkgs.filter((pkg) => isInstalled(pkg.id)).length;
+  row(
+    allPkgs.length > 0,
+    "packages",
+    allPkgs.length === 0
+      ? "none declared (settings.json:packages + packages.json:optional)"
+      : `${installedPkgs}/${allPkgs.length} installed` +
+          (installedPkgs < allPkgs.length ? color.yellow(`  (run mdpi install)`) : "") +
+          ` — core ${corePkgs.length}, optional ${optPkgs.length}`,
+  );
   if (templateRoot)
     row(
       orphans === 0,

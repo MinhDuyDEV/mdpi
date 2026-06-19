@@ -50,6 +50,7 @@ const ALWAYS_ENTRIES = [
   "scripts",
   "artifacts/example",
   "settings.json",
+  "packages.json",
   "AGENTS.md",
   "README.md",
   "QUALITY.md",
@@ -229,7 +230,8 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
       `Pi kit installed at:\n${piDir}\n\n` +
         `${fileCount} template files tracked via manifest.\n\n` +
         subsetNote +
-        `Next: open pi in this repo to use the kit.`,
+        `Next: run ${color.cyan("mdpi install")} to install the kit's npm packages,\n` +
+        `then open pi in this repo to use the kit.`,
       "Installation complete",
     );
     p.outro(color.green("Ready!"));
