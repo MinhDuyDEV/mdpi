@@ -107,7 +107,9 @@ To actively combat generic AI designs, systematically implement these high-end c
 * **4-7 (Daily App Mode):** Normal spacing for standard web apps.
 * **8-10 (Cockpit Mode):** Tiny paddings. No card boxes; just 1px lines to separate data. Everything is packed. **Mandatory:** Use Monospace (`font-mono`) for all numbers.
 
-## Don't
+## 7. Don't
+
+### Visual & CSS
 
 | Pattern | Replacement | Because |
 |---------|-------------|---------|
@@ -115,12 +117,40 @@ To actively combat generic AI designs, systematically implement these high-end c
 | Pure black `#000000` | Off-black, Zinc-950, or Charcoal | Pure black destroys visual depth |
 | Oversaturated accent colors | Desaturated accents blending with neutrals | High-saturation colors look amateurish |
 | Gradient text on large headers | Single solid heading color | Gradient text is an AI design cliché |
+| Custom mouse cursors | Default system cursor | Custom cursors hurt performance and accessibility |
+
+### Typography
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
 | Inter as display typeface | Geist, Outfit, Cabinet Grotesk, or Satoshi | Inter signals default AI-generated output |
+| Oversized H1 (>40px without reason) | Control hierarchy with weight and color, not just massive scale | Giant headings scream without communicating |
+| Serif fonts on dashboards or data UIs | Sans-serif for data; serif only for editorial/creative contexts | Serifs on dashboards feel out of place |
+
+### Layout & Spacing
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
 | 3-column identical card layouts | 2-column zig-zag, asymmetric grid, or horizontal scroll | Three equal cards is the #1 AI UI tell |
-| Generic placeholder names (John Doe, Sarah Chan) | Creative, realistic-sounding names | Generic names feel fake and unprofessional |
+| Floating elements with awkward gaps | Mathematically perfect padding and margin alignment | Misaligned spacing reads as sloppy |
+
+### Content & Data
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Generic placeholder names (John Doe, Sarah Chan) | Creative, realistic-sounding names (Dr. Sarah Chen, Marcus Okonkwo) | Generic names feel fake and unprofessional |
 | Emoji avatars or Lucide user icons | Creative photo placeholders or styled SVGs | Emoji avatars degrade perceived quality |
+| Fake or predictable numbers (`99.99%`, `50%`, `$99/mo`) | Organic, messy data (`47.2%`, `$12,450`, `+18.3%`) | Round numbers look fabricated |
+| Startup slop names (Acme, Nexus, SmartFlow) | Premium, contextual brand names | Startup-slop names are a dead AI giveaway |
+| Filler words (Elevate, Seamless, Unleash, Next-Gen) | Concrete, specific verbs and descriptions | AI copywriting clichés destroy credibility |
 | Unsplash URLs in image sources | `picsum.photos/seed/{seed}/800/600` or SVG placeholders | Unsplash links break and leave broken images |
 | Default shadcn/ui appearance | Customized radii, colors, and shadows | Default shadcn reads as AI-generated |
+
+### Code Quality
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Sloppy output — misaligned elements, poor spacing, generic feel | Meticulously refined, visually striking, memorable output | Production-ready cleanliness is non-negotiable for premium UI |
 
 ## 8. THE CREATIVE ARSENAL (High-End Inspiration)
 Do not default to generic UI. Pull from this library of advanced concepts to ensure the output is visually striking and memorable. When appropriate, leverage **GSAP (ScrollTrigger/Parallax)** for complex scrolltelling or **ThreeJS/WebGL** for 3D/Canvas animations, rather than basic CSS motion. **CRITICAL:** Never mix GSAP/ThreeJS with Framer Motion in the same component tree. Default to Framer Motion for UI/Bento interactions. Use GSAP/ThreeJS EXCLUSIVELY for isolated full-page scrolltelling or canvas backgrounds, wrapped in strict useEffect cleanup blocks.

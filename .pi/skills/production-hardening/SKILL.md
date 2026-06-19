@@ -408,8 +408,8 @@ Every data-display component must receive realistic, domain-appropriate data. Th
 
 **Rule:** Every text string must be real or realistically plausible for the domain.
 
-| Anti-pattern | Replacement | Because |
-|-------------|-------------|---------|
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
 | `Lorem ipsum dolor sit amet...` | Context-aware placeholder text | Lorem ipsum signals demo/throwaway quality |
 | "Jane Doe", "John Smith" | Realistic names with context | Generic names make UI feel fake |
 | "$99/mo", "$49" | Domain-realistic numbers | Fake stock pricing looks like a template |

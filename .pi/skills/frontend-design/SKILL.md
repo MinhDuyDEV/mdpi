@@ -94,18 +94,54 @@ Bold maximalism and refined minimalism both work. Key is intentionality.
 
 ## Don't
 
+### Typography
+
 | Pattern | Replacement | Because |
 |---------|-------------|---------|
 | Inter, Roboto, Arial as display fonts | Distinctive display fonts (Instrument Sans, Outfit, Fraunces) | Overused fonts signal generic design |
+| Monospace used as "developer aesthetic" shorthand | Purposeful type choice; mono only for code/data | Mono-as-aesthetic reads as placeholder design |
+| Big icons centered above every heading | Integrated icon + heading lockup, or icon inline | Giant centered icons feel template-generated |
+| Using `px` for body text | `rem`/`em` to respect user font-size preferences | `px` ignores accessibility and user settings |
+
+### Color
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
 | Gray text on colored backgrounds | Darker shade of the background color | Gray-on-color fails contrast and looks muddy |
 | Pure `#000` or `#fff` | Tinted near-black or near-white | Pure black/white don't exist in natural light |
 | Gradient text on headings or metrics | Solid, well-chosen heading color | Gradient text is a design crutch |
+| `rgba()` / heavy alpha transparency as primary palette | Explicit, named color values | Heavy alpha stacking creates unpredictable colors |
+
+### Layout
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
 | Cards nested inside cards | Typography, spacing, dividers for hierarchy | Nested cards create visual noise without purpose |
 | Identical card grids (icon + heading + text ×3-6) | Varied layout with purposeful asymmetry | Repeated identical cards is the #1 AI tell |
+| Hero metric template (big number + small label + gradient accent) | Contextual data display — number embedded in prose or card | Generic hero metrics are the startup-template cliché |
+| Center-aligning everything | Left-align content blocks; reserve center for short hero headlines | Center-aligned body text is hard to scan |
+| Same spacing everywhere (no visual rhythm) | Use proximity to group related items; vary spacing to create sections | Uniform spacing flattens hierarchy |
+
+### Visual
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
 | Glassmorphism used decoratively | Flat surfaces or layered shadows | Glassmorphism needs a functional reason for depth |
+| Thick colored border on one side of rounded rectangles | Subtle border or shadow on entire element | One-sided colored borders are a dated pattern |
+| Sparklines as decoration (not connected to real data) | Real sparklines from actual data, or omit entirely | Decorative sparklines are fake data theater |
+| Generic drop shadows on everything | Intentional shadow hierarchy — only where depth communicates meaning | Shadow-everywhere flattens the depth language |
+| Rounded rectangles as the only shape language | Mix shapes: sharp corners, soft corners, circles, organic shapes | Single-shape designs feel templated |
+
+### Motion
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
 | Bounce or elastic easing on UI | Exponential easing `cubic-bezier(0.16, 1, 0.3, 1)` | Real objects decelerate smoothly, not bounce |
 | Animating `height`, `width`, `padding`, `margin` | Animate only `transform` and `opacity` | Layout animations cause expensive repaints |
+| Default `ease` | Exponential easing curves tuned to animation purpose | Default `ease` is a compromise rarely optimal |
 | Missing `prefers-reduced-motion` handling | Always respect reduced motion preferences | ~35% of adults over 40 prefer reduced motion |
+
+> **The Slop Test:** If you showed this interface to someone and said "AI made this," would they believe you immediately? If yes, that's the problem.
 
 ## Best Practices
 
