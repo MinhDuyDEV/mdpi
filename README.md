@@ -1,6 +1,6 @@
 # mdpi — Pi Coding-Agent Kit CLI
 
-> Scaffold a curated `.pi/` kit (agents, prompts, skills, templates, workflows, extensions) into any repo with one command. The pi-native equivalent of OpenCodeKit's `ock init`.
+> Scaffold a curated `.pi/` kit (agents, prompts, skills, templates, workflows, extensions) into any repo with one command.
 
 ## Install
 

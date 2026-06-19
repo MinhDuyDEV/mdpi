@@ -10,19 +10,19 @@ For project-wide rules (kernel, drift signals, hard constraints, output style), 
 
 ## What This Directory Is
 
-`.pi/` is the **mapped deliverable** of OpenCodeKit → Pi coding agent format. It is **not** your personal configuration. Treat it as the artifact being built, not a system you own.
+`.pi/` is the **curated kit deliverable** — a standalone `.pi/` scaffold installable into any repo. It is **not** your personal configuration. Treat it as the artifact being built/maintained, not a system you own.
 
 ### What lives here
 
 | Subdir | Purpose | Treat as |
 |--------|---------|----------|
 | `agents/` | 7 agent personas (pi format) | Source of truth — don't modify casually |
-| `skills/` | 59 skills (Agent Skills spec) | Content ported from opencodekit |
-| `prompts/` | 9 slash commands | Content ported, dispatched by primary agent |
-| `workflows/` | 5 DAG workflows | Content ported, executed via subagent tool |
-| `templates/` | 10 project context templates | Direct copies, referenced via auto-inject |
-| `context/` | 2 reference docs (architecture, fallow) | Manual reference only, never auto-injected |
-| `extensions/` | 4 TypeScript extensions | Compiled JS code, gated by pi extension SDK |
+| `skills/` | 59 skills (Agent Skills spec) | Tier-1 auto-load + Tier-2 on-demand |
+| `prompts/` | slash commands | Dispatched by primary agent |
+| `workflows/` | DAG workflows | Executed via subagent tool |
+| `templates/` | project context templates | Referenced via auto-inject |
+| `context/` | reference docs (architecture, fallow) | Manual reference only, never auto-injected |
+| `extensions/` | TypeScript extensions | Compiled JS code, gated by pi extension SDK |
 
 ---
 
@@ -31,50 +31,27 @@ For project-wide rules (kernel, drift signals, hard constraints, output style), 
 ✅ **Auto-loaded** when you (the agent) are:
 - Editing any file under `.pi/`
 - Creating new files under `.pi/`
-- Mapping new opencodekit content into `.pi/`
 - Verifying format compliance of `.pi/` content
 
 ❌ **NOT auto-loaded** when:
-- Working in `ockit-mapping/` root (project rules live in `../../AGENTS.md`)
+- Working in project root (project rules live in `../../AGENTS.md`)
 - Working in any other subdirectory of the project
 - The user's request has nothing to do with `.pi/`
 
 ---
 
-## Mapping Discipline (Critical)
-
-When porting opencodekit content, follow these rules:
+## Format Conventions
 
 ### 1. Idempotency
 
-Re-running port operations must not duplicate or corrupt files.
-
-Before adding a file:
+Kit edits must not duplicate or corrupt files. Before adding a file:
 
 ```bash
 ls .pi/agents/<name>.md 2>/dev/null  # Check collision
 head -5 .pi/agents/<name>.md          # Check existing frontmatter
 ```
 
-### 2. Format Conversion Rules
-
-| Source (opencodekit) | Target (pi) |
-|----------------------|-------------|
-| `mode: primary\|subagent` | Remove (pi primary agent dispatches dynamically) |
-| `temperature: 0.1` | Remove (pi uses model defaults) |
-| `permission.bash.*` | Remove (pi uses settings.json permissions) |
-| `permission.write\|edit` paths | Remove (pi uses default tool permissions) |
-| `tools:` in skill frontmatter | Remove (pi infers tool usage) |
-| `agent: <name>` in command | Remove (dispatched via subagent tool) |
-| `version:`, `tags:`, `dependencies:` | Strip to `name` + `description` only |
-| `webclaw` | Replace with `websearch` / `codesearch` / `web_fetch` |
-| `srcwalk` CLI | Replace with `semantic_query` / `semantic_inspect` / `semantic_grep` / `semantic_show` |
-| `task({ subagent_type })` | Replace with `subagent({ agent })` |
-| `observation()` / `memory-search()` | Replace with `memory` (add/replace/remove) / `memory_search` / `session_search` tools (pi-hermes-memory) |
-| `compress` (DCP) | Remove (pi-vcc handles compaction at end-of-task) |
-| `fallow` references | Keep as-is (CLI tool, language-agnostic) |
-
-### 3. Frontmatter Hygiene
+### 2. Frontmatter Hygiene
 
 YAML frontmatter is strict. Always quote values containing `:`, `#`, or special chars:
 
@@ -87,7 +64,7 @@ description: "Use when the request contains: colons, or: weird: punctuation"
 
 Unquoted values with `:` cause "Nested mappings are not allowed in compact mappings" parse errors.
 
-### 4. Skill Frontmatter — Minimal
+### 3. Skill Frontmatter — Minimal
 
 Pi uses the Agent Skills spec — only 2 fields required:
 
@@ -98,7 +75,11 @@ description: "When to use this skill, max 1024 chars"
 ---
 ```
 
-Do **not** add `version`, `tags`, `dependencies`, `agent_types`, or `tools`. Migrate that metadata into the body if needed.
+Do **not** add `version`, `tags`, `dependencies`, `agent_types`, or `tools`. Put that metadata in the body if needed.
+
+### 4. Agent Frontmatter — Pi Format
+
+Agents use `tools` and `model` fields. Do **not** add `mode`, `temperature`, or `permission.*` blocks — pi uses model defaults and `settings.json` for permissions.
 
 ### 5. Workflows — Preserve DAG Structure
 
@@ -129,22 +110,18 @@ export default function (pi: ExtensionAPI) {
 }
 ```
 
-Do **not** use opencodekit's `@opencode-ai/plugin` SDK — different API surface.
-
 ---
 
 ## What You Must NOT Do
 
 | Forbidden | Why |
 |-----------|-----|
-| Modify global `~/.pi/agent/AGENTS.md` | That's the user's personal config, not part of this mapping |
-| Add `webclaw` / `srcwalk` / `task()` to `.pi/` content | Pi has stricter-superset replacements already |
-| Add DCP-style mid-session compression | Pi-vcc handles end-of-task compaction; DCP paradigm not ported |
+| Modify global `~/.pi/agent/AGENTS.md` | That's the user's personal config, not part of this kit |
 | Add `permission.bash` blocks to agent frontmatter | Pi uses settings.json for permissions |
 | Quote-skip in YAML when value has `:` | Causes parse errors |
-| Reimplement opencodekit's `srcwalk` Rust binary | `pi-srcwalk` is already a superset |
 | Add OAuth providers for Copilot/Codex | Already supported globally; no need to re-add here |
 | Strip `.ts` from `.pi/extensions/` | Pi loads them via jiti at startup |
+| Add net-new files for single-use cases | Violates smallest-working-change; extend existing files first |
 
 ---
 
@@ -182,31 +159,27 @@ npx tsc --noEmit .pi/extensions/*.ts 2>&1 | head -20
 
 ## Common Tasks
 
-### Porting a new opencodekit agent
+### Adding a new agent
 
-1. Read source: `cat /tmp/opencodekit-template/.opencode/agent/<name>.md`
-2. Strip `mode`, `temperature`, `permission.*` from frontmatter
-3. Add `tools:` and `model:` per pi conventions
-4. Replace tool references per Format Conversion Rules table
-5. Write to `.pi/agents/<name>.md`
-6. Verify with `head -8 .pi/agents/<name>.md`
+1. Create `.pi/agents/<name>.md`
+2. Use pi format frontmatter: `tools`, `model` (no `mode`/`temperature`/`permission`)
+3. Describe persona, when to use, tools available
+4. Update `.pi/agents/INDEX.md` if present
+5. Verify with `head -8 .pi/agents/<name>.md`
 
-### Porting a new opencodekit command
+### Adding a new prompt (slash command)
 
-1. Read source: `cat /tmp/opencodekit-template/.opencode/command/<name>.md`
-2. Strip `agent:` field (pi dispatches dynamically)
-3. Keep `description` and `argument-hint`
-4. Replace `skill({ name: "X" })` with descriptive instruction (pi auto-loads skills)
-5. Replace `task({ subagent_type: "X" })` with `subagent({ agent: "X" })`
-6. Write to `.pi/prompts/<name>.md`
+1. Create `.pi/prompts/<name>.md`
+2. Include `description` and `argument-hint` frontmatter
+3. Describe phases, load skills, dispatch via `subagent({ agent: "X" })`
+4. Update `.pi/prompts/INDEX.md`
 
-### Porting a new opencodekit skill
+### Adding a new skill
 
-1. Read source: `cat /tmp/opencodekit-template/.opencode/skill/<name>/SKILL.md`
-2. Strip everything except `name` and `description` from frontmatter
-3. If value contains `:` or special chars, wrap in double quotes
-4. Copy references/, rules/, scripts/ subdirs as-is
-5. Write to `.pi/skills/<name>/SKILL.md`
+1. Create `.pi/skills/<name>/SKILL.md`
+2. Frontmatter: only `name` and `description` (quote if value has `:` or special chars)
+3. Body: When to Use, Procedure, Pitfalls, Verification
+4. Update `.pi/skills/INDEX.md`
 
 ### Adding a new extension
 
@@ -219,18 +192,18 @@ npx tsc --noEmit .pi/extensions/*.ts 2>&1 | head -20
 
 ## Skills to Load When Working in `.pi/`
 
-These skills are most relevant when porting/editing `.pi/` content:
+These skills are most relevant when editing `.pi/` content:
 
 | Situation | Load skill |
 |-----------|------------|
-| Mapping content semantically | `behavioral-kernel` (clarify before committing) |
+| Editing content semantically | `behavioral-kernel` (clarify before committing) |
 | Validating edge cases | `defense-in-depth` |
-| Multi-file port | `incremental-implementation` (thin slices) |
-| Before claiming port is done | `verification-before-completion` (MUST run verification) |
+| Multi-file edit | `incremental-implementation` (thin slices) |
+| Before claiming work done | `verification-before-completion` (MUST run verification) |
 | Reformatting/cleanup | `code-cleanup` |
 | Code review before merge | `code-review-and-quality` |
 | Subagent usage in workflows | `subagent-driven-development` |
-| Spec-driven port | `spec-driven-development` |
+| Spec-driven work | `spec-driven-development` |
 
 ---
 

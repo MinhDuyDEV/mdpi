@@ -5,6 +5,14 @@ updated: <auto — last modified>
 
 # State
 
+## Project Mode
+
+<!-- Auto-injected every turn via templates-injector. Set during /init. -->
+**Mode:** greenfield | brownfield | mixed
+<!-- greenfield = no deployed consumers; skip backwards-compat layers, version prefixes, legacy handlers on day one -->
+<!-- brownfield = deployed consumers exist; run semantic_inspect callers/callees before any rename/delete to prove unreferenced; conform to existing conventions -->
+<!-- mixed = some subsystems new, some existing; state the mode per-task in the first sentence -->
+
 ## Current Position
 
 <!-- Where are we right now? What just happened? -->

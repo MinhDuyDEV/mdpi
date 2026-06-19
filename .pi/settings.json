@@ -3,8 +3,7 @@
   "packages": ["npm:@tintinweb/pi-subagents", "npm:@sting8k/pi-srcwalk", "npm:pi-hermes-memory"],
   "extensions": [
     "./extensions/workflows-runner.ts",
-    "./extensions/templates-injector.ts",
-    "./extensions/loop-guard.ts"
+    "./extensions/templates-injector.ts"
   ],
   "skills": ["./skills"],
   "prompts": ["./prompts"],

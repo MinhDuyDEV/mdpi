@@ -122,19 +122,6 @@ Built-in agent types: `general`, `explore`, `plan`, `review`, `scout`, `vision`.
 | Prompts | `.pi/prompts/*.md` | non-recursive root only | filename = command |
 | Agents | `.pi/agents/*.md` | root only (loaded by pi-subagents) | frontmatter schema |
 
-## Comparison to OpenCodeKit
-
-OpenCodeKit's 6 layers (Instructions / Commands / Workflows / Plugins / Tools / SDK) don't map 1:1 to pi:
-
-| OpenCodeKit concept | Pi equivalent | Notes |
-|---|---|---|
-| Instructions (AGENTS.md, skills) | Skills + Prompts (Layer 3) | Both declarative |
-| Commands (slash) | Prompts (Layer 3) | Pi-native pattern |
-| Workflows (DAG) | Skills (`subagent-driven-development`) or `.pi/workflows/*.md` (custom) | Pi has no native DAG, use `workflows-runner` extension |
-| Plugins (TS runtime) | Extensions (Layer 5) | Same concept, different SDK |
-| Tools (agent-callable) | Built-in tools + `registerTool` in extensions | Same concept |
-| SDK (shared types) | `ExtensionAPI` types from `@earendil-works/pi-coding-agent` | External npm package |
-
 ## Principles
 
 ### Extension Isolation

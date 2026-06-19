@@ -39,6 +39,8 @@ Initialize project setup. Run once per project.
 
 **Brownfield auto-detection:** Existing codebase = any `src/`, `lib/`, or `app/` directory with `.ts`, `.js`, `.tsx`, `.jsx`, `.py`, `.go`, or `.rs` files.
 
+**Mode 1 brownfield branch:** If brownfield auto-detected and no `--deep`/`--context` flag, before running default AGENTS.md generation, ask the user: "Detected existing codebase. (a) Deep-profile first — spawn parallel `subagent({ agent: "explore" })` + run `srcwalk`/`fallow` to enrich AGENTS.md and pre-fill context, or (b) continue with basic AGENTS.md only?" Default to (a) for repos with > 50 source files; (b) otherwise. Set `MODE:` in `.pi/state.md` accordingly (`greenfield` | `brownfield` | `mixed`). This closes the silent-greenfield-on-brownfield failure — never run the greenfield flow silently on an existing codebase.
+
 ## Guard Phase
 
 Before initializing:

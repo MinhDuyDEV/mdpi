@@ -2,7 +2,7 @@
 
 A self-contained `.pi/` directory that turns any repository into a pi-coding-agent workspace with structured agents, skills, slash commands, workflows, templates, and safety guards.
 
-Adapted from [opencodekit](https://github.com/) → pi-coding-agent format. Optimized for the **"copy and use"** workflow: no global setup required.
+Optimized for the **"copy and use"** workflow: no global setup required.
 
 ---
 
@@ -371,24 +371,6 @@ Then `/reload` in pi.
 
 ---
 
-## Differences from OpenCodeKit
-
-| Aspect | OpenCodeKit | This kit (Pi) |
-|--------|-------------|---------------|
-| Agents | 7 (with `build` + 6) | 7 (same) — uses `pi-subagents` schema |
-| Skills | 67 (4 Tier-1 + 63 Tier-2) | 67 (all shipped — 4 Tier-1 + 63 Tier-2) |
-| Code-intel | `srcwalk` plugin (7 tools) | Uses `pi-srcwalk` (5 tools, BM25 + RRF) |
-| External research | `webclaw` + `grepsearch` + `context7` | Uses `pi-search` (5 tools, Exa web) |
-| Subagent dispatch | `task()` in agent body | Same — `pi-subagents` extension |
-| Workflows | DAG markdown + plugin | Same DAG, but `workflows-runner` returns execution plan for LLM to execute |
-| Memory | LTM (SQLite + FTS5) | `npm:pi-hermes-memory` — markdown + SQLite FTS5, learning loop, secret scan, two-tier global/project (external package) |
-| Mid-session compression | Full DCP (LLM-invoked) | `@davecodes/pi-dcp` (npm package, auto-loaded) |
-| Safety | `guard.ts` plugin (regex) | `pi-guard` (jdiamond, bash AST parser) |
-| Settings | `opencode.json` (503 lines) | `settings.json` (~30 lines, lean) |
-| Scope | OpenCode runtime | Pi coding agent |
-
----
-
 ## Memory
 
 The kit's memory layer is [`pi-hermes-memory`](https://github.com/chandra447/pi-hermes-memory) (`npm:pi-hermes-memory`, wired in `settings.json:packages`) — a mature external package (368 tests, 140★, MIT) ported from the Hermes agent. It replaces the kit's former in-house `pi-memory` + `pi-session-summary` extensions.
@@ -467,4 +449,4 @@ Check that phases follow the format:
 
 ## License
 
-Adapted from opencodekit. See parent project for license terms.
+MIT. See parent project for license terms.
