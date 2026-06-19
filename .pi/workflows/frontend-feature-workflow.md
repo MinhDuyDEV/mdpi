@@ -21,7 +21,9 @@ Multi-agent workflow for building production-quality frontend features. Chains 7
 - **Tool:** `subagent` (single mode)
 - **Skill:** `figma` (if mockup provided), `mockup-to-code` (if screenshot provided)
 
-**Pre-Flight: Read DESIGN.md.** Before analyzing any mockup or design file, read `.pi/DESIGN.md` (fallback: `.pi/templates/DESIGN.md`) to load project mood, color palette, typography scale, and design constraints. Use DESIGN.md prose as the aesthetic anchor — the Overview section's specific reference sets the tone for all subsequent design decisions.
+**Pre-Flight: Load DESIGN.md + aesthetic skills.** Before analyzing any mockup or design file: (1) read `.pi/DESIGN.md` (fallback: `.pi/templates/DESIGN.md`) to load project mood, color palette, typography scale, and design constraints; (2) load `frontend-design` and `design-taste-frontend` skills via `/skill:frontend-design` and `/skill:design-taste-frontend`. Use DESIGN.md prose as the aesthetic anchor — the Overview section's specific reference sets the tone for all subsequent design decisions.
+
+Also load `design-taste-frontend` and `frontend-design` skills — they enforce the aesthetic rules that translate DESIGN.md's prose into concrete component styling decisions.
 
 **Prompt:**
 

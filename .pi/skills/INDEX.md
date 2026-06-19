@@ -44,8 +44,7 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | refactor, cleanup, simplify, clean code, complex | `code-cleanup`, `code-simplification`, `deep-module-design` |
 | test, spec, verify, assert, coverage, TDD | `test-driven-development`, `testing-anti-patterns` |
 | review, audit, quality, check, PR | `code-review-and-quality`, `agent-code-quality-gate` |
-| design, UI, component, style, layout, CSS, tailwind | `frontend-design`, `design-taste-frontend` |
-| DESIGN.md, design identity, design token, brand identity | `frontend-design`, `design-taste-frontend` |
+| design, UI, component, style, layout, CSS, tailwind, DESIGN.md, design identity, design token, brand identity | `frontend-design`, `design-taste-frontend` |
 | accessibility, a11y, WCAG, ARIA, keyboard, focus, fix a11y | `fixing-accessibility` |
 | craft, polish, detail, micro-interaction, concentric, optical, border-radius | `ui-craft-principles` |
 | i18n, internationalization, RTL, edge case, error state, empty state, harden, text overflow | `production-hardening` |

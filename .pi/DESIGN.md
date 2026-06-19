@@ -10,9 +10,9 @@ updated: 2026-06-19
 ## 1. Overview & Mood
 
 - **Mood:** Architectural Minimalism, Journalistic Gravitas
-- **Specific Reference:** A 1970s graduate lecture handout, mimeographed on off-white paper — generous margins, one type family, nothing superfluous.
+- **Specific Reference:** A 1970s graduate lecture handout, mimeographed on off-white paper — generous margins, one type family with safe fallbacks, nothing superfluous.
 - **Tone:** Professional, Warm
-- **Design Philosophy:** Every element must earn its place. Content is the hero; design is the frame. Generous whitespace over decorative flourishes.
+- **Design Philosophy:** Every element must earn its place. Content is the hero; design is the frame. Generous whitespace over decorative flourishes. One type family (with web-safe fallbacks for rendering).
 
 ## 2. Colors
 
@@ -51,7 +51,6 @@ updated: 2026-06-19
 - **Border Radius Scale:** 0/4/8/12/16/24/full
 - **Corner Philosophy:** Sharp (0px) for layout containers, Soft (4px) for interactive elements
 - **Icon Style:** Outline — thin stroke, consistent 1.5px weight
-- **Stroke Width:** 1px
 
 ## 7. Components
 
