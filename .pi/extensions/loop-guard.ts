@@ -30,18 +30,73 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 // ---------------------------------------------------------------------------
 
 /**
+ * Mutating command verbs that, when combined with a sensitive keyword, signal a
+ * CHANGE to auth/payments/architecture (not a read). Used to scope the auth /
+ * payments / architecture never-do patterns so reads (`grep`, `cat` without
+ * redirection, `git log --grep=...`) are NOT over-blocked.
+ *
+ * Notes:
+ *   - `cat`/`echo`/`printf` only count as mutating when followed by a redirection
+ *     (`>` / `>>`); without redirection they are reads/prints.
+ *   - `sed` only counts as mutating with the in-place `-i` flag.
+ *   - `git checkout` (restore a file) mutates the working tree; `git checkout -b`
+ *     is blocked separately by the ship-command set below.
+ *   - `checkout` is intentionally NOT a payments keyword (it collides with
+ *     `git checkout`); payments are still caught via `stripe|billing|...`.
+ */
+const MUTATING_CMD_SRC =
+	"(?:npm\\s+(?:install|i|add)\\b|pnpm\\s+(?:install|i|add)\\b|yarn\\s+(?:add|install)\\b|" +
+	"git\\s+(?:checkout|merge|reset|revert|apply)\\b|" +
+	"sed\\b[^|;&\\n]*\\s-i\\b|tee\\b|cp\\b|mv\\b|" +
+	"(?:echo|cat|printf)\\b[^|;&\\n]*\\s>>?\\s)";
+
+/**
  * Never-do bash command patterns. Always blocked (attended or not).
  *
- * These match keywords that signal the maker is reaching outside its allowed
- * surface (auth, payments/billing, or architectural changes per Rule 4).
+ * Two groups:
+ *   1. Ship commands — the maker must never ship (FR6): push, pr create/merge,
+ *      creating a branch, committing, merging. The orchestrator owns these.
+ *   2. Auth / payments / architecture CHANGES (Rule 4 territory) — scoped to a
+ *      mutating verb so reads about these topics are NOT over-blocked.
  */
 export const NEVER_DO_PATTERNS: readonly RegExp[] = [
-	// auth / secrets / credentials
-	/\b(auth|oauth|jwt|credential|credentials|password|passwd|secret[_-]?key|api[_-]?key)\b/i,
-	// payments / billing / monetization
-	/\b(payment|payments|stripe|billing|checkout|subscription|subscriptions|paddle|lemonsqueezy)\b/i,
-	// architecture: refactors, rewrites, migrations, dep/library swaps (Rule 4 territory)
-	/\b(architecture|architectural|refactor|refactoring|restructure|restructuring|rewrite|migration|migrate)\b/i,
+	// --- Ship commands (FR6): the maker must never ship. ---
+	/\bgit\s+push\b/i,
+	/\bgh\s+pr\s+create\b/i,
+	/\bgh\s+pr\s+merge\b/i,
+	/\bgit\s+checkout\s+-b\b/i,
+	/\bgit\s+commit\b/i,
+	/\bgit\s+merge\b/i,
+	// --- Auth / credentials CHANGES (install/checkout/sed/redirection), not reads. ---
+	new RegExp(
+		"\\b" + MUTATING_CMD_SRC + "[^\\n]*\\b(auth|oauth|jwt|credential|credentials|password|passwd|secret[_-]?key|api[_-]?key)\\b",
+		"i",
+	),
+	// --- Payments / billing CHANGES, not reads. ---
+	new RegExp(
+		"\\b" + MUTATING_CMD_SRC + "[^\\n]*\\b(payment|payments|stripe|billing|subscription|subscriptions|paddle|lemonsqueezy)\\b",
+		"i",
+	),
+	// --- Architecture / refactor / migration CHANGES, not reads. ---
+	new RegExp(
+		"\\b" + MUTATING_CMD_SRC + "[^\\n]*\\b(architecture|architectural|refactor|refactoring|restructure|restructuring|rewrite|migration|migrate)\\b",
+		"i",
+	),
+];
+
+/**
+ * Secret / credential exfiltration patterns. ALWAYS blocked (attended or not) —
+ * a loop should never print a real secret.
+ *
+ * The `aws...` alternative absorbs the trailing word chars (`\w*`) because `_`
+ * is a word character in regex, so `\b` boundaries inside SCREAMING_SNAKE env
+ * identifiers like `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` would otherwise
+ * defeat the match. The other alternatives use real `\b` boundaries to avoid
+ * over-blocking words like `tokenizer`.
+ */
+export const SECRETS_PATTERNS: readonly RegExp[] = [
+	/\b(token|access[_-]?key|secret[_-]?key|github[_-]?token|api[_-]?key)\b/i,
+	/\baws[_-]?(?:access[_-]?key|secret[_-]?key|secret)\w*/i,
 ];
 
 /**
@@ -50,12 +105,19 @@ export const NEVER_DO_PATTERNS: readonly RegExp[] = [
  * so these are allowed to pass through the gate.
  */
 export const DANGEROUS_PATTERNS: readonly RegExp[] = [
-	// rm -rf / rm -r / --recursive (destructive recursive deletion)
-	/\brm\s+(-rf?|--recursive)/i,
+	// rm with any recursive/force flag (destructive): catches -rf, -fr, -r, -R,
+	// --recursive, --force, -f -r, --force --recursive. Uses \s before the flag
+	// (not \b) because flags start with `-`, a non-word char, so \b before `-`
+	// never matches when preceded by a space.
+	/\brm\b[^\n;&|]*\s(-r|-rf|-fr|-R|--recursive|--force)\b/i,
 	// privilege escalation
 	/\bsudo\b/i,
-	// world-writable permission grants
-	/\b(chmod|chown)\b[^\n&|;]*\b777\b/,
+	// world-writable permission grants: handles 0777 / 00777 / 777
+	/\b(chmod|chown)\b[^\n&|;]*\b0*777\b/i,
+	// world-writable via symbolic mode: ugo+rwx / [augo]=rwx
+	/\b(chmod|chown)\b[^\n&|;]*\b(ugo\+rwx|[augo]=rwx)\b/i,
+	// find -delete / find -exec rm (destructive recursive deletion via find)
+	/\bfind\b[^\n;&|]*\s(-delete|-exec\s+rm)\b/i,
 ];
 
 /**
@@ -95,13 +157,29 @@ function block(reason: string): GuardDecision {
 }
 
 /**
- * Evaluate a bash command string against never-do + dangerous policy.
- * Never-do always blocks. Dangerous blocks only when `!ctx.hasUI`.
+ * Evaluate a bash command string against secrets + never-do + protected-path /
+ * dangerous policy.
+ *   - Secrets: always blocked (credential exfiltration).
+ *   - Never-do: always blocked (ship commands + auth/payment/architecture CHANGES).
+ *   - Protected paths written via bash redirection (`>`, `>>`, `tee`, `sed -i`,
+ *     `cp`, `mv`): always blocked — defeats the write/edit path gate (FR12).
+ *   - Dangerous: blocked only when `!ctx.hasUI`.
  */
 export function evaluateBashCommand(command: string, ctx: GuardCtx): GuardDecision {
+	for (const pattern of SECRETS_PATTERNS) {
+		if (pattern.test(command)) {
+			return block(`Blocked secret/credential pattern (matched /${pattern.source}/): ${command}`);
+		}
+	}
 	for (const pattern of NEVER_DO_PATTERNS) {
 		if (pattern.test(command)) {
 			return block(`Blocked by never-do rule (matched /${pattern.source}/): ${command}`);
+		}
+	}
+	for (const target of extractBashWriteTargets(command)) {
+		const d = evaluatePath(target);
+		if (d) {
+			return block(`Protected path written via bash redirection: ${target}`);
 		}
 	}
 	if (!ctx.hasUI) {
@@ -115,13 +193,73 @@ export function evaluateBashCommand(command: string, ctx: GuardCtx): GuardDecisi
 }
 
 /**
+ * Extract file paths that a bash command WRITES to via redirection or
+ * copy/move/in-place-edit, so they can be matched against PROTECTED_BASENAMES.
+ *
+ * Covers: `> file`, `>> file` (with optional fd prefix like `2>`), `tee file`,
+ * `tee -a file`, `sed -i ... file` (last non-flag token), `cp src dst` / `mv src dst`
+ * (last non-flag token = destination). Pure, no side effects.
+ */
+function extractBashWriteTargets(command: string): string[] {
+	const targets: string[] = [];
+	let m: RegExpExecArray | null;
+
+	// `> file` and `>> file` (optional fd prefix like `2>`). Skip `&...` (e.g. `2>&1`).
+	const redir = /(?:\d)?>>?\s*('([^']*)'|"([^"]*)"|(\S+))/g;
+	while ((m = redir.exec(command)) !== null) {
+		const t = stripQuotes(m[2] ?? m[3] ?? m[4] ?? "");
+		if (t && !t.startsWith("&")) targets.push(t);
+	}
+
+	// `tee <file>` (with optional flags like `-a`).
+	const tee = /\btee\b(?:\s+-[a-zA-Z]+)*\s+('([^']*)'|"([^"]*)"|(\S+))/g;
+	while ((m = tee.exec(command)) !== null) {
+		targets.push(stripQuotes(m[2] ?? m[3] ?? m[4] ?? ""));
+	}
+
+	// `sed -i <script> <file>`: last non-flag token is the in-place target.
+	if (/\bsed\b[^|;&\n]*\s-i\b/.test(command)) {
+		const sed = /\bsed\b([^|;&\n]*)/g;
+		while ((m = sed.exec(command)) !== null) {
+			const tokens = m[1].trim().split(/\s+/).filter((x) => x && !x.startsWith("-"));
+			if (tokens.length >= 1) targets.push(stripQuotes(tokens[tokens.length - 1]));
+		}
+	}
+
+	// `cp <src...> <dst>` / `mv <src...> <dst>`: last non-flag token is the destination.
+	for (const cmd of ["cp", "mv"] as const) {
+		const re = new RegExp("\\b" + cmd + "\\b([^|;&\\n]*)", "g");
+		while ((m = re.exec(command)) !== null) {
+			const tokens = m[1].trim().split(/\s+/).filter((x) => x && !x.startsWith("-"));
+			if (tokens.length >= 2) targets.push(stripQuotes(tokens[tokens.length - 1]));
+		}
+	}
+
+	return targets;
+}
+
+function stripQuotes(s: string): string {
+	return s.replace(/^["']|['"]$/g, "");
+}
+
+/**
+ * Case-insensitive basename membership test. macOS uses a case-insensitive
+ * filesystem, so `VISION.MD` / `Package.JSON` must not bypass protection.
+ */
+function isProtectedBasename(base: string): boolean {
+	if (!base) return false;
+	const lower = base.toLowerCase();
+	return PROTECTED_BASENAMES.some((b) => b.toLowerCase() === lower);
+}
+
+/**
  * Evaluate a file path for write/edit protection. Matches the basename against
- * the protected list. Returns a block decision or null to allow.
+ * the protected list (case-insensitively). Returns a block decision or null.
  */
 export function evaluatePath(filePath: string): GuardDecision {
 	if (!filePath) return null;
 	const base = path.basename(filePath);
-	if (PROTECTED_BASENAMES.includes(base)) {
+	if (isProtectedBasename(base)) {
 		return block(`Protected path "${filePath}" (basename "${base}") cannot be written/edited by the loop`);
 	}
 	return null;
@@ -223,9 +361,11 @@ async function loadSdk(): Promise<{ isToolCallEventType: IsToolCallEventType }> 
  * event into a typed bash/write/edit event, then delegates to the pure
  * `decideToolCall` predicate. Extracted so the narrowing is observable in isolation.
  */
-async function handleToolCall(event: AnyToolCallEvent, ctx: { hasUI: boolean; cwd: string }) {
+async function handleToolCall(event: AnyToolCallEvent, ctx: { hasUI?: boolean; cwd?: string }) {
 	const { isToolCallEventType } = await loadSdk();
-	const guardCtx: GuardCtx = { hasUI: ctx.hasUI, cwd: ctx.cwd };
+	// Default hasUI to `true` when missing: assume attended/interactive unless
+	// explicitly told unattended — avoids false-positive unattended-level blocking.
+	const guardCtx: GuardCtx = { hasUI: ctx?.hasUI ?? true, cwd: ctx?.cwd ?? "" };
 
 	if (isToolCallEventType("bash", event)) {
 		return decideToolCall("bash", { command: event.input.command }, guardCtx);
