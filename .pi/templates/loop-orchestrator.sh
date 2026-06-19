@@ -90,9 +90,10 @@ WORKTREE_DIR=""
 ACTION=""
 GIT_BRANCH=""
 PR_URL=""
-START_EPOCH=0
+START_EPOCH="$(date +%s)"  # Fix 4: init at script entry so dur= is sane on early error paths.
 BUDGET_KILLED=0      # FR13: set to 1 when the maker is killed for exceeding TOKEN_CAP.
 TOKEN_SUM=0          # FR13: cumulative message_end.message.usage.totalTokens across the run.
+_CLEANUP_RAN=0       # Fix 3: guard so the EXIT trap doesn't override a signal's exit code.
 
 # =============================================================================
 # LOGGING — INFO/WARN/ERROR with instance id + phase + duration
@@ -148,12 +149,27 @@ EOF
 parse_gate() {
     local vision="$1"
     [ -f "$vision" ] || { log_error "parse_gate" "VISION.md not found: $vision"; return 1; }
-    awk '
+    # Contract (must match T2 loop-vision.md + TS parseGateCommand): capture
+    # EXACTLY ONE ```bash block directly under the `## Gate` heading, bounded
+    # by the next level-1/2 heading. Zero or >1 blocks -> exit non-zero (caller
+    # treats as gate-not-parseable -> record failure, no ship).
+    local out
+    out="$(awk '
         /^## Gate[[:space:]]*$/ { in_gate=1; next }
-        in_gate && /^```bash[[:space:]]*$/ { in_block=1; next }
-        in_block && /^```[[:space:]]*$/ { in_block=0; in_gate=0; exit }
-        in_block { print }
-    ' "$vision" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | grep -v '^$'
+        in_gate && /^## / && !/^## Gate[[:space:]]*$/ { in_gate=0 }
+        in_gate && /^# / { in_gate=0 }
+        in_gate && /^```bash[[:space:]]*$/ { block_count++; if (block_count==1) in_block=1; next }
+        in_gate && in_block && /^```[[:space:]]*$/ { in_block=0; next }
+        in_block { buf[++n] = $0 }
+        END {
+            if (block_count != 1) exit 1
+            for (i=1; i<=n; i++) print buf[i]
+        }
+    ' "$vision")" || { log_error "parse_gate" "expected exactly 1 bash block under ## Gate in $vision (found 0 or >1)"; return 1; }
+    # Strip leading/trailing whitespace per line; drop blank lines.
+    out="$(printf '%s\n' "$out" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | grep -v '^$')"
+    [ -n "$out" ] || { log_error "parse_gate" "gate block under ## Gate was empty in $vision"; return 1; }
+    printf '%s\n' "$out"
 }
 
 # =============================================================================
@@ -245,15 +261,20 @@ state_record_budget_kill() {
 # CLEANUP — trap-registered; always remove the worktree (FR8).
 # =============================================================================
 cleanup() {
-    local rc=$?
+    local sig="${1:-}"
+    [ "$_CLEANUP_RAN" -eq 1 ] && return 0
+    _CLEANUP_RAN=1
     if [ -n "$WORKTREE_DIR" ] && [ -d "$WORKTREE_DIR" ]; then
-        log_warn "cleanup" "removing worktree $WORKTREE_DIR (rc was $rc)"
+        log_warn "cleanup" "removing worktree $WORKTREE_DIR (sig=${sig:-normal-exit})"
         git -C "$REPO_ROOT" worktree remove --force "$WORKTREE_DIR" 2>/dev/null \
             || rm -rf "$WORKTREE_DIR" 2>/dev/null \
             || log_error "cleanup" "failed to remove $WORKTREE_DIR"
     fi
-    # Never exit 1 on a loop failure (FR10). Always exit 0 from cleanup unless
-    # we are mid-arg-parse (handled by the caller's explicit exit codes).
+    # On INT/TERM, exit with the conventional signal code so a scheduler/CI
+    # timeout (e.g. GH Actions 30-min) is NOT reported as success. Normal EXIT
+    # stays 0 (FR10). _CLEANUP_RAN guards the EXIT-trap re-entry so a signal's
+    # exit code is not overwritten by a second `exit 0`.
+    [ -n "$sig" ] && exit "$sig"
     exit 0
 }
 
@@ -373,15 +394,14 @@ phase_worktree_and_maker() {
 phase_gate() {
     log_info "E_gate" "running gate via bash -c"
     local gate_out
-    if ! gate_out="$(cd "$WORKTREE_DIR" && bash -c "$GATE" 2>&1)"; then
-        local rc=$?
+    gate_out="$(cd "$WORKTREE_DIR" && bash -c "$GATE" 2>&1)"
+    local rc=$?
+    if [ "$rc" -ne 0 ]; then
         printf '%s\n' "$gate_out" >&2
         log_error "E_gate" "gate FAILED (exit $rc)"
-        return $rc
+        return "$rc"
     fi
-    printf '%s\n' "$gate_out" >&2
     log_info "E_gate" "gate PASSED (exit 0)"
-    return 0
 }
 
 # =============================================================================
@@ -429,7 +449,9 @@ phase_ship() {
 # =============================================================================
 main() {
     phase_parse_args "$@"
-    trap cleanup EXIT INT TERM
+    trap 'cleanup'     EXIT
+    trap 'cleanup 130' INT
+    trap 'cleanup 143' TERM
 
     # Idempotence (FR9): skip already-processed items.
     if state_contains_processed "$ITEM_ID"; then
