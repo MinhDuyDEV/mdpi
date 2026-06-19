@@ -45,6 +45,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimized prompt phase consistency — all triggers use conditional wording
   ("if available … skip if unavailable") for portability.
 
+## [0.4.1] — 2026-06-20
+
+### Fixed
+- **quality-loop workflow** — corrected `ask_user` → `ask_user_question` in the
+  verdict JSON schema to match the actual Pi tool name.
+- **pi-hermes-memory database recovery** — resolved `database disk image is
+  malformed` error caused by SQLite WAL corruption. Recovered data via
+  `.recover`, rebuilt FTS5 indexes, documented recovery procedure and
+  recommended `PRAGMA integrity_check` gate in `DatabaseManager.open()`.
+
 ## [Unreleased]
 
 (no unreleased changes)
