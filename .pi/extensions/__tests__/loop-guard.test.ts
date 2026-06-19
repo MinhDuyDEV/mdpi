@@ -18,7 +18,7 @@ import {
 	decideToolCall,
 	type GuardCtx,
 	type GuardDecision,
-} from "./loop-guard.ts";
+} from "../loop-guard.ts";
 
 const ATTENDED: GuardCtx = { hasUI: true, cwd: "/repo" };
 const UNATTENDED: GuardCtx = { hasUI: false, cwd: "/repo" };
