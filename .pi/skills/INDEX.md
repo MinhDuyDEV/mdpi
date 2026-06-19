@@ -60,6 +60,7 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | Jira, Confluence, Atlassian, issue, ticket | `jira` |
 | browser, e2e, screenshot, playwright, chrome | `playwright`, `chrome-devtools`, `browser-testing-with-devtools` |
 | dependency, package, library, npm, PyPI, source | `opensrc` |
+| scrape, crawl, webclaw, bot protection, 403, webfetch fail, extract web content, web scraping | `webclaw` |
 | loop, unattended loop, nightly triage, loop-readiness, loop-cost, loop-check, loop-review | `loop-engineering`, `loop-audit`, `loop-cost` |
 | Swift, iOS, macOS, actor, async/await, Sendable | `swift-concurrency`, `swiftui-expert-skill`, `core-data-expert` |
 
@@ -229,6 +230,7 @@ Maps user intent to skill(s). `→` = sequential pipeline (execute in order). `+
 | "redisign" / "visual upgrade" / "restyle" | `redesign-existing-projects` | Build | High |
 | "accessibility" / "a11y" / "WCAG" | `accessibility-audit` | Review | Medium |
 | "dependency issue" / "how does library X work" | `opensrc` | Build | Low |
+| "scrape this" / "extract from" / "webclaw" / "crawl site" / "webfetch failed" | `webclaw` | Build | Low |
 | "browser test" / "e2e test" / "playwright" | `playwright` \| `browser-testing-with-devtools` | Verify | Medium |
 | "migrate" / "deprecate" / "remove old API" | `deprecation-and-migration` | Ship | High |
 | "create skill" / "write skill" / "edit skill" | `writing-skills` | Build | Low |
