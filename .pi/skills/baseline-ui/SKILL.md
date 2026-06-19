@@ -35,6 +35,8 @@ Patterns that are never acceptable in production UI. Fix before any other work.
 | **No emojis in code** | `🎉`, `🚀`, `✨` in React components, headings, or alt text | Replace with SVG icons (Phosphor, Radix) or clean primitives |
 | **No `h-screen`** | `h-screen` on hero sections or full-page layouts | Use `min-h-[100dvh]` to prevent mobile browser chrome layout jump |
 | **No `div` onClick as button** | `<div onClick={...} className="cursor-pointer">` | Use `<button type="button">` or `<button type="submit">` with proper styling |
+| **No lorem ipsum** | `Lorem ipsum dolor sit amet...` or any lorem ipsum variant | Use real or realistic domain-appropriate text. For placeholder text, use context-aware content (e.g., "Product launch strategy Q3 2026" not "Lorem ipsum"). |
+| **No generic data** | "Jane Doe", "John Smith", "$99/mo", "amazing", "powerful" | Use realistic names, numbers, and domain-appropriate language. No filler testimonials, no startup slop words. |
 
 **Before/After examples:**
 
@@ -199,3 +201,11 @@ Run `baseline-ui` first when starting any frontend work. It catches the most com
 - [ ] No glassmorphism (`backdrop-blur` + semi-transparent bg) used purely decoratively
 - [ ] No bounce/elastic CSS easing curves on UI elements
 - [ ] Skeleton loaders used instead of spinners for content loading states
+
+### Self-Critique (Run Before Output)
+
+1. **Contrast Check:** Are all text/background combinations ≥ 4.5:1 ratio? No low-contrast gray text on colored backgrounds.
+2. **Data Check:** Is every text string real or realistic? No "Lorem ipsum", "Jane Doe", "$99", or filler words ("amazing", "powerful").
+3. **Grid Check:** Do all spacing values use the 4pt scale (4, 8, 12, 16, 24, 32, 48, 64)? No arbitrary pixel values.
+4. **Font Check:** No Inter, Roboto, Arial, or other AI-default fonts. No oversized H1 (>40px without explicit design reason).
+5. **Color Check:** No pure black `#000`, no purple/indigo gradients, no oversaturated accents like `#FF4500`.

@@ -390,6 +390,32 @@ function OfflineBanner() {
 }
 ```
 
+### Must-Use-Real-Data
+
+Every data-display component must receive realistic, domain-appropriate data. This is non-negotiable for production UI.
+
+```tsx
+// BEFORE — generic slop (NEVER do this)
+<TestimonialCard name="Jane Doe" quote="Amazing product! Highly recommended." />
+<StatCard label="Revenue" value="$99/mo" />
+<HeroSection title="Unleash Your Potential with Our Powerful Platform" />
+
+// AFTER — realistic data with domain specificity
+<TestimonialCard name="Dr. Sarah Chen" quote="Reduced our deployment time from 3 days to 45 minutes." />
+<StatCard label="Revenue" value="$12,450" trend="+18.3%" />
+<HeroSection title="Deploy infrastructure changes in under 10 minutes" />
+```
+
+**Rule:** Every text string must be real or realistically plausible for the domain.
+
+| Anti-pattern | Replacement | Because |
+|-------------|-------------|---------|
+| `Lorem ipsum dolor sit amet...` | Context-aware placeholder text | Lorem ipsum signals demo/throwaway quality |
+| "Jane Doe", "John Smith" | Realistic names with context | Generic names make UI feel fake |
+| "$99/mo", "$49" | Domain-realistic numbers | Fake stock pricing looks like a template |
+| "amazing", "powerful", "unleash", "revolutionary" | Specific, verifiable claims | Filler adjectives are startup clichés |
+| "Highly recommended!" | Specific outcome statement | Generic testimonials destroy credibility |
+
 ---
 
 ## Edge Cases
@@ -616,3 +642,11 @@ body {
 - [ ] Font smoothing applied to body
 - [ ] i18n-ready: text allows 30% expansion, uses logical properties, uses `Intl.*` for dates/numbers
 - [ ] `noscript` fallback present in HTML
+
+### Self-Critique (Run Before Output)
+
+1. **State Coverage:** Does every async component handle loading, empty, error, AND success states? No "it just works" assumptions.
+2. **Data Realism:** Are all names, numbers, dates, and text strings realistic? No lorem ipsum, no Jane Doe, no filler content.
+3. **Boundary Check:** Do inputs have maxLength? Do lists handle 0, 1, 100+ items? Do long names/words get truncated?
+4. **Accessibility Resilience:** Is every interactive element keyboard-accessible? No keyboard traps? Focus visible on all elements?
+5. **Error Recovery:** Does every error state explain what happened, why, and how to fix it? No "Something went wrong" alone.
