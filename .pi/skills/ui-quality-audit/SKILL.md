@@ -304,6 +304,19 @@ When producing an audit, use this format:
 5. **Plan P1** — Schedule remaining must-fix items for this release
 6. **Triage P2-P3** — Decide what to fix vs. backlog
 
+## Don't
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Keyboard trap — user cannot tab through all elements | Ensure logical tab order with proper focus management | Keyboard trap makes site unusable for non-mouse users |
+| `outline: none` without `:focus-visible` alternative | Custom focus ring via `:focus-visible` | Removing focus breaks keyboard navigation |
+| Color contrast < 3:1 on body text | Darken text to meet minimum 3:1 contrast | Below 3:1 is illegible for low-vision users |
+| CLS > 0.25 (Cumulative Layout Shift) | Reserve space with aspect-ratio containers and fixed dimensions | High CLS degrades Core Web Vitals |
+| No lazy loading on below-fold images | Add `loading="lazy"` to all images below the fold | Eager loading wastes bandwidth and slows page load |
+| Page unusable at 375px width | Implement responsive layout that reflows at all breakpoints | Mobile users are the primary audience |
+| `<div onClick>` as interactive button | Use `<button type="button">` with proper ARIA | div onClick has no keyboard/screen reader semantics |
+| Purple/blue gradient hero sections | Single flat accent or subtle tonal gradient | Purple/blue gradient is the #1 AI generation fingerprint |
+
 ## Verification
 
 - [ ] Accessibility scored and all P0 items identified

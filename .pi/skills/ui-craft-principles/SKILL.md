@@ -530,6 +530,20 @@ function usePrefersReducedMotion() {
 
 ---
 
+## Don't
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Same border-radius on nested containers | Apply concentric formula: `innerRadius = outerRadius - padding` | Same radius creates "fattened" corner look on inner element |
+| Single heavy `box-shadow` | 2-3 layered shadows with decreasing opacity | Layered shadows create realistic depth |
+| Fixed-duration CSS transitions | Spring-based physics or natural easing curves | Fixed duration can't be interrupted mid-animation |
+| No `:active` state on pressable elements | `active:scale-[0.98]` for physical push feedback | Missing tactile feedback makes UI feel flat |
+| Proportional numbers in data displays | `font-variant-numeric: tabular-nums` | Proportional numbers jitter as values change |
+| Permanent `will-change` on animated elements | Apply before animation, remove after | Permanent will-change wastes GPU memory |
+| Generic skeleton bars not matching layout | Skeleton matching exact real content layout | Generic skeletons don't provide useful placeholder |
+| `outline: none` without `:focus-visible` fallback | `outline: 2px solid` with `outline-offset: 2px` using `:focus-visible` | Removing outlines breaks keyboard navigation |
+| No `prefers-reduced-motion` handling | Always respect user motion preferences with media query | Animations can cause discomfort for vestibular disorders |
+
 ## Verification
 
 - [ ] Concentric radius formula applied to all nested containers

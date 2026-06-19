@@ -399,15 +399,15 @@ Give your neutral tones a subtle brand hue by adding very low chroma:
 
 ---
 
-## Common Mistakes
+## Don't
 
-| Mistake | Why it's wrong | Fix |
-|---------|---------------|-----|
-| C too high for text | High chroma text is fatiguing to read at small sizes | Keep text C ≤ 0.15. Reserve C=0.2+ for display/brand use |
-| Not checking gamut | `oklch(0.5 0.37 290)` is outside sRGB, clips unpredictably | Reduce C or use `toGamut()` to get predictable clipping |
-| Mixing color spaces | Part of palette in HEX, part in OKLCH — hard to compare | Use one color space for the entire palette |
-| C=0 for all grays | True neutral grays can look sterile | Use C=0.01 with brand hue for richer neutrals |
-| No fallback | OKLCH not supported in IE11 or some older browsers | Use `color: #hex; color: oklch(...)` pattern |
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| C too high for text | Keep text C ≤ 0.15; reserve C≥0.2 for display/brand use | High chroma text is fatiguing at small sizes |
+| Not checking gamut | Reduce C or use `toGamut()` for predictable clipping | Colors outside sRGB clip unpredictably |
+| Mixing color spaces in palette | Use one color space for the entire palette | Mixed spaces make comparison impossible |
+| C=0 for all grays | Use C=0.01 with brand hue for richer neutrals | True neutral grays can look sterile |
+| No fallback for OKLCH | Use `color: #hex; color: oklch(...)` pattern | OKLCH unsupported in older browsers |
 
 ---
 

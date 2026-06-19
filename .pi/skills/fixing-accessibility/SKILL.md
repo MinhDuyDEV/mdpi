@@ -481,6 +481,18 @@ function Modal({ open, onClose, children }) {
 4. Check contrast on all text/background pairs — fix failures
 5. Zoom to 200% / 400% — fix content reflow issues
 
+## Don't
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Custom interactive elements not keyboard-accessible | Use native `<button>`, `<a>`, or implement proper ARIA + keyboard handlers | ~25% of users rely on keyboard navigation |
+| Removing focus outlines with `outline: none` | Use `:focus-visible` with a visible focus ring | Lost focus indicator makes site unusable for keyboard users |
+| Icon-only buttons without `aria-label` | Add `aria-label` describing the action | Screen readers cannot convey the action |
+| Placeholder as only form label | Associate `<label>` with `htmlFor`/`id` | Placeholder disappears on input, breaking assistive tech |
+| Missing `alt` text on informative images | Describe content or function in `alt` attribute | Screen reader reads filename instead |
+| Touch targets under 44×44px | Pad interactive elements to 44px minimum hit area | WCAG 2.1 requires 44px for touch targets |
+| Skipping heading levels (h1 → h3) | Maintain sequential hierarchy (h1 → h2 → h3) | Screen reader navigation relies on heading structure |
+
 ## Verification
 
 - [ ] Tab through every interactive element — logical order, visible focus, no traps

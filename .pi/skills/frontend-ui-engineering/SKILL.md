@@ -186,16 +186,17 @@ Test at: 320px, 768px, 1024px, 1440px.
 - `aria-busy="true"` on loading regions
 - Avoid layout shifts during loading (reserve space)
 
-## Red Flags
+## Don't
 
-- Components with more than 200 lines (split them)
-- Inline styles or arbitrary pixel values
-- Missing error states, loading states, or empty states
-- No keyboard navigation testing
-- Color as the sole indicator of state (red/green without text or icons)
-- `<div onClick>` instead of `<button>` — breaks keyboard and screen reader access
-- Prop drilling deeper than 3 levels without context or composition
-- Skipping heading levels (h1 → h3) — breaks screen reader navigation
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Components over 200 lines | Split into smaller focused sub-components | Large components violate single responsibility |
+| Inline styles or arbitrary pixel values | Use design tokens and consistent spacing scale | Inline styles are not maintainable |
+| Missing error, loading, or empty states | Handle all 4 data states (loading, empty, error, normal) | Users see blank screens without complete state handling |
+| Color as sole indicator of state | Add text labels or icons alongside color | Color-only cues are inaccessible to colorblind users |
+| `<div onClick>` instead of `<button>` | Use `<button type="button">` with proper styling | div onClick has no keyboard or screen reader semantics |
+| Prop drilling deeper than 3 levels | Use context, composition, or state management | Deep prop drilling couples components unnecessarily |
+| Skipping heading levels (h1 → h3) | Maintain sequential hierarchy (h1 → h2 → h3) | Skipped levels break screen reader page navigation |
 
 ## Verification
 
