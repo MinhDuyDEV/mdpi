@@ -24,8 +24,8 @@ When the agent edits files matching these patterns, the listed skills auto-load.
 | `.github/workflows/**,Dockerfile,docker-compose*.yml` | `ci-cd-and-automation` | Pipeline design + caching |
 | `.pi/skills/*/SKILL.md` | `writing-skills` | Skill authoring best practices |
 | `.pi/loops/**`,`loop-orchestrator.*`,`loop-guard.ts` | `loop-engineering`, `loop-audit` | Loop design/qualification + readiness scoring |
-| `*.css,*.scss,*.less` | `frontend-design`, `design-taste-frontend` | Design system consistency |
-| `*.tsx,*.jsx` | `frontend-ui-engineering` | Production-quality UI standards |
+| `*.css,*.scss,*.less` | `baseline-ui`, `frontend-design`, `design-taste-frontend` | Deslop pass + design system consistency |
+| `*.tsx,*.jsx` | `baseline-ui`, `frontend-ui-engineering` | Deslop pass + production-quality UI standards |
 | `*.md,docs/**,ADR*.md` | `documentation-and-adrs` | Doc structure + ADR format |
 
 ---
@@ -44,6 +44,12 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | test, spec, verify, assert, coverage, TDD | `test-driven-development`, `testing-anti-patterns` |
 | review, audit, quality, check, PR | `code-review-and-quality`, `agent-code-quality-gate` |
 | design, UI, component, style, layout, CSS, tailwind | `frontend-design`, `design-taste-frontend` |
+| accessibility, a11y, WCAG, ARIA, keyboard, focus, fix a11y | `fixing-accessibility` |
+| craft, polish, detail, micro-interaction, concentric, optical, border-radius | `ui-craft-principles` |
+| i18n, internationalization, RTL, edge case, error state, empty state, harden, text overflow | `production-hardening` |
+| audit, quality score, UI audit, anti-pattern detection, P0 P1 P2 | `ui-quality-audit` |
+| OKLCH, color system, color palette, color space, gamut, color conversion | `oklch-color-workflow` |
+| deslop, quick fix, baseline, fix AI patterns, auto-fix UI | `baseline-ui` |
 | database, query, SQL, postgres, supabase, RLS, migration | `supabase`, `supabase-postgres-best-practices` |
 | docs, documentation, README, ADR, changelog | `documentation-and-adrs` |
 | commit, branch, merge, rebase, git, worktree | `git-workflow-and-versioning`, `using-git-worktrees` |
@@ -135,17 +141,23 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 
 | Skill | Use when | Phase | Risk |
 |-------|----------|-------|------|
-| `frontend-ui-engineering` | Production-quality UIs — component architecture, design systems, WCAG 2.1 AA, avoid AI aesthetic | Build | Medium |
-| `frontend-design` | Building any web UI with React-based frameworks | Build | Medium |
+| `accessibility-audit` | ⚠️ DEPRECATED — use `fixing-accessibility` instead | Review | Medium |
+| `baseline-ui` | Quick deslop pass — fixes common AI-generated UI anti-patterns automatically | Build | Low |
+| `design-system-audit` | Auditing an existing design system for consistency | Review | Medium |
 | `design-taste-frontend` | BASE aesthetic layer to override default LLM design biases | Build | Low |
+| `fixing-accessibility` | Actionable WCAG 2.1 AA accessibility fixes — before/after code examples | Build + Review | Medium |
+| `frontend-design` | Building any web UI with React-based frameworks | Build | Medium |
+| `frontend-ui-engineering` | Production-quality UIs — component architecture, design systems, WCAG 2.1 AA, avoid AI aesthetic | Build | Medium |
 | `high-end-visual-design` | Premium, agency-quality, or luxury visual design | Build | Low |
-| `minimalist-ui` | Clean, editorial, or minimalist aesthetics | Build | Low |
 | `industrial-brutalist-ui` | Brutalist, military-terminal, or raw mechanical aesthetics | Build | Low |
+| `minimalist-ui` | Clean, editorial, or minimalist aesthetics | Build | Low |
+| `mockup-to-code` | Converting UI mockups, screenshots, Figma/Sketch designs into code | Build | Medium |
+| `oklch-color-workflow` | Complete OKLCH color system — syntax, palette generation, contrast, Tailwind v4 | Build | Low |
+| `production-hardening` | Production hardening — i18n, error states, edge cases, cross-browser | Ship | High |
 | `react-best-practices` | Writing, reviewing, or refactoring React/Next.js code for performance | Build | Medium |
 | `redesign-existing-projects` | Upgrading an existing website or app's visual design | Build | High |
-| `mockup-to-code` | Converting UI mockups, screenshots, Figma/Sketch designs into code | Build | Medium |
-| `accessibility-audit` | Auditing UI components or pages for accessibility compliance | Review | Medium |
-| `design-system-audit` | Auditing an existing design system for consistency | Review | Medium |
+| `ui-craft-principles` | 16 craft principles — concentric radius, optical alignment, interruptible animations | Build | Low |
+| `ui-quality-audit` | 5-dimension UI quality scoring (0-4) with P0-P3 severity tags | Review | Medium |
 
 ### Platform / Infrastructure
 
@@ -228,7 +240,13 @@ Maps user intent to skill(s). `→` = sequential pipeline (execute in order). `+
 | "add payment" / "subscription" / "checkout" | `polar` | Build | High |
 | "Figma to code" / "mockup to code" / "design to code" | `figma` → `mockup-to-code` → `frontend-design` | Build | Medium |
 | "redisign" / "visual upgrade" / "restyle" | `redesign-existing-projects` | Build | High |
-| "accessibility" / "a11y" / "WCAG" | `accessibility-audit` | Review | Medium |
+| "color system" / "OKLCH" / "color palette" | `oklch-color-workflow` | Build | Low |
+| "fix accessibility" / "a11y fix" / "WCAG fix" | `fixing-accessibility` | Build | Medium |
+| "make it feel better" / "craft details" / "UI polish" | `ui-craft-principles` | Build | Low |
+| "production ready" / "harden UI" / "edge cases" | `production-hardening` | Ship | High |
+| "quick polish" / "deslop" / "baseline fix" | `baseline-ui` | Build | Low |
+| "UI audit" / "quality score" / "score my UI" | `ui-quality-audit` | Review | Medium |
+| "accessibility" / "a11y" / "WCAG" | `fixing-accessibility` | Review | Medium |
 | "dependency issue" / "how does library X work" | `opensrc` | Build | Low |
 | "scrape this" / "extract from" / "webclaw" / "crawl site" / "webfetch failed" | `webclaw` | Build | Low |
 | "browser test" / "e2e test" / "playwright" | `playwright` \| `browser-testing-with-devtools` | Verify | Medium |
@@ -248,6 +266,7 @@ Execute skills in order — output of one feeds the next.
 brainstorming → spec-driven-development → planning-and-task-breakdown → incremental-implementation
 figma → mockup-to-code → frontend-design
 root-cause-tracing → debugging-and-error-recovery → verification-before-completion
+baseline-ui → frontend-design → ui-craft-principles → production-hardening → ui-quality-audit
 ```
 
 ### Parallel Load (`+`)
@@ -255,7 +274,7 @@ Load multiple skills simultaneously for independent concerns.
 
 ```
 code-review-and-quality + performance-optimization + security-and-hardening
-frontend-design + design-taste-frontend + accessibility-audit
+frontend-design + design-taste-frontend + fixing-accessibility
 test-driven-development + testing-anti-patterns + defense-in-depth
 ```
 
@@ -267,6 +286,15 @@ Phase 1 (Define):  brainstorming + spec-driven-development
 Phase 2 (Build):   incremental-implementation + test-driven-development
 Phase 3 (Review):  code-review-and-quality + code-simplification
 Phase 4 (Ship):    verification-before-completion → shipping-and-launch
+```
+
+```
+Phase 1 (Deslop):   baseline-ui
+Phase 2 (Design):   design-taste-frontend → frontend-design  
+Phase 3 (Craft):    ui-craft-principles + oklch-color-workflow
+Phase 4 (Build):    frontend-ui-engineering + incremental-implementation
+Phase 5 (Harden):   production-hardening + fixing-accessibility
+Phase 6 (Audit):    ui-quality-audit
 ```
 
 ### Choose One (`|`)
