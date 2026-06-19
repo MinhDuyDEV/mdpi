@@ -123,7 +123,7 @@ Patterns that signal complete design failure. Block the output and rewrite.
 | Rule | Why it's blocked |
 |------|-----------------|
 | **Pure black `#000`** | Never looks good in UI. Destroys depth. Use `#111`, `#18181b`, or `#1c1c1e` instead. |
-| **Centered hero with low variance** | When `DESIGN_VARIANCE <= 4` and layout is centered hero/H1 — forces boring landing pages. Use split-screen or left-aligned content. |
+| **Centered hero with low variance** | Forces boring landing pages. Use split-screen or left-aligned content. Establish a layout variance baseline (see `design-taste-frontend` for DESIGN_VARIANCE dial if loaded). |
 | **3-column identical cards** | Three identical feature cards is the #1 sign of AI-generated UI. Vary layout: 2-col then 1-col, or 4-col grid, or asymmetric bento. |
 | **Glassmorphism as decoration** | `backdrop-blur-xl bg-white/10` applied to elements with no functional need for depth. Use flat surfaces or layered shadows instead. |
 | **Bounce/elastic easing** | `cubic-bezier(0.68, -0.55, 0.265, 1.55)` or CSS `bounce` animation on UI elements. Use `ease-out` or spring-based motion instead. |

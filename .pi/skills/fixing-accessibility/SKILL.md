@@ -121,7 +121,7 @@ function Modal({ open, onClose, children }) {
   );
 }
 
-// AFTER — focus trap and auto-focus dialog
+// AFTER — auto-focus dialog and Escape to close (for full focus-trap, see `frontend-design` interaction patterns)
 function Modal({ open, onClose, children }) {
   const dialogRef = useRef(null);
 

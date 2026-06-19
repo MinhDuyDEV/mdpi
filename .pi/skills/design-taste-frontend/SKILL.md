@@ -15,7 +15,7 @@ description: Use when building any web UI as the BASE aesthetic layer to overrid
 - For non-UI tasks (backend, CLI, data processing)
 
 
-# High-Agency Frontend Skill
+# Design Taste Frontend
 
 ## 1. ACTIVE BASELINE CONFIGURATION
 * DESIGN_VARIANCE: 8 (1=Perfect Symmetry, 10=Artsy Chaos)

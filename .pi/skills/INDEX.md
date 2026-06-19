@@ -5,7 +5,7 @@ description: "Task-to-skill routing table with File Match + Keyword triggers, Ph
 
 # Skills Index — Task → Skill Mapping
 
-This file helps the agent (and humans) discover which skill to load for a given task. Skills are auto-loaded into the system prompt at startup (Tier 1), triggered by File/Keyword Match rules, or loaded on-demand via `/skill:<name>` (Tier 2). All 70 skills are available directly in `.pi/skills/`.
+This file helps the agent (and humans) discover which skill to load for a given task. Skills are auto-loaded into the system prompt at startup (Tier 1), triggered by File/Keyword Match rules, or loaded on-demand via `/skill:<name>` (Tier 2). All skills are available directly in `.pi/skills/`.
 
 **How routing works:** File Match → Keyword Match → Quick Routing Table → Decision Tree (if ambiguous).
 

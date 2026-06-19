@@ -63,9 +63,9 @@ Return findings in this format:
 
 ### Phase 2: Baseline Cleanup
 
-- **Depends on:** Phase 1
 - **Agent:** general
 - **Concurrency:** 1
+- **Depends on:** Phase 1
 - **Tool:** `subagent` (single mode)
 - **Skill:** `baseline-ui`
 
@@ -90,9 +90,9 @@ Return the list of fixes applied and verification results.
 
 ### Phase 3: Component Architecture
 
-- **Depends on:** Phase 2
 - **Agent:** plan
 - **Concurrency:** 1
+- **Depends on:** Phase 2
 - **Tool:** `subagent` (single mode)
 - **Skill:** `frontend-design`
 
@@ -153,9 +153,9 @@ PageLayout
 
 ### Phase 4: Craft Polish
 
-- **Depends on:** Phase 3
 - **Agent:** general
 - **Concurrency:** 1
+- **Depends on:** Phase 3
 - **Tool:** `subagent` (single mode)
 - **Skill:** `ui-craft-principles`, `oklch-color-workflow`
 
@@ -192,9 +192,10 @@ Return the enhanced design specs with before/after for each craft improvement.
 
 ### Phase 5: Parallel Implementation
 
-- **Depends on:** Phase 4
 - **Agent:** general
-- **Concurrency:** Dynamic (1 agent per build group, min 1, max 5)
+- **Concurrency:** Dynamic: 1..5
+- **Notes:** One subagent per build group from Phase 3.
+- **Depends on:** Phase 4
 - **Tool:** `subagent` (parallel mode)
 - **Skill:** `frontend-ui-engineering`, `react-best-practices`
 
@@ -229,9 +230,9 @@ Return each component implementation with its test file.
 
 ### Phase 6: Hardening
 
-- **Depends on:** Phase 5
 - **Agent:** general
 - **Concurrency:** 1
+- **Depends on:** Phase 5
 - **Tool:** `subagent` (single mode)
 - **Skill:** `production-hardening`, `fixing-accessibility`
 
@@ -266,9 +267,9 @@ Return hardening report with each issue found and fix applied.
 
 ### Phase 7: Quality Audit
 
-- **Depends on:** Phase 6
 - **Agent:** review
 - **Concurrency:** 1
+- **Depends on:** Phase 6
 - **Tool:** `subagent` (single mode)
 - **Skill:** `ui-quality-audit`
 
