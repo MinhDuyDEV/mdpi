@@ -2,7 +2,7 @@
  * Templates Injector Extension
  *
  * Auto-injects project context files into system prompt.
- * Mimics opencodekit's `instructions[]` mechanism via pi's before_agent_start hook.
+ * Auto-injects project context files into system prompt via pi's before_agent_start hook.
  *
  * Resolution: prefer the LIVE file at `.pi/{name}` (filled by /init, the project's
  * real state/stack/vision); fall back to the blank seed at `.pi/templates/{name}`
