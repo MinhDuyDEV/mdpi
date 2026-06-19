@@ -3,7 +3,7 @@ name: frontend-design
 description: MUST load when building any web UI with React-based frameworks — components, pages, or full applications. Covers Tailwind CSS v4, shadcn/ui, Motion animations. Base UI implementation skill; combine with aesthetic overlays (minimalist-ui, high-end-visual-design) for specific styles.
 ---
 
-**Aesthetic Context:** Your implementation must reflect the project DESIGN.md identity. Before writing any component, internalize the Overview & Mood, Colors, and Typography sections. All code output should feel like it belongs to the same intentional design system.
+**Aesthetic Context:** Your implementation must reflect the project `.pi/DESIGN.md` identity. Before writing any component, internalize the Overview & Mood, Colors, and Typography sections. All code output should feel like it belongs to the same intentional design system.
 
 # Frontend Design
 

@@ -3,7 +3,7 @@ name: design-taste-frontend
 description: Use when building any web UI as the BASE aesthetic layer to override default LLM design biases. Enforces strict typography, color, spacing, and component architecture rules. Load BEFORE frontend-design when premium visual quality is required.
 ---
 
-**Aesthetic Context:** This is a premium aesthetic layer. Read `.pi/context/DESIGN.md` first to internalize the project's visual identity — every typographic, color, and spacing rule here is shaped by that mood. Design taste means the design feels intentional, not AI-generated.
+**Aesthetic Context:** This is a premium aesthetic layer. Read `.pi/DESIGN.md` first to internalize the project's visual identity — every typographic, color, and spacing rule here is shaped by that mood. Design taste means the design feels intentional, not AI-generated.
 
 ## When to Use
 

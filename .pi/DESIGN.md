@@ -58,7 +58,7 @@ updated: 2026-06-19
 - **Button Hierarchy:** Primary `oklch(45% 0.08 250)` / Secondary `oklch(95% 0.005 250)` / Ghost transparent / Danger `oklch(55% 0.22 25)`
 - **Input Style:** Underlined with `44px` height
 - **Card Style:** Bordered (1px `oklch(92% 0 0)`) with `24px` padding
-- **Modal Style:** Centered with backdrop `oklch(0% 0 0 / 0.4)`
+- **Modal Style:** Centered with backdrop `oklch(12% 0.01 260 / 0.4)`
 - **Navigation:** Top bar with `56px` height
 
 ## 8. Do's and Don'ts
