@@ -5,7 +5,7 @@ description: "Task-to-skill routing table with File Match + Keyword triggers, Ph
 
 # Skills Index — Task → Skill Mapping
 
-This file helps the agent (and humans) discover which skill to load for a given task. Skills are auto-loaded into the system prompt at startup (Tier 1), triggered by File/Keyword Match rules, or loaded on-demand via `/skill:<name>` (Tier 2). All 67 skills are available directly in `.pi/skills/`.
+This file helps the agent (and humans) discover which skill to load for a given task. Skills are auto-loaded into the system prompt at startup (Tier 1), triggered by File/Keyword Match rules, or loaded on-demand via `/skill:<name>` (Tier 2). All 70 skills are available directly in `.pi/skills/`.
 
 **How routing works:** File Match → Keyword Match → Quick Routing Table → Decision Tree (if ambiguous).
 
@@ -23,6 +23,7 @@ When the agent edits files matching these patterns, the listed skills auto-load.
 | `*.sql,migrations/**` | `supabase-postgres-best-practices` | Query performance + RLS |
 | `.github/workflows/**,Dockerfile,docker-compose*.yml` | `ci-cd-and-automation` | Pipeline design + caching |
 | `.pi/skills/*/SKILL.md` | `writing-skills` | Skill authoring best practices |
+| `.pi/loops/**`,`loop-orchestrator.*`,`loop-guard.ts` | `loop-engineering`, `loop-audit` | Loop design/qualification + readiness scoring |
 | `*.css,*.scss,*.less` | `frontend-design`, `design-taste-frontend` | Design system consistency |
 | `*.tsx,*.jsx` | `frontend-ui-engineering` | Production-quality UI standards |
 | `*.md,docs/**,ADR*.md` | `documentation-and-adrs` | Doc structure + ADR format |
@@ -57,6 +58,7 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | Jira, Confluence, Atlassian, issue, ticket | `jira` |
 | browser, e2e, screenshot, playwright, chrome | `playwright`, `chrome-devtools`, `browser-testing-with-devtools` |
 | dependency, package, library, npm, PyPI, source | `opensrc` |
+| loop, unattended loop, nightly triage, loop-readiness, loop-cost, loop-check, loop-review | `loop-engineering`, `loop-audit`, `loop-cost` |
 | Swift, iOS, macOS, actor, async/await, Sendable | `swift-concurrency`, `swiftui-expert-skill`, `core-data-expert` |
 
 ---
@@ -97,6 +99,9 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | `writing-skills` | Creating new skills, editing existing skills, verifying skills before deployment | Build | Low |
 | `context-engineering` | Optimizing agent context setup — rules files, selective loading, confusion management | All | Low |
 | `doubt-driven-development` | In-flight adversarial review of non-trivial decisions before they stand | Build | Medium |
+| `loop-engineering` | Designing/qualifying/running unattended coding loops; 2-condition test + VISION/state + confidence-gated action | All | Medium |
+| `loop-audit` | Scoring a project's loop-readiness 0-100 + L0/L1/L2/L3; L3 gated on proven run | Review | Low |
+| `loop-cost` | Estimating tokens/day + daily cap + early-exit flag before approving a loop budget | Plan | Low |
 
 ### Implementation
 
