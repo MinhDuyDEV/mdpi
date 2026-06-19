@@ -1,9 +1,15 @@
 ---
 name: accessibility-audit
-description: Use when auditing UI components or pages for accessibility compliance, checking WCAG conformance, identifying keyboard navigation issues, color contrast problems, and pre-launch accessibility verification
+description: ⚠️ DEPRECATED — Use fixing-accessibility instead. Previously used for auditing UI components or pages for accessibility compliance.
 ---
 
-# Accessibility Audit Skill
+> **⚠️ DEPRECATED — This skill has been replaced by [`fixing-accessibility`](../fixing-accessibility/SKILL.md).**
+> 
+> `fixing-accessibility` provides actionable WCAG 2.1 AA fixes with before/after code examples, not just audit checklists. It covers 9 priority categories with concrete fix recipes.
+> 
+> This file is retained for backward compatibility. All references should redirect to `fixing-accessibility`.
+
+# Accessibility Audit Skill (Deprecated)
 
 ## When to Use
 
