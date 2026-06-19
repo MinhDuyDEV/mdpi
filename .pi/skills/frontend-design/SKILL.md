@@ -18,6 +18,17 @@ description: MUST load when building any web UI with React-based frameworks — 
 
 - Backend-only tasks or minimal UI with no visual design requirements.
 
+## Relationship to Other Skills
+
+| Skill | Role |
+|-------|------|
+| `design-taste-frontend` | Upstream — sets aesthetic baseline and anti-AI-slops. Load BEFORE this skill. |
+| `frontend-ui-engineering` | Sibling — handles component implementation, accessibility, and state patterns. |
+| `react-best-practices` | Complement — React/Next.js performance patterns. |
+| `baseline-ui` | Quick deslop pass for automatic fixes (spacing, typography). |
+
+**Pipeline:** `design-taste-frontend` → `frontend-design` → `frontend-ui-engineering`
+
 ## Reference Documentation
 
 ### Tailwind CSS v4.1
@@ -67,7 +78,7 @@ For sophisticated compositions: posters, brand materials, design systems.
 - `./references/design/interaction.md` - State models, focus, dialogs/popovers, loading patterns
 - `./references/design/ux-writing.md` - Button copy, error structure, empty states, i18n
 
-Search: `AI Slop Test`, `tinted neutrals`, `focus-visible`, `verb + object`, `65ch`
+Search: `tinted neutrals`, `focus-visible`, `verb + object`, `65ch`
 
 ## Design Thinking
 
@@ -79,9 +90,9 @@ Before coding, commit to BOLD aesthetic direction:
 
 Bold maximalism and refined minimalism both work. Key is intentionality.
 
-## Anti-Patterns (AI Fingerprints — NEVER)
+## Design Quality Standards
 
-These patterns immediately signal "AI made this." Avoid them all.
+These patterns immediately signal low-quality output. Avoid them all. For design-level anti-patterns (fonts, colors, layouts), see `design-taste-frontend`.
 
 ### Typography
 
@@ -92,7 +103,6 @@ These patterns immediately signal "AI made this." Avoid them all.
 
 ### Color
 
-- **AI palette**: Cyan-on-dark, purple-to-blue gradients, neon accents on dark backgrounds
 - Gray text on colored backgrounds (use darker shade of background color instead)
 - Pure `#000` or `#fff` (always tint — pure black/white don't exist in nature)
 - Gradient text on headings or metrics
@@ -121,7 +131,7 @@ These patterns immediately signal "AI made this." Avoid them all.
 - Default `ease` (compromise that's rarely optimal — use exponential easing)
 - Missing `prefers-reduced-motion` handling
 
-> **The AI Slop Test**: If you showed this interface to someone and said "AI made this," would they believe you immediately? If yes, that's the problem.
+> **The Slop Test**: If you showed this interface to someone and said "AI made this," would they believe you immediately? If yes, that's the problem.
 
 ## Best Practices
 
@@ -235,28 +245,21 @@ Create atmosphere: gradient meshes, noise textures, geometric patterns, layered 
 
 | Rationalization | Reality |
 |---|---|
-| "The AI aesthetic is fine for now" | AI default styles (purple gradients, oversized cards) signal low quality. Use the design system. |
+| "The default look is fine for now" | Default styles signal low quality. Use the design system from the start. |
 | "I'll make it responsive later" | Retrofitting responsive design is 3x harder than building it mobile-first. |
 | "Accessibility is a nice-to-have" | It's a legal requirement in many jurisdictions and an engineering quality standard. |
 | "This is just a prototype" | Prototypes become production code. Build the foundation right from the start. |
-
-## Red Flags
-
-- Components exceeding 200 lines (split them)
-- Inline styles or arbitrary pixel values
-- Missing error states, loading states, or empty states
-- No keyboard navigation testing
-- Color as the sole indicator of state (red/green without text or icons)
-- Generic "AI look" (purple gradients, oversized cards, stock layouts)
+| "Typography doesn't matter for functionality" | Typography is 95% of web design. Bad type ruins even good layouts. |
+| "Users won't notice the details" | Users may not articulate it, but they feel quality. Details accumulate into perception. |
 
 ## Verification
 
-After building UI:
-
-- [ ] Component renders without console errors
-- [ ] All interactive elements are keyboard accessible (Tab through the page)
-- [ ] Screen reader can convey the page's content and structure
+- [ ] Design tokens defined: primitives + semantic layer, with dark mode variants
+- [ ] Typography: distinctive font pairing, fluid sizing with `clamp()`, `max-width: 65ch` on body text
+- [ ] Color: OKLCH tokens, tinted neutrals (chroma 0.01-0.02), sufficient contrast (4.5:1 min)
+- [ ] Motion: exponential easing only, `prefers-reduced-motion` handled, only `transform` + `opacity` animated
+- [ ] Spacing: consistent 4pt scale, `gap` over margins, self-adjusting grids
 - [ ] Responsive: works at 320px, 768px, 1024px, 1440px
-- [ ] Loading, error, and empty states all handled
-- [ ] Follows the project's design system (spacing, colors, typography)
-- [ ] No accessibility warnings in dev tools or axe-core
+- [ ] Interaction: all 8 states designed, `:focus-visible` used, skeletons over spinners
+- [ ] UX Writing: verb + object buttons, error = what + why + fix, empty states are onboarding
+- [ ] No banned fonts, no gray-on-color text, no pure black/white

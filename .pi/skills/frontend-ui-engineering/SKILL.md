@@ -30,14 +30,15 @@ This skill composes with others for a complete frontend quality pipeline:
 
 | Skill | Relationship | When to combine |
 |-------|-------------|-----------------|
-| `frontend-design` | Sibling | `frontend-design` covers general UI patterns with React. `frontend-ui-engineering` adds production-quality standards (accessibility, AI-aesthetic avoidance). Load both for serious UI work. |
-| `design-taste-frontend` | Upstream | Apply design-taste rules FIRST to establish the aesthetic baseline. Then use `frontend-ui-engineering` for implementation quality. |
+| `design-taste-frontend` | Upstream | Apply aesthetic baseline FIRST. Then use `frontend-ui-engineering` for implementation quality. |
+| `frontend-design` | Upstream | `frontend-design` covers design system + tokens. `frontend-ui-engineering` adds component implementation patterns. |
 | `react-best-practices` | Complement | Load when building React/Next.js components — covers performance-specific patterns (memo, useMemo, server components). |
-| `accessibility-audit` | Gate | After building UI, run `accessibility-audit` to verify WCAG 2.1 AA compliance. |
+| `baseline-ui` | Upstream | Quick deslop pass before implementation — fixes spacing, typography, layout basics automatically. |
+| `fixing-accessibility` | Gate | After building UI, run `fixing-accessibility` for actionable WCAG 2.1 AA fixes. |
 | `performance-optimization` | Gate | After UI is working, profile with `performance-optimization` for Core Web Vitals. |
-| `mockup-to-code` | Upstream | If converting from Figma/mockup, run `mockup-to-code` first, then refine with `frontend-ui-engineering`. |
+| `ui-craft-principles` | Complement | Apply 16 craft principles (concentric radius, optical alignment, etc.) for polish. |
 
-**Pipeline:** `design-taste-frontend` → `frontend-ui-engineering` → `accessibility-audit` + `performance-optimization`
+**Pipeline:** `design-taste-frontend` → `frontend-design` → `frontend-ui-engineering` → `fixing-accessibility` + `performance-optimization`
 
 ## Component Architecture
 
@@ -102,11 +103,11 @@ Global store (Zustand, Redux)    → Complex client state shared app-wide
 
 ## Design System Adherence
 
-### Avoid the AI Aesthetic
+### Avoid Common Visual Anti-Patterns
 
-AI-generated UI has recognizable patterns. Avoid all of them:
+These patterns degrade implementation quality. For design-level aesthetic rules, see `design-taste-frontend`.
 
-| AI Default | Production Quality |
+| Degraded Pattern | Production Quality |
 |---|---|
 | Purple/indigo everything | Use the project's actual color palette |
 | Excessive gradients | Flat or subtle gradients matching the design system |
@@ -185,16 +186,6 @@ Test at: 320px, 768px, 1024px, 1440px.
 - `aria-busy="true"` on loading regions
 - Avoid layout shifts during loading (reserve space)
 
-## Common Rationalizations
-
-| Rationalization | Reality |
-|---|---|
-| "Accessibility is a nice-to-have" | It's a legal requirement in many jurisdictions and an engineering quality standard. |
-| "We'll make it responsive later" | Retrofitting responsive design is 3x harder than building it from the start. |
-| "The design isn't final, so I'll skip styling" | Use the design system defaults. Unstyled UI creates a broken first impression. |
-| "This is just a prototype" | Prototypes become production code. Build the foundation right. |
-| "The AI aesthetic is fine for now" | It signals low quality. Use the project's actual design system from the start. |
-
 ## Red Flags
 
 - Components with more than 200 lines (split them)
@@ -202,11 +193,11 @@ Test at: 320px, 768px, 1024px, 1440px.
 - Missing error states, loading states, or empty states
 - No keyboard navigation testing
 - Color as the sole indicator of state (red/green without text or icons)
-- Generic "AI look" (purple gradients, oversized cards, stock layouts)
+- `<div onClick>` instead of `<button>` — breaks keyboard and screen reader access
+- Prop drilling deeper than 3 levels without context or composition
+- Skipping heading levels (h1 → h3) — breaks screen reader navigation
 
 ## Verification
-
-After building UI:
 
 - [ ] Component renders without console errors
 - [ ] All interactive elements are keyboard accessible (Tab through the page)
@@ -215,3 +206,5 @@ After building UI:
 - [ ] Loading, error, and empty states all handled
 - [ ] Follows the project's design system (spacing, colors, typography)
 - [ ] No accessibility warnings in dev tools or axe-core
+- [ ] No `<div onClick>` as button replacement — all interactive elements use semantic HTML
+- [ ] Components < 200 lines; larger components split into sub-components

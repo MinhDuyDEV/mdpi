@@ -43,7 +43,6 @@ Unless the user explicitly specifies a different stack, adhere to these structur
   * **Grid over Flex-Math:** NEVER use complex flexbox percentage math (`w-[calc(33%-1rem)]`). ALWAYS use CSS Grid (`grid grid-cols-1 md:grid-cols-3 gap-6`) for reliable structures.
 * **Icons:** You MUST use exactly `@phosphor-icons/react` or `@radix-ui/react-icons` as the import paths (check installed version). Standardize `strokeWidth` globally (e.g., exclusively use `1.5` or `2.0`).
 
-
 ## 3. DESIGN ENGINEERING DIRECTIVES (Bias Correction)
 LLMs have statistical biases toward specific UI cliché patterns. Proactively construct premium interfaces using these engineered rules:
 
@@ -55,7 +54,7 @@ LLMs have statistical biases toward specific UI cliché patterns. Proactively co
 
 **Rule 2: Color Calibration**
 * **Constraint:** Max 1 Accent Color. Saturation < 80%.
-* **THE LILA BAN:** The "AI Purple/Blue" aesthetic is strictly BANNED. No purple button glows, no neon gradients. Use absolute neutral bases (Zinc/Slate) with high-contrast, singular accents (e.g. Emerald, Electric Blue, or Deep Rose).
+* **THE LILA BAN:** The "AI Purple/Blue" aesthetic is strictly BANNED. No purple button glows, no neon gradients. Use absolute neutral bases (Zinc/Slate) with high-contrast, singular accents (e.g., Emerald, Electric Blue, or Deep Rose).
 * **COLOR CONSISTENCY:** Stick to one palette for the entire output. Do not fluctuate between warm and cool grays within the same project.
 
 **Rule 3: Layout Diversification**
@@ -143,7 +142,7 @@ Do not default to generic UI. Pull from this library of advanced concepts to ens
 ### The Standard Hero Paradigm
 * Stop doing centered text over a dark image. Try asymmetric Hero sections: Text cleanly aligned to the left or right. The background should feature a high-quality, relevant image with a subtle stylistic fade (darkening or lightening gracefully into the background color depending on if it is Light or Dark mode).
 
-### Navigation & Menüs
+### Navigation & Menus
 * **Mac OS Dock Magnification:** Nav-bar at the edge; icons scale fluidly on hover.
 * **Magnetic Button:** Buttons that physically pull toward the cursor.
 * **Gooey Menu:** Sub-items detach from the main button like a viscous liquid.
@@ -237,19 +236,15 @@ Evaluate your code against this matrix before outputting. This is the **last** f
 - [ ] Are cards omitted in favor of spacing where possible?
 - [ ] Did you strictly isolate CPU-heavy perpetual animations in their own Client Components?
 
-## Common Rationalizations
+## Verification
 
-| Rationalization | Reality |
-|---|---|
-| "Default LLM styles are acceptable" | Default LLM styles are generic. Aesthetic intent signals craftsmanship. |
-| "Typography doesn't matter for functionality" | Typography is 95% of web design. Bad type ruins even good layouts. |
-| "I'll refine the design later" | Design debt compounds like technical debt. Fix it in the first pass. |
-| "Users won't notice the details" | Users may not articulate it, but they feel quality. Details accumulate into perception. |
-
-## Red Flags
-
-- Default LLM spacing and typography used without adjustment
-- No explicit font pairing decisions documented
-- Color palette not extracted from project context
-- Components lack hover/focus/active state differentiation
-- Visual hierarchy is flat — everything looks equally important
+- [ ] Aesthetic baseline config (DESIGN_VARIANCE, MOTION_INTENSITY, VISUAL_DENSITY) respected throughout output
+- [ ] No banned fonts (Inter, Roboto, Arial, system-ui) used as display font
+- [ ] No AI purple/blue gradients, no neon glows, no pure black (`#000000`)
+- [ ] No centered Hero/H1 when DESIGN_VARIANCE > 4
+- [ ] No 3-column identical card layouts
+- [ ] All interactive states (loading, empty, error) implemented
+- [ ] Mobile layout collapse verified at 320px, 768px
+- [ ] `min-h-[100dvh]` used instead of `h-screen` for full-height sections
+- [ ] No emojis in code, markup, or alt text
+- [ ] Perpetual animations isolated in their own Client Components
