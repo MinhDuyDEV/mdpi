@@ -16,6 +16,7 @@ import {
 	updateStateJson,
 	isAlreadyProcessed,
 	auditShipToolCalls,
+	enforceBudgetCap,
 	MAKER_TOOLS,
 } from "./loop-orchestrator.ts";
 
@@ -261,4 +262,28 @@ test("MAKER_TOOLS: does not include any ship tool", () => {
 	for (const t of MAKER_TOOLS) {
 		assert.equal(ship.has(t), false, `maker allowlist must not include ${t}`);
 	}
+});
+
+// ---------------------------------------------------------------------------
+// enforceBudgetCap (FR13 — budget cap enforcement)
+// ---------------------------------------------------------------------------
+
+test("enforceBudgetCap: null cap never kills", () => {
+	assert.deepEqual(enforceBudgetCap({ tokens: { total: 999999 } }, null), { kill: false, reason: null });
+});
+
+test("enforceBudgetCap: under cap does not kill", () => {
+	assert.deepEqual(enforceBudgetCap({ tokens: { total: 100 } }, 1000), { kill: false, reason: null });
+});
+
+test("enforceBudgetCap: over cap kills with budget_cap_exceeded reason", () => {
+	assert.deepEqual(enforceBudgetCap({ tokens: { total: 1500 } }, 1000), { kill: true, reason: "budget_cap_exceeded" });
+});
+
+test("enforceBudgetCap: missing tokens treated as 0 (no kill under cap)", () => {
+	assert.deepEqual(enforceBudgetCap({}, 1000), { kill: false, reason: null });
+});
+
+test("enforceBudgetCap: exactly at cap does not kill (strict >)", () => {
+	assert.deepEqual(enforceBudgetCap({ tokens: { total: 1000 } }, 1000), { kill: false, reason: null });
 });

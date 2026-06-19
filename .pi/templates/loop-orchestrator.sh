@@ -76,7 +76,10 @@ set -uo pipefail
 LOOP_NAME="${LOOP_NAME:-}"
 GATE="${GATE:-}"
 REPO_ROOT="${REPO_ROOT:-}"
-TOKEN_CAP="${TOKEN_CAP:-}"          # BUDGET-CAP HOOK (T13): set to enforce cap.
+# FR13 budget cap: per-run token ceiling. Empty/0 = disabled. When set and the
+# maker's --mode json cumulative message_end usage exceeds it, the loop is
+# killed (pi PID terminated) and the kill is recorded in STATE.json.metrics.
+TOKEN_CAP="${TOKEN_CAP:-}"          # BUDGET-CAP HOOK (FR13): set to enforce cap.
 MAKER_TOOLS="read,edit,write,bash,grep,find"
 LOOP_DIR=""
 VISION_FILE=""
@@ -88,6 +91,8 @@ ACTION=""
 GIT_BRANCH=""
 PR_URL=""
 START_EPOCH=0
+BUDGET_KILLED=0      # FR13: set to 1 when the maker is killed for exceeding TOKEN_CAP.
+TOKEN_SUM=0          # FR13: cumulative message_end.message.usage.totalTokens across the run.
 
 # =============================================================================
 # LOGGING — INFO/WARN/ERROR with instance id + phase + duration
@@ -221,6 +226,21 @@ state_record_run() {
         "$STATE_FILE" > "$tmp" && mv "$tmp" "$STATE_FILE"
 }
 
+# FR13: record a budget-cap kill in STATE.json (metrics.killed=true,
+# kill_reason=budget_cap_exceeded, tokens_used=cumulative sum). Graceful —
+# never exits non-zero; the caller continues to cleanup (FR10).
+state_record_budget_kill() {
+    [ -f "$STATE_FILE" ] || return 0
+    local tmp
+    tmp="$(mktemp)"
+    jq --arg reason "budget_cap_exceeded" --argjson tokens "${TOKEN_SUM:-0}" '
+        .metrics.killed = true
+        | .metrics.kill_reason = $reason
+        | .metrics.tokens_used = $tokens
+        | .last_run = (now | todate)
+    ' "$STATE_FILE" > "$tmp" && mv "$tmp" "$STATE_FILE"
+}
+
 # =============================================================================
 # CLEANUP — trap-registered; always remove the worktree (FR8).
 # =============================================================================
@@ -275,8 +295,15 @@ phase_load_gate() {
 }
 
 # =============================================================================
-# PHASE C — worktree + maker (`pi -p` with restricted tools, cwd in worktree)
+# PHASE C — worktree + maker (`pi -p --mode json` with restricted tools)
 # =============================================================================
+# Runs the maker with `pi -p --mode json`, which streams JSONL events on
+# stdout (one JSON object per line). We stream stdout into a parser that
+# accumulates `message_end.message.usage.totalTokens` for assistant messages
+# (the verified SDK usage field — only assistant message_end events carry
+# .usage; user message_end events do not) and kills the pi PID if the
+# cumulative sum exceeds TOKEN_CAP (FR13). Stderr is captured separately so it
+# never pollutes the jq-parsed event stream.
 phase_worktree_and_maker() {
     WORKTREE_DIR="$(mktemp -d -t "loop-${LOOP_NAME}-XXXXXX")"
     # mktemp -d gives a plain dir; convert to a git worktree.
@@ -291,36 +318,53 @@ phase_worktree_and_maker() {
     local prompt
     prompt="$(build_maker_prompt)"
 
-    # ---- Maker: pi -p with capability-deprivation allowlist (FR6). ----
+    # ---- Maker: pi -p --mode json with capability-deprivation allowlist (FR6). ----
     # The maker literally cannot call push/PR/Slack (not in --tools). It only
     # stages files in the worktree + writes PR_BODY.md. The orchestrator ships.
-    log_info "C_maker" "running pi -p (cwd=$WORKTREE_DIR, tools=$MAKER_TOOLS)"
-    local maker_log
-    if ! maker_log="$(cd "$WORKTREE_DIR" && pi -p --tools "$MAKER_TOOLS" --no-session --approve -a "$prompt" 2>&1)"; then
-        log_warn "C_maker" "pi -p exited non-zero (recorded, not fatal — FR10)"
-        printf '%s\n' "$maker_log" >&2
-        # Not a script-level failure: record + continue to gate evaluation.
-    fi
-    log_info "C_maker" "maker phase complete"
+    # --mode json emits JSONL events on stdout (one JSON object per line).
+    log_info "C_maker" "running pi -p --mode json (cwd=$WORKTREE_DIR, tools=$MAKER_TOOLS)"
+
+    local fifo err_file pi_pid=0
+    fifo="$(mktemp -u -t loop-fifo-XXXXXX)"
+    err_file="$(mktemp -t loop-maker-err-XXXXXX)"
+    mkfifo "$fifo"
+
+    # Background: pi writes JSONL events to the FIFO; stderr to err_file.
+    # The foreground reads the FIFO line by line and parses it inline below.
+    ( cd "$WORKTREE_DIR" && pi -p --tools "$MAKER_TOOLS" --no-session --approve --mode json -a "$prompt" >"$fifo" 2>"$err_file" ) &
+    pi_pid=$!
 
     # ---------------------------------------------------------------------
-    # PHASE D — BUDGET-CAP HOOK POINT (T13 will fill this block)
+    # PHASE D — BUDGET-CAP enforcement (FR13). Stream-parse the JSONL event
+    # stream; for each `message_end` event whose .message.role == "assistant",
+    # sum .message.usage.totalTokens. If cumulative > TOKEN_CAP, kill the pi
+    # PID, record the kill in STATE.json (metrics.killed=true,
+    # kill_reason=budget_cap_exceeded), and break. Never `exit 1` (FR10).
+    # Usage field name: message_end.message.usage.totalTokens.
     # ---------------------------------------------------------------------
-    # T13 (budget cap in orchestrators) will replace this commented block with
-    # real token-cap enforcement:
-    #   1. Re-run maker with `pi -p --mode json ...` and parse token usage from
-    #      the JSONL event stream (message_end events carry usage).
-    #   2. Accumulate usage across the run.
-    #   3. If usage exceeds TOKEN_CAP (config block above), kill the loop:
-    #        - record STATE.json.metrics.killed=true + kill_reason
-    #        - skip the gate + ship phases
-    #        - cleanup the worktree
-    #        - exit 0 (graceful — never exit 1, FR10)
-    # Until T13 ships, TOKEN_CAP is null/empty and this hook is a no-op.
-    if [ -n "$TOKEN_CAP" ]; then
-        log_warn "D_budget_cap" "TOKEN_CAP=$TOKEN_CAP set but T13 enforcement not yet implemented — no-op (hook point for T13)"
-    fi
-    # ---------------------------------------------------------------------
+    TOKEN_SUM=0
+    BUDGET_KILLED=0
+    while IFS= read -r line; do
+        # Extract totalTokens from assistant message_end events (jq per line).
+        local t
+        t="$(printf '%s' "$line" | jq -r 'select(.type=="message_end" and .message.role=="assistant") | .message.usage.totalTokens // empty' 2>/dev/null)"
+        if [ -n "$t" ]; then
+            TOKEN_SUM=$((TOKEN_SUM + t))
+        fi
+        if [ -n "$TOKEN_CAP" ] && [ "$TOKEN_SUM" -gt "$TOKEN_CAP" ]; then
+            log_warn "D_budget_cap" "cumulative tokens $TOKEN_SUM > cap $TOKEN_CAP; killing pi pid $pi_pid"
+            kill "$pi_pid" 2>/dev/null || true
+            BUDGET_KILLED=1
+            state_record_budget_kill 2>/dev/null || true
+            break
+        fi
+    done < "$fifo"
+
+    # Drain / reap the background pi (non-zero exit is not fatal — FR10).
+    wait "$pi_pid" 2>/dev/null || log_warn "C_maker" "pi -p exited non-zero (recorded, not fatal — FR10)"
+    [ -s "$err_file" ] && log_warn "C_maker" "pi stderr: $(head -c 500 "$err_file" 2>/dev/null)"
+    rm -f "$fifo" "$err_file"
+    log_info "C_maker" "maker phase complete (tokens=$TOKEN_SUM, killed=$BUDGET_KILLED)"
 }
 
 # =============================================================================
@@ -393,6 +437,16 @@ main() {
         state_record_skip "$ITEM_ID" 2>/dev/null || true
         exit 0
     fi
+
+    # FR13 early-exit: empty watchlist (in_progress) and no explicit item-id
+    # arg → nothing to process; exit cheaply (<5k tokens) before the maker.
+    if [ $# -lt 4 ]; then
+        in_progress_count="$(jq '(.in_progress // []) | length' "$STATE_FILE" 2>/dev/null || echo 0)"
+        if [ "${in_progress_count:-0}" -eq 0 ]; then
+            log_info "main" "NOTHING_TO_DO — watchlist (in_progress) empty; early-exit (<5k tokens)"
+            exit 0
+        fi
+    fi
     state_record_run 2>/dev/null || true
 
     # B — load gate.
@@ -406,6 +460,14 @@ main() {
     if ! phase_worktree_and_maker; then
         state_record_failure "$ITEM_ID" "worktree-or-maker-failed" 2>/dev/null || true
         log_error "main" "worktree/maker failed; recording and exiting 0 (FR10)"
+        exit 0
+    fi
+
+    # D — budget cap: if the maker was killed for exceeding TOKEN_CAP, the
+    # kill was already recorded in STATE.json by phase_worktree_and_maker;
+    # skip the gate + ship phases and exit 0 (FR10 — never exit 1).
+    if [ "$BUDGET_KILLED" -eq 1 ]; then
+        log_error "main" "budget_cap_exceeded — kill recorded in STATE.json; skipping gate/ship; exiting 0 (FR10)"
         exit 0
     fi
 

@@ -95,7 +95,11 @@ import type {
 export const MAKER_TOOLS = ["read", "edit", "write", "bash", "grep", "find"] as const;
 export const SHIP_TOOLS: ReadonlySet<string> = new Set(["push", "pr", "slack"]);
 
-export const TOKEN_CAP: number | null = null; // BUDGET-CAP HOOK (T13): set to enforce.
+// FR13 budget cap: per-run token ceiling. null disables enforcement.
+// Override per-run via runOnce({ tokenCap }). When the maker's cumulative
+// message_end token usage exceeds this, the loop is killed mid-stream
+// (session.abort()) and STATE.json.metrics.killed=true is recorded.
+export const TOKEN_CAP: number | null = null;
 
 // =============================================================================
 // LOCAL SDK SHAPE MIRRORS (so tsc type-checks without resolving the package)
@@ -115,6 +119,9 @@ export interface SessionStatsMirror {
 		cacheRead?: number;
 		cacheWrite?: number;
 		total?: number;
+		// Verified SDK shape: AssistantMessage.usage.totalTokens (the canonical
+		// per-message cumulative token count emitted on message_end events).
+		totalTokens?: number;
 	};
 	cost?: number;
 	contextUsage?: number;
@@ -123,8 +130,9 @@ export interface SessionStatsMirror {
 /** Mirror of the SDK `AgentSessionEvent` union (subset we subscribe to). */
 export interface AgentSessionEventMirror {
 	type: string;
-	// message_end carries an AssistantMessage with .usage
-	message?: { usage?: SessionStatsMirror["tokens"] };
+	// message_end carries an AssistantMessage with .role + .usage. user
+	// message_end events have no .usage, so we gate accumulation on role.
+	message?: { role?: string; usage?: SessionStatsMirror["tokens"] };
 	// tool_execution_start / tool_execution_end
 	toolCallId?: string;
 	toolName?: string;
@@ -347,18 +355,16 @@ export function auditShipToolCalls(toolNames: string[]): { ok: boolean; offender
 }
 
 // =============================================================================
-// BUDGET-CAP HOOK POINT — Phase D (T13 will fill this)
+// BUDGET-CAP ENFORCEMENT — Phase D (FR13)
 // =============================================================================
 //
-// T13 (budget cap in orchestrators) will replace this stub with real per-event
-// token-cap enforcement:
-//   1. Accumulate usage from `message_end` events (message.usage) across the run.
-//   2. If accumulated usage exceeds `cap`, return { kill: true, reason }.
-//   3. runOnce calls `session.abort()` when kill=true, records
-//      STATE.json.metrics.killed=true + kill_reason, skips the gate + ship
-//      phases, cleans up the worktree, and exits gracefully (FR10 — never
-//      throws).
-// Until T13 ships, TOKEN_CAP is null and this hook is a no-op predicate.
+// Per-event token-cap enforcement. runOnce subscribes to `message_end` events
+// and accumulates `event.message.usage.totalTokens` for assistant messages
+// (user message_end events carry no .usage). After each accumulation it calls
+// enforceBudgetCap; if cumulative > cap, runOnce calls `session.abort()`
+// mid-stream, records STATE.json.metrics.killed=true +
+// metrics.kill_reason="budget_cap_exceeded", skips the gate + ship phases,
+// cleans up the worktree, and resolves gracefully (FR10 — never throws).
 //
 // Pure predicate (no side effects) so it can be unit-tested without a session.
 export interface BudgetCapDecision {
@@ -370,7 +376,7 @@ export function enforceBudgetCap(stats: SessionStatsMirror, cap: number | null):
 	if (cap == null) return { kill: false, reason: null };
 	const used = stats?.tokens?.total ?? 0;
 	if (used > cap) {
-		return { kill: true, reason: `token budget exceeded: ${used} > ${cap}` };
+		return { kill: true, reason: "budget_cap_exceeded" };
 	}
 	return { kill: false, reason: null };
 }
@@ -520,10 +526,21 @@ export async function runOnce(opts: RunOnceOptions): Promise<RunResult> {
 	if (!fs.existsSync(loopDir)) fs.mkdirSync(loopDir, { recursive: true });
 	ensureState(stateFile, loopName, templateState);
 
-	const itemId = opts.itemId ?? nextItemId(readState(stateFile));
+	let state = readState(stateFile);
+
+	// FR13 early-exit: if no explicit item was requested and the watchlist
+	// (STATE.json in_progress) is empty, there is nothing to process — exit
+	// cheaply (<5k tokens target) before running the maker.
+	const hasExplicitItem = typeof opts.itemId === "string" && opts.itemId.length > 0;
+	if (!hasExplicitItem && (!Array.isArray(state.in_progress) || state.in_progress.length === 0)) {
+		log("INFO", instanceId, "main", "NOTHING_TO_DO — watchlist (in_progress) empty; early-exit (<5k tokens)");
+		writeState(stateFile, updateStateJson(state, { last_run: nowIso() }));
+		return { ok: true, itemId: "", branch: null, prUrl: null, reason: "nothing-to-do", skipped: true, audit: { ok: true, offenders: [] } };
+	}
+
+	const itemId = opts.itemId ?? nextItemId(state);
 
 	// Idempotence (FR9): skip already-processed items.
-	let state = readState(stateFile);
 	if (isAlreadyProcessed(state, itemId)) {
 		log("INFO", instanceId, "main", `NOTHING_TO_DO — item ${itemId} already processed (idempotent skip)`);
 		state = updateStateJson(state, {
@@ -581,10 +598,29 @@ export async function runOnce(opts: RunOnceOptions): Promise<RunResult> {
 
 		const toolNames: string[] = [];
 		let tokenTotal = 0;
+		let budgetKilled = false;
+		// FR13: subscribe to message_end events; accumulate assistant message
+		// token usage (verified SDK shape: AssistantMessage.usage.totalTokens).
+		// message_end fires for both user and assistant messages — only
+		// assistant messages carry .usage, so we gate on role === "assistant".
+		// After each accumulation, call enforceBudgetCap; if cumulative > cap,
+		// call session.abort() mid-stream and flag the kill (FR10 — never crash).
 		const unsub = session.subscribe((event: AgentSessionEventMirror) => {
-			if (event.type === "message_end" && event.message?.usage) {
+			if (
+				event.type === "message_end" &&
+				event.message?.role === "assistant" &&
+				event.message?.usage
+			) {
 				const u = event.message.usage;
-				tokenTotal += u.total ?? (u.input ?? 0) + (u.output ?? 0);
+				const t = u.totalTokens ?? u.total ?? ((u.input ?? 0) + (u.output ?? 0));
+				tokenTotal += t;
+				const decision = enforceBudgetCap({ tokens: { total: tokenTotal } }, tokenCap);
+				if (decision.kill && !budgetKilled) {
+					budgetKilled = true;
+					log("WARN", instanceId, "D_budget_cap", `cumulative tokens ${tokenTotal} > cap ${tokenCap}; calling session.abort()`);
+					// Fire-and-forget abort; the prompt() await unwinds below.
+					void session.abort().catch(() => {});
+				}
 			} else if (event.type === "tool_execution_start" && typeof event.toolName === "string") {
 				toolNames.push(event.toolName);
 			}
@@ -598,9 +634,25 @@ export async function runOnce(opts: RunOnceOptions): Promise<RunResult> {
 			log("WARN", instanceId, "C_maker", `session.prompt failed (recorded, not fatal — FR10): ${String(err)}`);
 		}
 		unsub();
-		log("INFO", instanceId, "C_maker", "maker phase complete");
+		log("INFO", instanceId, "C_maker", `maker phase complete (tokens=${tokenTotal}, killed=${budgetKilled})`);
 
-		// ---- Phase D: BUDGET-CAP HOOK POINT (T13 fills enforceBudgetCap) ----
+		// ---- Phase D: BUDGET-CAP enforcement (FR13) ----
+		// Per-event accumulation above already called session.abort() if the
+		// cumulative token count exceeded the cap mid-stream. Record the kill
+		// in STATE.json (metrics.killed=true, kill_reason="budget_cap_exceeded")
+		// and exit gracefully — FR10 (never throw, never crash).
+		if (budgetKilled) {
+			log("WARN", instanceId, "D_budget_cap", `budget cap exceeded (${tokenTotal} > ${tokenCap}); recording kill + skipping gate/ship`);
+			const killedState = updateStateJson(state, {
+				metrics: { ...state.metrics, killed: true, kill_reason: "budget_cap_exceeded", tokens_used: tokenTotal, token_cap: tokenCap },
+				last_run: nowIso(),
+			});
+			writeState(stateFile, killedState);
+			return { ok: false, itemId, branch: null, prUrl: null, reason: "budget-cap-kill: budget_cap_exceeded", skipped: false, audit };
+		}
+
+		// Fallback: post-prompt check via session stats (covers cases where the
+		// event stream was not granular enough to trip the per-event check).
 		const stats = session.getSessionStats();
 		const capDecision = enforceBudgetCap(stats, tokenCap);
 		if (capDecision.kill) {
@@ -611,11 +663,11 @@ export async function runOnce(opts: RunOnceOptions): Promise<RunResult> {
 				log("WARN", instanceId, "D_budget_cap", `session.abort() failed: ${String(err)}`);
 			}
 			const killedState = updateStateJson(state, {
-				metrics: { ...state.metrics, killed: true, kill_reason: capDecision.reason, tokens_used: tokenTotal },
+				metrics: { ...state.metrics, killed: true, kill_reason: "budget_cap_exceeded", tokens_used: tokenTotal, token_cap: tokenCap },
 				last_run: nowIso(),
 			});
 			writeState(stateFile, killedState);
-			return { ok: false, itemId, branch: null, prUrl: null, reason: `budget-cap-kill: ${capDecision.reason}`, skipped: false, audit };
+			return { ok: false, itemId, branch: null, prUrl: null, reason: "budget-cap-kill: budget_cap_exceeded", skipped: false, audit };
 		}
 
 		// ---- Ship-tool audit (FR6): zero push/pr/slack calls expected. ----
