@@ -581,6 +581,19 @@ body {
 
 ---
 
+## Don't
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Long text breaking layout | Apply `truncate`, `overflow-wrap: break-word`, or `-webkit-line-clamp` | Unbounded text breaks grid layouts |
+| Blank container when no items | Meaningful empty state with icon, message, and CTA | Blank screens confuse users |
+| Generic error ("Something went wrong") | Actionable error: what happened + why + how to fix | Users need to know what to do next |
+| Content flash on load (no loading state) | Skeleton loaders matching final layout | Instant skeleton prevents layout shift |
+| Just grayed-out disabled button | Tooltip explaining why it's disabled | Users need to know why they can't proceed |
+| No input validation | HTML5 + JS validation with `aria-describedby` for errors | Unvalidated input causes data integrity issues |
+| No fallback for broken image src | `onError` handler to swap to default image | Broken image icons look unprofessional |
+| Unsanitized user content rendering | `DOMPurify.sanitize()` or text-only rendering | Raw user content is an XSS vulnerability |
+
 ## Verification
 
 - [ ] All text content handles overflow — truncation or word-break applied

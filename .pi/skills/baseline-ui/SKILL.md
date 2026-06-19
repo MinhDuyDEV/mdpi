@@ -172,6 +172,20 @@ baseline-ui ──► design-taste-frontend ──► frontend-design ──► 
 
 Run `baseline-ui` first when starting any frontend work. It catches the most common AI-generation artifacts so downstream skills can focus on real design quality.
 
+## Don't
+
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Purple/indigo gradients as primary palette | Single flat accent color from project palette | Purple gradient is the #1 AI-generation fingerprint |
+| Inter, Roboto, Arial fonts | Geist, Outfit, Satoshi, or system font stack | Overused fonts signal generic AI output |
+| Emojis in JSX/TSX or CSS content | SVG icons (Phosphor, Radix) or clean primitives | Emojis look unprofessional in production UI |
+| `h-screen` on hero sections | `min-h-[100dvh]` | h-screen causes layout jump on mobile browsers |
+| `<div onClick>` as interactive element | `<button type="button">` with proper styling | div onClick breaks keyboard and screen reader access |
+| Pure black `#000` in UI | Off-black (`#111`, Zinc-950, or `#1c1c1e`) | Pure black destroys visual depth |
+| 3-column identical card grids | Varied 2-col, asymmetric bento, or alternating layouts | Three identical cards is the #1 AI UI tell |
+| Glassmorphism without functional purpose | Flat surfaces or layered shadows | Decorative glassmorphism adds visual noise |
+| Bounce/elastic CSS easing on UI elements | `ease-out` or spring-based motion | Bounce easing feels unnatural for UI |
+
 ## Verification
 
 - [ ] No `h-screen` — all full-height containers use `min-h-[100dvh]`

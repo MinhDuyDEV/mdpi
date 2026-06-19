@@ -3,6 +3,8 @@ name: frontend-design
 description: MUST load when building any web UI with React-based frameworks — components, pages, or full applications. Covers Tailwind CSS v4, shadcn/ui, Motion animations. Base UI implementation skill; combine with aesthetic overlays (minimalist-ui, high-end-visual-design) for specific styles.
 ---
 
+**Aesthetic Context:** Your implementation must reflect the project DESIGN.md identity. Before writing any component, internalize the Overview & Mood, Colors, and Typography sections. All code output should feel like it belongs to the same intentional design system.
+
 # Frontend Design
 
 ## When to Use
@@ -90,48 +92,20 @@ Before coding, commit to BOLD aesthetic direction:
 
 Bold maximalism and refined minimalism both work. Key is intentionality.
 
-## Design Quality Standards
+## Don't
 
-These patterns immediately signal low-quality output. Avoid them all. For design-level anti-patterns (fonts, colors, layouts), see `design-taste-frontend`.
-
-### Typography
-
-- **Banned fonts**: Inter, Roboto, Arial, Open Sans, Lato, Montserrat, Space Grotesk, system-ui as display font
-- Monospace used as "developer aesthetic" shorthand
-- Big icons centered above every heading
-- Using `px` for body text (use `rem`/`em` to respect user settings)
-
-### Color
-
-- Gray text on colored backgrounds (use darker shade of background color instead)
-- Pure `#000` or `#fff` (always tint — pure black/white don't exist in nature)
-- Gradient text on headings or metrics
-- `rgba()` / heavy alpha transparency as primary palette (design smell — define explicit colors)
-
-### Layout
-
-- Cards nested inside cards (use typography, spacing, dividers for hierarchy within a card)
-- Identical card grids (icon + heading + text repeated 3-6 times)
-- Hero metric template (big number + small label + gradient accent)
-- Center-aligning everything
-- Same spacing everywhere (no visual rhythm)
-
-### Visual
-
-- Glassmorphism used decoratively (blur cards, glow borders)
-- Thick colored border on one side of rounded rectangles
-- Sparklines as decoration (not connected to real data)
-- Generic drop shadows on everything
-- Rounded rectangles as the only shape language
-
-### Motion
-
-- Bounce or elastic easing (real objects decelerate smoothly)
-- Animating `height`, `width`, `padding`, `margin` (causes layout recalculation)
-- Default `ease` (compromise that's rarely optimal — use exponential easing)
-- Missing `prefers-reduced-motion` handling
-
-> **The Slop Test**: If you showed this interface to someone and said "AI made this," would they believe you immediately? If yes, that's the problem.
+| Pattern | Replacement | Because |
+|---------|-------------|---------|
+| Inter, Roboto, Arial as display fonts | Distinctive display fonts (Instrument Sans, Outfit, Fraunces) | Overused fonts signal generic design |
+| Gray text on colored backgrounds | Darker shade of the background color | Gray-on-color fails contrast and looks muddy |
+| Pure `#000` or `#fff` | Tinted near-black or near-white | Pure black/white don't exist in natural light |
+| Gradient text on headings or metrics | Solid, well-chosen heading color | Gradient text is a design crutch |
+| Cards nested inside cards | Typography, spacing, dividers for hierarchy | Nested cards create visual noise without purpose |
+| Identical card grids (icon + heading + text ×3-6) | Varied layout with purposeful asymmetry | Repeated identical cards is the #1 AI tell |
+| Glassmorphism used decoratively | Flat surfaces or layered shadows | Glassmorphism needs a functional reason for depth |
+| Bounce or elastic easing on UI | Exponential easing `cubic-bezier(0.16, 1, 0.3, 1)` | Real objects decelerate smoothly, not bounce |
+| Animating `height`, `width`, `padding`, `margin` | Animate only `transform` and `opacity` | Layout animations cause expensive repaints |
+| Missing `prefers-reduced-motion` handling | Always respect reduced motion preferences | ~35% of adults over 40 prefer reduced motion |
 
 ## Best Practices
 
