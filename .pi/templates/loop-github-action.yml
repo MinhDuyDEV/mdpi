@@ -124,16 +124,17 @@ jobs:
         run: |
           set -uo pipefail
           echo "::group::loop run-once ${LOOP_NAME} (cadence=${LOOP_CRON})"
-          # Primary: Node SDK orchestrator (T9). Fallback to the portable
-          # bash orchestrator (T10) if tsx/node module resolution fails.
+          # Primary: Node SDK orchestrator (T9) via tsx (plain `node` cannot
+          # execute TypeScript). Fallback to the portable bash orchestrator
+          # (T10) if tsx/node module resolution fails.
           # --approve/-a auto-trusts project files (required non-interactive).
           # --offline prevents phone-home.
-          if command -v node >/dev/null 2>&1; then
-            echo "Running Node orchestrator (loop-orchestrator.ts)..."
-            node .pi/templates/loop-orchestrator.ts run-once "${LOOP_NAME}" . \
+          if command -v npx >/dev/null 2>&1; then
+            echo "Running Node orchestrator (loop-orchestrator.ts) via tsx..."
+            npx --yes tsx .pi/templates/loop-orchestrator.ts run-once "${LOOP_NAME}" . \
               || echo "::warning::Node orchestrator exited non-zero (FR10: recorded, not fatal)"
           else
-            echo "node not found — running bash orchestrator (loop-orchestrator.sh)..."
+            echo "npx not found — running bash orchestrator (loop-orchestrator.sh)..."
             bash .pi/templates/loop-orchestrator.sh run-once "${LOOP_NAME}" . \
               || echo "::warning::Bash orchestrator exited non-zero (FR10: recorded, not fatal)"
           fi
