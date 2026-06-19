@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "webclaw": {
-      "command": "/opt/homebrew/bin/webclaw-mcp",
-      "args": [],
-      "env": {}
-    }
-  }
-}
