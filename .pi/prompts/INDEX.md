@@ -39,7 +39,7 @@ Status:                 /status
 | `/gc` | Fallow analysis + quality grades + optional cleanup PRs | Maintenance cadence; not during active feature work | `[--dry-run] [--apply] [--scope <dir>]` | Maintenance |
 | `/status` | Show active feature, progress tail, blockers | Orient at session start or when unsure | `[--full]` | Any (read-only) |
 | `/close` | Finalize active feature, clear `.active` | Feature done/blocked/abandoned, or recover dangling `.active` | `[--done\|--blocked\|--abandoned] [--note <text>]` | Ship/Recovery |
-| `/loop-check` | NO-GO qualification gate — refuse-list + 2-condition test + 30s checklist | Before scheduling a task as an unattended loop | `<task> [--help]` | Define |
+| `/loop-check` | NO-GO qualification gate — refuse-list + 2-condition test + 30s checklist | Before scheduling a task as an unattended loop | `<task description> [--help]` | Define |
 | `/loop-init` | Scaffold `.pi/loops/<name>/` from templates (VISION/STATE/SKILL) | Once a task passes /loop-check | `<name> [--help]` | Define |
 | `/loop-review` | Maker/checker gate — verifier subagent runs the gate, emits ACCEPT/REJECT | After a maker run, before ship | `<loop-name> [--help]` | Review |
 
@@ -75,4 +75,4 @@ Status:                 /status
 
 - `skills/INDEX.md` — task → skill routing (70 skills)
 - `workflows/INDEX.md` — 6 DAG workflows invoked by commands
-- `templates/` — 12 context templates (PRD, plan body, state, roadmap, etc.)
+- `templates/` — 19 template files (PRD, plan body, state, roadmap, loop-vision, loop-state, orchestrators, etc.)

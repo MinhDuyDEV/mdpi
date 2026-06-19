@@ -59,14 +59,17 @@ updated: <auto — last modified>
 
 <!--
   PARSE CONTRACT (machine-readable — do NOT edit this comment):
-    The orchestrator (T9/T10) extracts the gate command from the FIRST fenced
+    The orchestrator extracts the gate command from the SINGLE fenced
     ```bash block located directly under the "## Gate" heading in this file.
-    Extraction rule: take the content of that code block, strip trailing
-    whitespace, run it via `bash -c "<command>"`, read the exit code.
+    Extraction rule: require EXACTLY ONE ```bash block in this section
+    (bounded by the next "## " heading). Zero or more-than-one -> refuse
+    (gate not parseable; orchestrator records failure and does NOT ship).
+    Take that single block's content, strip trailing whitespace, run it via
+    `bash -c "<command>"`, read the exit code.
       exit 0   -> PASS  -> ship (push branch `loop/<name>/<ts>` + open PR)
       non-zero -> FAIL  -> no ship; record failure in STATE.json; cleanup worktree
     The gate decision is computational (exit code), never an LLM's opinion.
-    Keep exactly ONE ```bash block directly under ## Gate.
+    Keep EXACTLY ONE ```bash block directly under ## Gate.
 -->
 
 Command (exit 0 = pass):

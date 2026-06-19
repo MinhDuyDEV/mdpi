@@ -49,6 +49,7 @@ Copy the three templates byte-for-byte first (placeholders intact), then fill pl
 
 ```markdown
 ---
+name: <name>
 description: Per-loop procedure for <name> — classify, fix, escalate
 ---
 

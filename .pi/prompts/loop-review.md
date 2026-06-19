@@ -30,12 +30,12 @@ Use the `subagent` tool with **type `review`**. Pass a prompt that instructs the
 
 ### Gate-parse contract (must match T2 exactly)
 
-Extract the gate command from `VISION.md` as: **the first fenced ```bash block located directly under the `## Gate` heading**. Take the content of that code block, strip trailing whitespace, run it via `bash -c "<command>"`, and read the exit code.
+Extract the gate command from `VISION.md` as: **the SINGLE fenced ```bash block located directly under the `## Gate` heading** — require **EXACTLY ONE** such block directly under `## Gate` (zero or more-than-one → REJECT / hard fail). Take that single block's content, strip trailing whitespace, run it via `bash -c "<command>"`, and read the exit code.
 
 - `exit 0`   → PASS → ship (orchestrator pushes `loop/<name>/<ts>` + opens PR)
 - non-zero   → FAIL → no ship; record failure in `STATE.json.failures[]`; cleanup worktree
 
-The gate decision is **computational (exit code), never an LLM's opinion**. If `## Gate` is missing, the fenced block is empty, or multiple ```bash blocks sit directly under `## Gate`, treat that as a hard fail: emit `DECISION: REJECT` with `EVIDENCE: gate not parseable` and do not run anything.
+The gate decision is **computational (exit code), never an LLM's opinion**. If `## Gate` is missing, the fenced block is empty, or the block count under `## Gate` is not exactly one (zero or more-than-one), treat that as a hard fail: emit `DECISION: REJECT` with `EVIDENCE: gate not parseable` and do not run anything.
 
 ### Evidence to collect from the verifier
 
