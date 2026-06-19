@@ -4,7 +4,7 @@ purpose: Index of DAG workflows with trigger, phases, and invoking command
 
 # Workflows Index
 
-6 DAG workflows. All have `description` frontmatter (for `run_workflow` discovery) and use a consistent Phase format: `Agent`, `Concurrency`, `Depends on`, `Prompt`.
+7 DAG workflows. All have `description` frontmatter (for `run_workflow` discovery) and use a consistent Phase format: `Agent`, `Concurrency`, `Depends on`, `Prompt`.
 
 ## Invocation
 
@@ -24,6 +24,7 @@ Workflows may compose recursively (e.g., `development-lifecycle-workflow` Phase 
 | `batch-implement` | 3 + merge | ≥5 independent tasks, no file conflicts | `/ship` Phase 3, `development-lifecycle-workflow` Phase 4 | One subagent per task in parallel, review, merge |
 | `deep-research` | 2 + synthesis | Complex/multi-angle topic | `/research` (complex mode) | Fan out web searches per angle, cross-check, cited report |
 | `development-lifecycle-workflow` | 5 | Explicit full-lifecycle multi-agent run | Manual / future `/lifecycle` | research → validate → plan → implement → verify (composes batch-implement) |
+| `frontend-feature-workflow` | 7 | Frontend feature build (mockup or spec) | `run_workflow({ name: "frontend-feature-workflow", args: { feature: "..." } })` | design analysis → deslop → architecture → craft → implement → harden → audit |
 | `garbage-collection` | 5 | Manual `/gc` or scheduled cadence | `/gc` | Fallow scan → grade → prioritize → optional cleanup PRs |
 | `quality-loop` | 7 (looped) | High-risk feature, explicit quality gating | `/ship` Phase 5 (Iterative Quality Loop) | Score-gated review loop until 5/5 or escalation |
 
