@@ -21,6 +21,7 @@ Execute spec tasks, verify each passes, run review, mark complete.
 
 Before shipping:
 - Use `vcc_recall` to search for failed approaches to avoid repeating
+- Use `memory_search({ query: "<feature keywords>", target: "failure", category: "failure" })` for durable cross-session failures and prior decisions
 - Verify `.pi/artifacts/$(cat .pi/artifacts/.active)/spec.md` exists (if not, tell user to run `/create` first)
 - If `plan.md` exists, verify it references the current spec
 - Workspace check: create branch if needed, install deps if needed
@@ -37,6 +38,7 @@ Before shipping:
 | `code-review-and-quality` | Phase 5 review | 5-axis review: correctness, readability, architecture, security, performance |
 | `doubt-driven-development` | High-risk features | In-flight adversarial review before merge |
 | `context-engineering` | Batch workflow (≥5 independent tasks) | Context budget management for parallel subagent handoffs |
+| `dcp-hygiene` | Phase 7 Report (+ Phase 2/3→4 transition) | Compress closed implement/verify work-streams when `compress` is available |
 
 ## Phase 1: Route to Execution
 
@@ -118,6 +120,8 @@ If routed to workflow mode:
 
 ## Phase 4: Verification Gate
 
+> **DCP hygiene (mid-command):** Implementation is complete — the diff is now the source of truth, not the edit/read history. If `compress` is available, compress the closed Phase 2/3 implementation work-stream (file reads + edits) per the `dcp-hygiene` skill before running gates. Keep task results, commits, and affected-file lists in the summary. Skip if `compress` is unavailable.
+
 **Delegate to `/verify` — do not duplicate the gate logic here.** Run the canonical verification protocol defined in `prompts/verify.md` (Phase 1 Completeness → Phase 2 Correctness → Phase 4 Phantom Detection). Concretely:
 
 1. Invoke `/verify all --full` semantics (or run the same steps inline if already mid-session): load `verification-before-completion`, run typecheck + lint + test gates, use **full mode** for shipping (incremental is for iteration only), record stamp to `.pi/artifacts/verify.log` after all gates pass, run phantom completion detection, and do goal-backward verification (observable truths from plan/spec satisfied).
@@ -182,13 +186,15 @@ Ask user before closing. If confirmed:
 
 | Scenario | Action |
 |----------|--------|
-| Task verification fails 2x | Stop, report blocker with file:line evidence |
+| Task verification fails 2x | Stop, report blocker with file:line evidence. **Also:** save the failed approach to `memory(action: "add", target: "failure", category: "failure")` — what was tried, why it failed, the error, and the task description. |
 | Subagent returns failure | Read error, retry once with adjusted prompt, then escalate |
 | Review finds critical issue | Fix inline, re-run Phase 4, continue |
 | Batch workflow failure | Fall back to sequential execution |
 | Missing `.active` slug | Report: "No active feature. Run `/create` first." |
 
 ## Phase 7: Report
+
+> **DCP hygiene:** Before reporting, if the `compress` tool is available, compress the closed implementation + verification work-stream (file reads, edits, gate bash output) per the `dcp-hygiene` skill — task results, commits, and gate results are captured in this report and `progress.md`. Skip if `compress` is unavailable.
 
 1. **Execution Summary:** tasks completed/total, waves executed, commits made
 2. **Task Results:** per-task status, files modified, commit hashes

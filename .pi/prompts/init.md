@@ -56,6 +56,7 @@ Before initializing:
 | `documentation-and-adrs` | Always (Mode 1) | Doc conventions, ADR format when architectural decisions arise |
 | `verification-before-completion` | Before writing AGENTS.md | Validate commands before documenting them |
 | `brainstorming` | Conditionally: when ambiguous requirements arise | Refine project vision before initializing |
+| `dcp-hygiene` | Output (after `--deep` runs) | Compress closed detection + srcwalk/fallow work-stream when `compress` is available |
 
 ---
 
@@ -170,6 +171,8 @@ Write to `.pi/user.md` with the captured preferences.
 - Command validation fails → stop, report which command failed
 
 ## Output
+
+> **DCP hygiene:** If `--deep` ran and `compress` is available, compress the closed Phase 1 detection + git-history + srcwalk/fallow work-stream per the `dcp-hygiene` skill — tech stack, validated commands, and structure are captured in `AGENTS.md` and `tech-stack.md`. Skip if `compress` is unavailable (non-deep init produces little output).
 
 Report what was created:
 1. AGENTS.md (if core setup ran)

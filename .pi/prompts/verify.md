@@ -41,6 +41,7 @@ Check implementation against PRD before shipping.
 | `verification-before-completion` | Always | Evidence-before-claims; phantom detection; verification cache protocol; Worker Distrust Protocol |
 | `code-review-and-quality` | Phase 4 coherence check | Cross-reference artifacts for correctness |
 | `testing-anti-patterns` | Phase 3 after tests pass | Detect mock-only tests, production pollution, and fragile assertions |
+| `dcp-hygiene` | Phase 5 Report | Compress the closed gate output (typecheck/lint/test) when `compress` is available |
 
 ## Phase 0: Verification Cache
 
@@ -115,7 +116,7 @@ Load `verification-before-completion` skill. Follow its phantom completion detec
 | Scenario | Action |
 |----------|--------|
 | Gate fails | Report which gate failed with exact error |
-| Verification fails 2x | Stop, report blocker with file:line evidence |
+| Verification fails 2x | Stop, report blocker with file:line evidence. **Also:** save the failure to `memory(action: "add", target: "failure", category: "failure")` — the gate that failed, the error, and what was tried. |
 | Cache stamp mismatch | Run gates fresh — don't reuse stale cache |
 | Phantom artifacts detected | Report PHANTOM score, block completion |
 
@@ -127,6 +128,8 @@ Load `verification-before-completion` skill. Follow its phantom completion detec
 - Verification fails 2x on same approach → stop, escalate
 
 ## Phase 5: Report
+
+> **DCP hygiene:** Before reporting, if the `compress` tool is available, compress the closed Phase 2 gate output (typecheck/lint/test/bash) per the `dcp-hygiene` skill — results are recorded in the report table and the verification cache. Skip if `compress` is unavailable.
 
 Append to `.pi/artifacts/$SLUG/progress.md`: `Verification: [PASS|PARTIAL|FAIL] - [summary]`
 

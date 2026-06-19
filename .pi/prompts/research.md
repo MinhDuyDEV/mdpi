@@ -62,6 +62,7 @@ Before starting, analyze the research topic complexity:
 | `srcwalk` | Codebase research | Navigate codebase with repo maps, symbol search, callers/callees |
 | `opensrc` | Researching dependencies | Inspect library source for internal behavior |
 | `gemini-large-context` | Large codebase or multi-repo | Analyze beyond typical context limits |
+| `dcp-hygiene` | Phase 3 Synthesize (+ mid-research if `--thorough`) | Compress closed search/verify work-streams when `compress` is available |
 
 ## Direct Execution (Simple Research)
 
@@ -81,6 +82,8 @@ Cross-check findings:
 - Conflicting info, speculation → discard without corroboration
 
 ### Phase 3: Synthesize
+
+> **DCP hygiene:** If `compress` is available, compress the closed Phase 1-2 search/verify work-stream per the `dcp-hygiene` skill — questions, answers, confidence, and sources are captured in the findings. For `--thorough` (~100+ calls), compress every ~30 calls mid-research to keep context bounded. Skip if `compress` is unavailable.
 
 If within active work, write findings to `.pi/artifacts/$SLUG/research.md`. Otherwise report inline.
 

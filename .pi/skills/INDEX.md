@@ -48,6 +48,8 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | docs, documentation, README, ADR, changelog | `documentation-and-adrs` |
 | commit, branch, merge, rebase, git, worktree | `git-workflow-and-versioning`, `using-git-worktrees` |
 | context, memory, token, agent quality, degraded | `context-engineering` |
+| memory_system, memory-search, memory_search, pi-hermes, /memory-insights, save memory, remember this, past failure, previous attempt | `memory-system` |
+| compress, dcp, context prune, cleanup context, context filling up | `context-engineering`, `dcp-hygiene` |
 | brainstorm, idea, design, concept, explore, ideate, refine | `brainstorming`, `idea-refine`, `spec-driven-development` |
 | interview, grill, are we sure, what do you want | `interview-me` |
 | plan, break down, decompose, tasks, roadmap | `planning-and-task-breakdown` |
@@ -98,6 +100,8 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | `deprecation-and-migration` | Deprecating APIs, migrating library versions, removing legacy code | Ship | High |
 | `writing-skills` | Creating new skills, editing existing skills, verifying skills before deployment | Build | Low |
 | `context-engineering` | Optimizing agent context setup — rules files, selective loading, confusion management | All | Low |
+| `dcp-hygiene` | At command/phase closure — compress closed exploratory work-streams via pi-dcp when `compress` is available; no-ops if DCP absent | All | Low |
+| `memory-system` | Understanding/leveraging pi-hermes-memory — auto-flywheel, tools, commands, when to use memory_search vs vcc_recall | All | Low |
 | `doubt-driven-development` | In-flight adversarial review of non-trivial decisions before they stand | Build | Medium |
 | `loop-engineering` | Designing/qualifying/running unattended coding loops; 2-condition test + VISION/state + confidence-gated action | All | Medium |
 | `loop-audit` | Scoring a project's loop-readiness 0-100 + L0/L1/L2/L3; L3 gated on proven run | Review | Low |
@@ -214,6 +218,8 @@ Maps user intent to skill(s). `→` = sequential pipeline (execute in order). `+
 | "set up database" / "Supabase" | `supabase` + `supabase-postgres-best-practices` | Build | High |
 | "add logging" / "monitoring" / "observability" | `observability-and-instrumentation` | Ship | Medium |
 | "optimize context" / "agent quality degraded" / "too many tokens" | `context-engineering` | All | Low |
+| "remember this" / "memory-search" / "past failure" / "previous attempt" / "save to memory" | `memory-system` | All | Low |
+| "compress context" / "dcp" / "context filling up" / "cleanup context" | `dcp-hygiene` | All | Low |
 | "verify this approach" / "challenge this decision" / "doubt check" | `doubt-driven-development` | Build | Medium |
 | "security audit" / "auth setup" / "vulnerability" | `security-and-hardening` | Review | High |
 | "profile" / "too slow" / "bundle size" / "lighthouse" | `performance-optimization` | Review | Medium |

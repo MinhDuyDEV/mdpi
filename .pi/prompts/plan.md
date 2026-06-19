@@ -36,12 +36,13 @@ Before planning:
 | `incremental-implementation` | Always | Thin vertical slice discipline — each task is verify-after-each |
 | `subagent-driven-development` | Multi-wave plan | Plan tasks for fresh subagent dispatch per task |
 | `source-driven-development` | Level 1-3 | Ground decisions in official docs when researching dependencies |
+| `dcp-hygiene` | Phase 8 Report | Compress closed git-history + research work-stream when `compress` is available |
 
 ## Phase 0: Institutional Research (Mandatory)
 
 ### Step 1: Search institutional memory
 
-Use `vcc_recall` to search for bugfixes and existing plans. If relevant observations found, incorporate them.
+Use `vcc_recall` to search for bugfixes and existing plans. Also use `memory_search({ query: "<plan topic>", target: "failure", category: "insight" })` for durable institutional knowledge. If relevant observations found, incorporate them.
 
 ### Step 2: Mine git history
 
@@ -216,7 +217,7 @@ Scan plan against AGENTS.md hard constraints:
 | Plan already exists | Ask user: overwrite or skip? |
 | Missing spec artifact | Report: "No spec found. Run `/create` first." |
 | Subagent research fails | Retry once with adjusted prompt, then proceed with existing knowledge |
-| Verification fails 2x | Stop, report blocker with file:line evidence |
+| Verification fails 2x | Stop, report blocker with file:line evidence. **Also:** save the failed approach to `memory(action: "add", target: "failure", category: "failure")` — the plan decomposition or approach that failed, and why. |
 
 ## Stop Conditions
 
@@ -226,6 +227,8 @@ Scan plan against AGENTS.md hard constraints:
 - Verification fails 2x on same approach → stop, escalate
 
 ## Phase 8: Report
+
+> **DCP hygiene:** Before reporting, if the `compress` tool is available, compress the closed Phase 0-2 institutional-research + git-history + scout work-stream per the `dcp-hygiene` skill — observable truths, artifacts, and dependency waves are captured in `plan.md` and `tasks.json`. Skip if `compress` is unavailable.
 
 1. **Discovery Level:** [0-3] with rationale
 2. **Must-Haves:** [N] observable truths, [M] required artifacts, [K] key links

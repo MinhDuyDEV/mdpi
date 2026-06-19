@@ -39,6 +39,7 @@ Find all occurrences of a code pattern in the codebase, review each for issues, 
 | `security-and-hardening` | Pattern involves auth, secrets, validation, input | Identify vulnerability patterns in audited code |
 | `code-review-and-quality` | Occurrences > 5 | Assess correctness and structural quality across results |
 | `fallow` | Occurrences > 20 or scope is project-wide | Structural analysis for dead code, duplication, complexity |
+| `dcp-hygiene` | Output (after workflow execution) | Compress closed grep+read occurrence output when `compress` is available |
 
 ## Execution
 
@@ -67,7 +68,7 @@ For small audits, execute directly without workflow overhead:
 
 | Scenario | Action |
 |----------|--------|
-| Workflow phase fails | Retry once with adjusted prompt, then escalate |
+| Workflow phase fails | Retry once with adjusted prompt, then escalate. If retry also fails, **save the failure** to `memory(action: "add", target: "failure", category: "failure")` — the pattern, scope, and what went wrong. |
 | No occurrences found | Report: "Pattern not found in codebase." |
 | Audit timeout | Report partial results with what was covered |
 | Subagent returns failure | Read error, retry once, then escalate |
@@ -80,6 +81,8 @@ For small audits, execute directly without workflow overhead:
 - `.active` slug missing → write inline report (not an error)
 
 ## Output
+
+> **DCP hygiene:** Before writing the final report, if the `compress` tool is available, compress the closed discovery work-stream (`semantic_grep` results + per-occurrence `read` output) per the `dcp-hygiene` skill — occurrences and findings are captured in the report and `.pi/artifacts/$SLUG/audit.md`. Skip if `compress` is unavailable.
 
 1. **Pattern:** [pattern searched]
 2. **Occurrences found:** [count]

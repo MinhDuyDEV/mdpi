@@ -25,6 +25,7 @@ Before creating, verify:
 - If active slug exists with a `spec.md`, ask user: continue with `/ship` or start new?
 - Check `git status --porcelain` — if uncommitted changes, ask user to stash, commit, or continue
 - Use `vcc_recall` to search session history for prior decisions on this topic — avoid repeating explored/rejected approaches
+- Use `memory_search({ project: "$(cat .pi/artifacts/.active 2>/dev/null || echo '')" })` for durable prior decisions across sessions
 
 ## Load Skills
 

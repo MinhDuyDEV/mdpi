@@ -21,6 +21,7 @@ Systematically debug and fix the reported issue.
 
 Before fixing:
 - Use `vcc_recall` to search for prior fix attempts on the same issue — avoid repeating failed approaches
+- Use `memory_search({ query: "<issue keywords>", target: "failure", category: "failure" })` for durable cross-session failed approaches
 - Check that the codebase builds/tests pass at baseline (confirm the bug is not a pre-existing state)
 
 ## Load Skills
@@ -32,6 +33,7 @@ Before fixing:
 | `verification-before-completion` | Always | Evidence-before-claims; verify fix actually resolves the bug |
 | `defense-in-depth` | After fix is verified | Harden the layer so the bug becomes structurally impossible |
 | `testing-anti-patterns` | If writing tests | Ensure regression test isn't a mock-only test |
+| `dcp-hygiene` | Phase 5 Report | Compress the closed reproduce+isolate work-stream when `compress` is available |
 
 ## Phase 1: Reproduce
 
@@ -59,6 +61,8 @@ If `--attach` provided, read the attached log/error file for context.
 
 ## Phase 4: Verify
 
+> **DCP hygiene (mid-command):** The fix is applied — the root cause is now captured; the reproduce/isolate reads and greps are no longer needed verbatim. If `compress` is available, compress the closed Phase 1-2 reproduce+isolate work-stream per the `dcp-hygiene` skill before running gates. Keep the root cause (file:line) and reproduction command in the summary. Skip if `compress` is unavailable.
+
 Run verification gates:
 
 ```bash
@@ -80,7 +84,7 @@ Then, load `defense-in-depth` skill and add validation at the data entry layer.
 |----------|--------|
 | Cannot reproduce issue | Report reproduction steps attempted, ask for clarification |
 | Root cause ambiguous | Trace backward through call stack, add instrumentation |
-| Verification fails 2x | Stop, report blocker with learnings from both attempts |
+| Verification fails 2x | Stop, report blocker with learnings from both attempts. **Also:** save to `memory(action: "add", target: "failure", category: "failure", content: "[root cause + approach tried + error + reproduction]")` so future sessions don't repeat the failed approach. |
 | Fix causes regression | Revert fix, report regression with evidence |
 
 ## Stop Conditions
@@ -91,6 +95,8 @@ Then, load `defense-in-depth` skill and add validation at the data entry layer.
 - Root cause is in third-party dependency → stop, report with upstream reference
 
 ## Phase 5: Report
+
+> **DCP hygiene:** Before reporting, if the `compress` tool is available, compress the closed Phase 1-3 exploratory work-stream (reproduce bash + isolate grep/inspect/read output) per the `dcp-hygiene` skill — the root cause and fix are now captured in this report and the artifact. Skip if `compress` is unavailable; the artifact already holds the facts.
 
 1. Root cause (with file:line)
 2. Fix applied

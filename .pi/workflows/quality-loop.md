@@ -170,6 +170,8 @@ Score-gated, review-driven feedback loop for high-risk features. Runs iterative 
 - **Concurrency:** 1
 - **Depends on:** Phase 6
 - **Prompt:**
+  > **DCP hygiene (loop iteration):** This loop runs up to 5 rounds — context accumulates across iterations. Before re-reviewing, if `compress` is available, compress this iteration's closed Phase 6 fix work-stream (file reads + edits) per the `dcp-hygiene` skill. Keep the finding fixed (file:line), the fix applied, and the verification result in the summary; drop the exploratory reads. Skip if `compress` is unavailable.
+
   Loop back to Phase 2. The implementation has been updated based on review findings. Spawn a fresh review agent with the updated diff and spec.
 
   ```typescript

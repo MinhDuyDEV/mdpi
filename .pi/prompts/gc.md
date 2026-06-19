@@ -31,6 +31,7 @@ Run structural analysis, update quality grades, and open cleanup PRs.
 | `code-cleanup` | Phase 4 (cleanup PRs) | Safe code removal patterns |
 | `verification-before-completion` | After cleanup PRs | Verify typecheck + lint pass before merging |
 | `observability-and-instrumentation` | If removing instrumented code | Check that cleanup doesn't break monitoring/logging |
+| `dcp-hygiene` | Phase 5 Report | Compress the closed Fallow scan + grading output when `compress` is available |
 
 ## Execution
 
@@ -74,6 +75,8 @@ For each P0/P1 finding:
 If `--dry-run` (default), skip actual cleanup and report what would be cleaned. PRs are **never** opened without `--apply` and without explicit user confirmation (AGENTS.md: never push without confirmation).
 
 ### Phase 5: Report
+
+> **DCP hygiene:** Before reporting, if the `compress` tool is available, compress the closed Phase 1-3 Fallow scan + grading output (the large JSON and finding lists) per the `dcp-hygiene` skill — grades and prioritized findings are captured in this report and `.pi/QUALITY.md`. Skip if `compress` is unavailable.
 
 1. **Quality Grades:** Per-domain status (before → after)
 2. **Issues Found:** Count by severity
