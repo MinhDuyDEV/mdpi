@@ -66,7 +66,6 @@ Return findings in this format:
 - **Depends on:** Phase 1
 - **Agent:** general
 - **Concurrency:** 1
-- **Depends on:** Phase 1
 - **Tool:** `subagent` (single mode)
 - **Skill:** `baseline-ui`
 
@@ -196,7 +195,6 @@ Return the enhanced design specs with before/after for each craft improvement.
 - **Depends on:** Phase 4
 - **Agent:** general
 - **Concurrency:** Dynamic (1 agent per build group, min 1, max 5)
-- **Depends on:** Phase 4
 - **Tool:** `subagent` (parallel mode)
 - **Skill:** `frontend-ui-engineering`, `react-best-practices`
 
