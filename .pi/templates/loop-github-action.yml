@@ -1,0 +1,161 @@
+# =============================================================================
+# loop-github-action.yml — GitHub Actions workflow for unattended pi loop runs.
+#
+# Implements FR11 (Scheduling — unattended): a scheduled trigger fires the
+# loop-engineering orchestrator headless. The orchestrator runs the MAKER phase
+# (`pi -p` with capability-deprivation, --approve/-a auto-trusts project files
+# for non-interactive runs, --offline prevents phone-home), an exit-code GATE,
+# and ships-on-pass (push `loop/<name>/<ts>` + `gh pr create`).
+#
+# Self-contained: this workflow uses raw `pi -p` via the shipped orchestrators
+# (.pi/templates/loop-orchestrator.ts [T9] or loop-orchestrator.sh [T10]). It
+# does NOT hard-depend on any third-party GitHub Action. An optional compose
+# with the pi-coding-agent action is documented at the bottom of this file —
+# use it only if you prefer the maintained action wrapper over the raw CLI.
+#
+# PARAMETERIZATION:
+#   - loop_name (workflow_dispatch input): which loop to run
+#     (the .pi/loops/<loop_name>/ directory). Defaults to `ci-triage`.
+#   - cron     (workflow_dispatch input): overrides the placeholder schedule
+#     below for manual/ad-hoc runs. NOTE: workflow_dispatch inputs cannot
+#     change the `on.schedule` cron of an already-registered workflow — the
+#     schedule cron is fixed at registration time. To run a different cadence,
+#     copy this file, change the `on.schedule` cron placeholder, and register
+#     the new workflow. The `cron` input is documented for clarity and is
+#     consumed by the run step as `${{ inputs.cron }}` when you wire it into a
+#     wrapper; here it is surfaced in the step env for downstream tooling.
+#
+# CRON PLACEHOLDER:
+#   on.schedule.cron is set to "0 3 * * *" (03:00 UTC daily). Edit this value
+#   to match the loop's cadence (see .pi/loops/<name>/VISION.md cadence field).
+#   GitHub Actions cron is UTC and has a best-effort (not exact) fire time.
+#
+# Secrets required (repo → Settings → Secrets and variables → Actions):
+#   - PI_API_KEY  — the pi API key (provider key). Injected as env PI_API_KEY.
+#   - GH_TOKEN    — (optional) a GitHub PAT with repo + pull-requests scopes.
+#                    If unset, the workflow falls back to the auto-provided
+#                    `GITHUB_TOKEN` (permissions block below grants write).
+#
+# Requires (installed in the job): Node 24, pi CLI (global), git, gh.
+# =============================================================================
+
+name: loop-run
+
+# -----------------------------------------------------------------------------
+# Triggers
+# -----------------------------------------------------------------------------
+# schedule.cron is a PLACEHOLDER — edit to match the loop's cadence.
+# GitHub Actions cron is UTC, best-effort (may lag minutes).
+# workflow_dispatch inputs parameterize loop_name + cron for ad-hoc/manual runs.
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      loop_name:
+        description: "Loop name (the .pi/loops/<loop_name>/ directory to run, e.g. ci-triage)"
+        required: true
+        default: "ci-triage"
+        type: string
+      cron:
+        description: "Cadence hint (informational; schedule cron is fixed at registration — copy this file to change cadence). Example: '0 3 * * *'"
+        required: false
+        default: "0 3 * * *"
+        type: string
+
+# -----------------------------------------------------------------------------
+# Permissions — grant write so the orchestrator can push branches + open PRs.
+# (FR11 ship-on-pass: push loop/<name>/<ts> + gh pr create.)
+# -----------------------------------------------------------------------------
+permissions:
+  contents: write
+  pull-requests: write
+
+# A single run per loop at a time — avoid overlap/collision (FR8 worktree
+# isolation is per-invocation, but we still avoid duplicate scheduled runs).
+concurrency:
+  group: loop-run-${{ github.event.inputs.loop_name || 'ci-triage' }}
+  cancel-in-progress: false
+
+jobs:
+  loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Resolve loop name: workflow_dispatch input wins; scheduled runs default.
+      LOOP_NAME: ${{ github.event.inputs.loop_name || 'ci-triage' }}
+      PI_API_KEY: ${{ secrets.PI_API_KEY }}
+      # Prefer a dedicated GH_TOKEN secret if provided; else use GITHUB_TOKEN.
+      GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
+      # Surface the cron hint for downstream tooling/logging.
+      LOOP_CRON: ${{ github.event.inputs.cron || '0 3 * * *' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for branch + worktree ops
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          # No cache: pi is installed globally, not from package.json.
+
+      - name: Install pi globally
+        run: npm i -g @earendil-works/pi-coding-agent
+
+      - name: Configure gh CLI auth
+        env:
+          GH_TOKEN: ${{ env.GH_TOKEN }}
+        run: |
+          # If GH_TOKEN secret was set, use it; otherwise rely on the
+          # auto-provided GITHUB_TOKEN (permissions block grants write).
+          if [ -n "$GH_TOKEN" ]; then
+            echo "$GH_TOKEN" | gh auth login --with-token
+          else
+            echo "GH_TOKEN empty — relying on auto-provided GITHUB_TOKEN"
+          fi
+          gh auth status || true
+
+      - name: Run loop orchestrator (run-once)
+        env:
+          PI_API_KEY: ${{ env.PI_API_KEY }}
+          GH_TOKEN: ${{ env.GH_TOKEN }}
+        run: |
+          set -uo pipefail
+          echo "::group::loop run-once ${LOOP_NAME} (cadence=${LOOP_CRON})"
+          # Primary: Node SDK orchestrator (T9). Fallback to the portable
+          # bash orchestrator (T10) if tsx/node module resolution fails.
+          # --approve/-a auto-trusts project files (required non-interactive).
+          # --offline prevents phone-home.
+          if command -v node >/dev/null 2>&1; then
+            echo "Running Node orchestrator (loop-orchestrator.ts)..."
+            node .pi/templates/loop-orchestrator.ts run-once "${LOOP_NAME}" . \
+              || echo "::warning::Node orchestrator exited non-zero (FR10: recorded, not fatal)"
+          else
+            echo "node not found — running bash orchestrator (loop-orchestrator.sh)..."
+            bash .pi/templates/loop-orchestrator.sh run-once "${LOOP_NAME}" . \
+              || echo "::warning::Bash orchestrator exited non-zero (FR10: recorded, not fatal)"
+          fi
+          echo "::endgroup::"
+
+# =============================================================================
+# OPTIONAL COMPOSE (do NOT hard-depend — kept as a comment only).
+# -----------------------------------------------------------------------------
+# If you prefer the maintained action wrapper over raw `pi -p`, you can replace
+# the "Install pi globally" + "Run loop orchestrator" steps with:
+#
+#   - name: Run pi loop (via action)
+#     uses: shaftoe/pi-coding-agent-action@v1
+#     with:
+#       loop-name: ${{ env.LOOP_NAME }}
+#       approve: true      # -a: auto-trust project files (non-interactive)
+#       offline: true       # --offline: prevent phone-home
+#       api-key: ${{ secrets.PI_API_KEY }}
+#       gh-token: ${{ secrets.GH_TOKEN || github.token }}
+#       run-command: "node .pi/templates/loop-orchestrator.ts run-once ${{ env.LOOP_NAME }} ."
+#
+# This workflow stays self-contained with raw `pi -p` so it has zero external
+# action dependency. Use the compose above only if you accept the external
+# dependency and pin a version.
+# =============================================================================
