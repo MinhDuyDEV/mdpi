@@ -17,7 +17,12 @@ When the agent edits files matching these patterns, the listed skills auto-load.
 
 | File pattern | Auto-load skill(s) | Why |
 |-------------|-------------------|-----|
-| `*.ts,*.tsx,*.jsx` | `react-best-practices`, `deep-module-design` | TypeScript/React best practices + structural quality |
+| `*.ts,*.tsx,*.jsx` | `react-best-practices`, `deep-module-design`, `react-compiler` | TypeScript/React best practices + structural quality |
+| `**/actions.ts`, `**/actions/**` | `react-server-actions` | Server Actions + useActionState patterns |
+| `**/app/**/page.tsx`, `**/app/**/layout.tsx` | `nextjs-app-router`, `nextjs-cache` | App Router conventions + caching |
+| `**/stores/**`, `**/store.ts` | `zustand` | Zustand state management patterns |
+| `**/hooks/use-query*.ts`, `**/queries/**` | `tanstack-query` | TanStack Query hooks and patterns |
+| `**/forms/**` with `useForm`, `zodResolver` | `react-hook-form` | React Hook Form + Zod patterns |
 | `*.swift,*.swiftui` | `swift-concurrency`, `swiftui-expert-skill` | Swift patterns + concurrency safety |
 | `*.test.*,*.spec.*,__tests__/**` | `test-driven-development`, `testing-anti-patterns` | Test-first discipline + mock hygiene |
 | `*.sql,migrations/**` | `supabase-postgres-best-practices` | Query performance + RLS |
@@ -65,6 +70,15 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | payment, subscription, license, billing, checkout | `polar` |
 | Figma, design token, mockup, screenshot to code | `figma`, `mockup-to-code` |
 | Jira, Confluence, Atlassian, issue, ticket | `jira` |
+| v0, v0.sh, v0.dev, AI UI generator, Vercel v0, v0 component, v0 generate | `v0` |
+| shadcn, shadcn/ui, shadcn-ui, shadcn ui, shadcn component, shadcn add | `shadcn-ui` |
+| Server Actions, useActionState, useOptimistic, useFormStatus, 'use server', form action, progressive enhancement | `react-server-actions` |
+| App Router, layout.tsx, page.tsx, parallel routes, intercepting routes, route groups, async params, template.tsx, loading.tsx | `nextjs-app-router` |
+| use cache, cacheLife, cacheTag, revalidateTag, revalidatePath, Next.js cache, connection() | `nextjs-cache` |
+| React Compiler, auto-memoize, babel-plugin-react-compiler, useMemo, useCallback, memoization | `react-compiler` |
+| TanStack Query, React Query, useQuery, useMutation, optimistic update, infinite query, prefetch | `tanstack-query` |
+| Zustand, state management, global state, create store, useShallow, immer, persist, devtools | `zustand` |
+| React Hook Form, useForm, zodResolver, Controller, useFieldArray, form validation, conditional fields | `react-hook-form` |
 | browser, e2e, screenshot, playwright, chrome | `playwright`, `chrome-devtools`, `browser-testing-with-devtools` |
 | dependency, package, library, npm, PyPI, source | `opensrc` |
 | scrape, crawl, webclaw, bot protection, 403, webfetch fail, extract web content, web scraping | `webclaw` |
@@ -155,7 +169,14 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | `mockup-to-code` | Converting UI mockups, screenshots, Figma/Sketch designs into code | Build | Medium |
 | `oklch-color-workflow` | Complete OKLCH color system — syntax, palette generation, contrast, Tailwind v4 | Build | Low |
 | `production-hardening` | Production hardening — i18n, error states, edge cases, cross-browser | Ship | High |
-| `react-best-practices` | Writing, reviewing, or refactoring React/Next.js code for performance | Build | Medium |
+| `react-best-practices` | Writing, reviewing, or refactoring React 19 / Next.js 16 code for performance | Build | Medium |
+| `react-server-actions` | Building forms, mutations, data writes with React 19 Server Actions | Build | Medium |
+| `nextjs-app-router` | Building Next.js App Router pages — layouts, routes, RSC boundaries | Build | Medium |
+| `nextjs-cache` | Next.js 16 caching — `use cache`, cacheLife, cacheTag, revalidation | Build | Medium |
+| `react-compiler` | Enabling, debugging, optimizing with the React Compiler | Build | Low |
+| `tanstack-query` | Data fetching, caching, mutations with TanStack Query v5 | Build | Medium |
+| `zustand` | Global/shared state management with Zustand v5 | Build | Medium |
+| `react-hook-form` | Building forms with React Hook Form v7 + Zod v3 | Build | Medium |
 | `redesign-existing-projects` | Upgrading an existing website or app's visual design | Build | High |
 | `ui-craft-principles` | 16 craft principles — concentric radius, optical alignment, interruptible animations | Build | Low |
 | `ui-quality-audit` | 5-dimension UI quality scoring (0-4) with P0-P3 severity tags | Review | Medium |
@@ -197,6 +218,8 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | `opensrc` | Understanding how a library works internally, debugging dependency issues | Build | Low |
 | `pdf-extract` | Extracting text, images, tables, or metadata from PDF files | Build | Low |
 | `webclaw` | When webfetch returns 403 or bot protection errors | Build | Low |
+| `v0` | Using v0 (v0.app by Vercel) for AI-powered UI generation, prompt engineering, CLI/SDK integration | Build | Medium |
+| `shadcn-ui` | Setting up, configuring, or adding shadcn/ui components — CLI v4, presets, skills, registries | Build | Medium |
 | `gemini-large-context` | Analyzing large codebases, comparing multiple files exceeding typical context limits | Plan | Low |
 | `fallow` | Codebase intelligence — quality, dead code, duplication, complexity hotspots | Review | Low |
 
@@ -227,8 +250,18 @@ Maps user intent to skill(s). `→` = sequential pipeline (execute in order). `+
 | "I'm stuck" / "not sure what to do" | `behavioral-kernel` + `using-agent-skills` | All | Low |
 | "which skill to use" / "what skill for" | `using-agent-skills` | Define | Low |
 | "create UI" / "build component" / "design page" | `frontend-design` + `design-taste-frontend` | Build | Medium |
+| "generate with v0" / "v0 component" / "v0 prompt" / "AI generate UI" | `v0` + `frontend-design` | Build | Medium |
+| "add shadcn components" / "shadcn init" / "setup shadcn" / "shadcn/ui setup" | `shadcn-ui` + `frontend-design` | Build | Medium |
+| "Server Action" / "useActionState" / "useOptimistic" / "'use server'" | `react-server-actions` + `nextjs-app-router` | Build | Medium |
+| "App Router" / "layout.tsx" / "parallel route" / "intercepting route" | `nextjs-app-router` + `react-best-practices` | Build | Medium |
+| "use cache" / "revalidateTag" / "cacheLife" / "Next.js cache" | `nextjs-cache` + `nextjs-app-router` | Build | Medium |
+| "React Compiler" / "auto-memoize" / "useMemo unnecessary" | `react-compiler` + `react-best-practices` | Build | Low |
+| "useQuery" / "useMutation" / "TanStack Query" / "optimistic update" | `tanstack-query` + `zustand` | Build | Medium |
+| "Zustand" / "create store" / "useShallow" / "global state" | `zustand` + `tanstack-query` | Build | Medium |
+| "React Hook Form" / "useForm" / "zodResolver" / "useFieldArray" | `react-hook-form` + `react-server-actions` | Build | Medium |
 | "deploy to Cloudflare" | `cloudflare` | Ship | High |
 | "deploy to Vercel" | `vercel-deploy-claimable` | Ship | High |
+| "animate" / "animation" / "motion" / "framer" / "transition" | `frontend-design` (references/animation/) | Build | Low |
 | "set up database" / "Supabase" | `supabase` + `supabase-postgres-best-practices` | Build | High |
 | "add logging" / "monitoring" / "observability" | `observability-and-instrumentation` | Ship | Medium |
 | "optimize context" / "agent quality degraded" / "too many tokens" | `context-engineering` | All | Low |

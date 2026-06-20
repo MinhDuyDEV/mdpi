@@ -43,7 +43,7 @@ description: MUST load when building any web UI with React-based frameworks — 
 
 Search: `@theme`, `@container`, `OKLCH`, `mask-`, `text-shadow`
 
-### shadcn/ui (CLI v3.6)
+### shadcn/ui (CLI v4.11)
 
 - `./references/shadcn/setup.md` - Installation, visual styles, component list
 - `./references/shadcn/core-components.md` - Button, Card, Dialog, Select, Tabs, Toast

@@ -1,13 +1,13 @@
 # Motion Advanced
 
-Scroll, orchestration, TypeScript, performance.
+Scroll, orchestration, TypeScript, AnimateView, performance.
 
 ## Scroll Animations
 
 ```tsx
 import { motion, useScroll, useTransform } from 'motion/react';
 
-// Scroll progress
+// Scroll progress (GPU-accelerated via ScrollTimeline API since v12.32)
 const { scrollYProgress } = useScroll();
 const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
 
@@ -36,7 +36,7 @@ const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 1, 0.8]);
 ## AnimatePresence Modes
 
 ```tsx
-// Wait for exit before enter
+// Wait for exit before enter (recommended for page transitions)
 <AnimatePresence mode="wait">
   <motion.div key={currentPage} />
 </AnimatePresence>
@@ -48,6 +48,37 @@ const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 1, 0.8]);
 
 // Sync (default) - exit and enter simultaneously
 <AnimatePresence mode="sync" />
+```
+
+## AnimateView (New — Motion+ Early Access)
+
+View Transitions wrapper for React. Enter/exit/update/share animations for page transitions:
+
+```tsx
+import { AnimateView } from 'motion/react'
+
+<AnimateView>
+  <motion.div
+    animate={{ opacity: 1, scale: 1 }}
+    initial={{ opacity: 0, scale: 0.95 }}
+  />
+</AnimateView>
+```
+
+Built on React 19.2 `ViewTransition` component. Works alongside Next.js 16 `experimental.viewTransition`.
+
+## arc() — Curved Motion Paths (v12.40+)
+
+```tsx
+import { arc } from 'motion/react'
+
+<motion.div
+  animate={{
+    x: 200,
+    y: -120,
+    transition: { path: arc() }
+  }}
+/>
 ```
 
 ## Orchestration
@@ -157,6 +188,24 @@ const prefersReduced = useReducedMotion();
 
 // Use layoutRoot to isolate layout calculations
 <motion.div layoutRoot />
+
+// Axis-locked layout (v12.35+) — cheaper than full layout
+<motion.div layout="x" />
+
+// Custom anchor point (v12.38+)
+<motion.div layoutAnchor={{ x: 0.5, y: 0.5 }} />
+```
+
+## CSS Color Support (v12.35+)
+
+Motion now supports modern CSS color formats:
+- `oklch()`, `oklab()`, `lab()`, `lch()`
+- `color-mix()`, `light-dark()`
+
+```tsx
+<motion.div
+  animate={{ backgroundColor: 'oklch(0.65 0.22 250)' }}
+/>
 ```
 
 ## Common Patterns
@@ -171,18 +220,28 @@ const prefersReduced = useReducedMotion();
 />
 ```
 
-### Page transitions
+### Page transitions (Next.js App Router)
 ```tsx
-<AnimatePresence mode="wait">
-  <motion.main
-    key={pathname}
-    initial={{ opacity: 0, x: 20 }}
-    animate={{ opacity: 1, x: 0 }}
-    exit={{ opacity: 0, x: -20 }}
-  >
-    {children}
-  </motion.main>
-</AnimatePresence>
+// app/template.tsx
+'use client'
+import { AnimatePresence, motion } from 'motion/react'
+import { usePathname } from 'next/navigation'
+
+export default function Template({ children }) {
+  const pathname = usePathname()
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.main
+        key={pathname}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+      >
+        {children}
+      </motion.main>
+    </AnimatePresence>
+  )
+}
 ```
 
 ### Expandable card
@@ -212,13 +271,27 @@ anime.js v4 still appropriate for:
 - Non-React projects
 
 ```javascript
-// anime.js for SVG morphing
 import { animate, svg } from 'animejs';
 animate('#path1', { d: svg.morphTo('#path2'), duration: 1 });
 ```
+
+## Library Comparison (2026)
+
+| Library | Bundle | React DX | Scroll | Gestures | Layout Anim |
+|---------|--------|----------|--------|----------|-------------|
+| **Motion** | ~85KB | 🏆 Best | Built-in | Built-in | Built-in |
+| GSAP | ~78KB | Imperative | ScrollTrigger | Draggable | Flip plugin |
+| React Spring | ~45KB | Good | External | ❌ | ❌ |
+| Anime.js | ~52KB | Imperative | External | ❌ | ❌ |
+| TailwindCSS Motion | ~5KB | Good | Built-in | ❌ | ❌ |
+
+**Verdict**: Motion for React-first projects with complex interactions. GSAP for marketing sites with complex timelines. React Spring for physics-driven natural motion. Anime.js for SVG path animations.
 
 ## Installation
 
 ```bash
 npm install motion
+# or migrate from framer-motion:
+npm uninstall framer-motion && npm install motion
+# swap imports: "framer-motion" → "motion/react"
 ```

@@ -7,11 +7,16 @@ description: MUST load when writing, reviewing, or refactoring React/Next.js cod
 
 ## When to Use
 
-- Applying performance guidelines to React/Next.js components or pages.
+- Applying performance guidelines to React 19 / Next.js 16 components or pages.
+- Optimizing Server Components, data fetching, bundle size, and re-renders.
 
 ## When NOT to Use
 
 - Non-React codebases or UI-free/backend-only changes.
+- Server Actions and form patterns (use `react-server-actions` skill)
+- App Router architecture (use `nextjs-app-router` skill)
+- Next.js 16 caching (use `nextjs-cache` skill)
+- State management (use `tanstack-query`, `zustand`, or `react-hook-form` skills)
 
 
 ## When to Apply
@@ -107,6 +112,79 @@ Reference these guidelines when:
 
 - `advanced-event-handler-refs` - Store event handlers in refs
 - `advanced-use-latest` - useLatest for stable callback refs
+
+## React 19 Patterns
+
+### Server Components: Default Data Flow
+
+React 19 + Next.js App Router defaults to **Server Components**. Keep data fetching on the server:
+
+```tsx
+// ✅ Server Component — fetch data where it lives
+// app/posts/page.tsx
+export default async function PostsPage() {
+  const posts = await db.post.findMany()       // Direct DB access
+  const config = await fetchConfig()           // Private API calls (no CORS)
+
+  return <PostsList posts={posts} config={config} />
+}
+```
+
+Only add `'use client'` at the interactive leaves — push it as deep as possible.
+
+### New Hooks Performance Impact
+
+| Hook | Use Case | Performance Note |
+|------|----------|-----------------|
+| `useOptimistic` | Instant UI feedback | Replaces manual `useState` + revert logic |
+| `useActionState` | Form submissions | Replaces `useFormState` (deprecated) |
+| `useFormStatus` | Pending states | Read from child, not form component |
+| `use()` | Unwrap promises in render | Only in Client Components — Server Components use `await` |
+
+### React Compiler Awareness
+
+The React Compiler (stable, React 19+) auto-memoizes components and hooks. With compiler enabled:
+
+- **Remove** manual `useMemo`, `useCallback`, `memo()` unless truly expensive
+- **Keep** `useRef` (semantic, not memoization)
+- **Keep** `useEffect` for synchronization (compiler doesn't touch effects)
+- See `react-compiler` skill for full migration guide
+
+### `use()` for Client Component Data
+
+```tsx
+'use client'
+
+import { use } from 'react'
+
+function UserProfile({ userPromise }) {
+  const user = use(userPromise)  // Unwrap promise in render
+  return <div>{user.name}</div>
+}
+```
+
+`use()` reads Promises and Context in render without a hook wrapper.
+
+## Next.js 16 Caching
+
+Next.js 16 reversed the v15 caching model — everything is dynamic by default. To cache:
+
+```tsx
+// Cached — uses `use cache` directive
+export async function getPosts() {
+  'use cache'
+  cacheLife('hours')
+  cacheTag('posts')
+  return db.post.findMany()
+}
+
+// Dynamic — no directive (default)
+export async function getUserSession() {
+  return auth()  // Always fresh
+}
+```
+
+**Migration**: Remove `export const dynamic = 'force-dynamic'` (now default). Replace `export const revalidate = 3600` with `'use cache'` + `cacheLife`. See `nextjs-cache` skill for detailed migration.
 
 ## How to Use
 
