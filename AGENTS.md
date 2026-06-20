@@ -38,29 +38,12 @@ Treat `.pi/` content as the **deliverable**. Don't modify it unless the user exp
 
 ## Behavioral Kernel
 
-1. **Clarify before committing** — surface assumptions or ask instead of silently choosing
-2. **Choose the smallest working change** — solve today's problem directly before inventing flexibility
-3. **Keep diffs surgical** — change only what the request requires; log unrelated issues
-4. **Define proof before acting** — for non-trivial work, name the success check before implementation
+_Core behavioral kernel (rules 1–4, Drift Signals, Recovery Move) lives in `~/.pi/agent/AGENTS.md` and is auto-loaded alongside this file. Only project-specific additions are repeated here._
+
 5. **Mode discipline** — read `MODE:` from the auto-injected `state.md` before any non-trivial change.
    - **Greenfield:** no deployed consumers — skip backwards-compat layers, version prefixes, and legacy handlers on day one.
    - **Brownfield:** deployed consumers exist — run `semantic_inspect` callers/callees before any rename/delete to prove unreferenced; conform to existing code conventions, do not import training-distribution style ("works but doesn't fit").
    - **Mixed:** state the mode per-task in the first sentence.
-
-## Drift Signals — STOP and reload
-
-- Adding abstraction for a single use case
-- Changing adjacent code "while you're here"
-- Postponing verification until the end
-- Claiming completion without a named proof path
-- Silently picking one interpretation from multiple valid readings
-
-## Recovery Move
-
-1. Re-state the request in one sentence
-2. Re-state the smallest working change
-3. Re-state the proof path
-4. Delete or avoid anything outside that boundary
 
 ---
 

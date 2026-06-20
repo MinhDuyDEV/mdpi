@@ -32,7 +32,7 @@ When the agent edits files matching these patterns, the listed skills auto-load.
 | `*.css,*.scss,*.less` | `baseline-ui`, `frontend-design`, `design-taste-frontend` | Deslop pass + design system consistency |
 | `*.tsx,*.jsx` | `baseline-ui`, `frontend-ui-engineering` | Deslop pass + production-quality UI standards |
 | `*.md,docs/**,ADR*.md` | `documentation-and-adrs` | Doc structure + ADR format |
-| `.pi/**/DESIGN.md` | `frontend-design`, `design-taste-frontend` | Project design identity — load aesthetic skills when DESIGN.md is edited |
+| `.pi/**/DESIGN.md` | `frontend-design`, `design-taste-frontend` | Project design identity — load aesthetic skills when DESIGN.md is edited. NOTE: DESIGN.md is no longer auto-injected; load it into context on demand via `/inject-template DESIGN.md` when starting UI work. |
 
 ---
 

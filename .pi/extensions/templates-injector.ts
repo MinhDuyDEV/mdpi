@@ -1,7 +1,6 @@
 /**
  * Templates Injector Extension
  *
- * Auto-injects project context files into system prompt.
  * Auto-injects project context files into system prompt via pi's before_agent_start hook.
  *
  * Resolution: prefer the LIVE file at `.pi/{name}` (filled by /init, the project's
@@ -9,21 +8,40 @@
  * when no live file exists. This keeps templates/ pristine as deliverables while
  * ensuring real project state is what the agent actually sees.
  *
- * Auto-injected (always, whichever resolves):
+ * Auto-injected (always, whichever resolves) — but ONLY when not placeholder-heavy:
  * - project.md
  * - tech-stack.md
  * - state.md   ← the "you are here" marker; live version injected once /init fills it
  *
- * User can opt-in to inject more via /inject-template command.
+ * Placeholder-skip: at before_agent_start, blank seed templates (still full of
+ * `[Criterion]`/`[URL]`/`<!-- ... -->` markers) are skipped so they don't tax the
+ * first message. A live file with real content (few markers) still injects.
+ *
+ * DESIGN.md is NOT auto-injected — load it on demand via `/inject-template DESIGN.md`
+ * (e.g. when starting UI work).
+ *
+ * User can opt-in to inject more via /inject-template command (placeholder-skip
+ * does not apply to explicit on-demand injection).
  */
 
 import * as fs from "node:fs";
 import * as path from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-const ALWAYS_INJECT = ["project.md", "tech-stack.md", "state.md", "DESIGN.md"];
+const ALWAYS_INJECT = ["project.md", "tech-stack.md", "state.md"];
 
-function readTemplate(cwd: string, name: string): string | null {
+// Placeholder markers that indicate a template is still a blank seed (not filled).
+// Counted to decide whether an auto-injected file would just add noise to the
+// first message. Threshold is intentionally low (>5) so a genuinely filled live
+// file (a handful of incidental bracket occurrences) still injects.
+const PLACEHOLDER_MARKER_RE = /\[(?:e\.g\.|Criterion|URL|Title|Date|slug)[^\]]*\]|<slug>|<!-- /g;
+const PLACEHOLDER_MARKER_THRESHOLD = 5;
+
+function readTemplate(
+	cwd: string,
+	name: string,
+	skipPlaceholders = false,
+): string | null {
 	// Prefer live file at .pi/{name} (filled by /init — real project state);
 	// fall back to blank seed at .pi/templates/{name} when no live file exists.
 	const livePath = path.join(cwd, ".pi", name);
@@ -33,7 +51,17 @@ function readTemplate(cwd: string, name: string): string | null {
 	const content = fs.readFileSync(filePath, "utf-8");
 	// Strip frontmatter for injection
 	const fmMatch = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
-	return (fmMatch ? fmMatch[1] : content).trim();
+	const body = (fmMatch ? fmMatch[1] : content).trim();
+	// Auto-inject only: skip placeholder-heavy files so unfilled templates don't
+	// tax the first message. On-demand /inject-template bypasses this (default).
+	// Anchored to a closing `]` so real markdown links like `[Vercel](...)` don't
+	// count; only placeholder-shaped tokens (`[URL]`, `[Criterion 1]`, `[e.g., ...]`,
+	// `<slug>`, `<!-- `) do.
+	if (skipPlaceholders) {
+		const markers = body.match(PLACEHOLDER_MARKER_RE);
+		if (markers && markers.length > PLACEHOLDER_MARKER_THRESHOLD) return null;
+	}
+	return body;
 }
 
 export default function templatesInjector(pi: ExtensionAPI) {
@@ -41,7 +69,7 @@ export default function templatesInjector(pi: ExtensionAPI) {
 		const injected: string[] = [];
 
 		for (const name of ALWAYS_INJECT) {
-			const content = readTemplate(ctx.cwd, name);
+			const content = readTemplate(ctx.cwd, name, /* skipPlaceholders */ true);
 			if (content && content.length > 0) {
 				injected.push(`### ${name}\n\n${content}`);
 			}
