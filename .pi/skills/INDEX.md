@@ -28,7 +28,7 @@ When the agent edits files matching these patterns, the listed skills auto-load.
 | `*.sql,migrations/**` | `supabase-postgres-best-practices` | Query performance + RLS |
 | `.github/workflows/**,Dockerfile,docker-compose*.yml` | `ci-cd-and-automation` | Pipeline design + caching |
 | `.pi/skills/*/SKILL.md` | `writing-skills` | Skill authoring best practices |
-| `.pi/loops/**`,`loop-orchestrator.*`,`loop-guard.ts` | `loop-engineering`, `loop-audit` | Loop design/qualification + readiness scoring |
+
 | `*.css,*.scss,*.less` | `baseline-ui`, `frontend-design`, `design-taste-frontend` | Deslop pass + design system consistency |
 | `*.tsx,*.jsx` | `baseline-ui`, `frontend-ui-engineering` | Deslop pass + production-quality UI standards |
 | `*.md,docs/**,ADR*.md` | `documentation-and-adrs` | Doc structure + ADR format |
@@ -82,7 +82,7 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | browser, e2e, screenshot, playwright, chrome | `playwright`, `chrome-devtools`, `browser-testing-with-devtools` |
 | dependency, package, library, npm, PyPI, source | `opensrc` |
 | scrape, crawl, webclaw, bot protection, 403, webfetch fail, extract web content, web scraping | `webclaw` |
-| loop, unattended loop, nightly triage, loop-readiness, loop-cost, loop-check, loop-review | `loop-engineering`, `loop-audit`, `loop-cost` |
+
 | Swift, iOS, macOS, actor, async/await, Sendable | `swift-concurrency`, `swiftui-expert-skill`, `core-data-expert` |
 
 ---
@@ -125,9 +125,7 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | `dcp-hygiene` | At command/phase closure — compress closed exploratory work-streams via pi-dcp when `compress` is available; no-ops if DCP absent | All | Low |
 | `memory-system` | Understanding/leveraging pi-hermes-memory — auto-flywheel, tools, commands, when to use memory_search vs vcc_recall | All | Low |
 | `doubt-driven-development` | In-flight adversarial review of non-trivial decisions before they stand | Build | Medium |
-| `loop-engineering` | Designing/qualifying/running unattended coding loops; 2-condition test + VISION/state + confidence-gated action | All | Medium |
-| `loop-audit` | Scoring a project's loop-readiness 0-100 + L0/L1/L2/L3; L3 gated on proven run | Review | Low |
-| `loop-cost` | Estimating tokens/day + daily cap + early-exit flag before approving a loop budget | Plan | Low |
+
 
 ### Implementation
 

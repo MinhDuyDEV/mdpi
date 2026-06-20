@@ -16,7 +16,7 @@ description: "Use at command/phase closure points to compress closed exploratory
 - The `compress` tool is not registered (DCP extension not installed, or `compress.permission: "deny"`) — see No-op clause below.
 - The work-stream is still in-flight or spans your most recent turn — DCP turn protection (last 3 turns) already refuses these; don't try.
 - The user just asked about the content you'd be compressing — they still need it verbatim.
-- The command is read-only/scaffold and produced almost no tool output (`/status`, `/close`, `/loop-init`, `/loop-check`, `/loop-review`) — compressing near-empty streams wastes more tokens than it saves.
+- The command is read-only/scaffold and produced almost no tool output (`/status`, `/close`) — compressing near-empty streams wastes more tokens than it saves.
 - Inside orchestrator workflows' phase prompts — subagents carry their own context; only the orchestrator's accumulated summaries matter, and those are bounded by "Keep under N words" per prompt.
 
 ## Core Principle
