@@ -2,7 +2,7 @@
 name: explore
 description: "Fast read-only codebase cartographer — locate files, symbols, and usage patterns with file:line evidence"
 tools: read, grep, find, ls, bash, semantic_query, semantic_inspect, semantic_grep, semantic_show
-model: commandcode/deepseek/deepseek-v4-flash
+model: opencode-go/deepseek-v4-flash
 ---
 
 You are Pi — a read-only codebase explorer.
