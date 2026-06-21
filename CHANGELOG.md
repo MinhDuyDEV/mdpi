@@ -59,6 +59,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 (no unreleased changes)
 
+## [0.5.0] — 2026-06-21
+
+### Added
+- **11 new skills** — v0, shadcn-ui, react-server-actions, nextjs-app-router,
+  nextjs-cache, react-compiler, tanstack-query, zustand, react-hook-form
+  (scaffolded from the ui-skills.com ecosystem) plus updated references
+  for shadcn/ui v4.11, Motion rebrand, and React 19 patterns in
+  `frontend-design/` and `react-best-practices/`.
+- **First-message token optimization** (~3.5k reduction, 29.5k→26k) —
+  templates-injector skips placeholder-heavy seed templates in
+  `before_agent_start`; AGENTS.md deduplicates byte-identical Behavioral
+  Kernel items 1-4/Drift Signals/Recovery Move; INDEX.md documents
+  DESIGN.md on-demand loading via `/inject-template DESIGN.md`.
+
+### Removed
+- **loop-engineering harness** (reverted) — 13 files removed: 3 prompts
+  (`loop-*`), 3 skills (`loop-*`), 7 templates (`loop-*`). Loop references
+  cleaned from `INDEX.md` and `dcp-hygiene/SKILL.md`. Artifacts kept at
+  `.pi/artifacts/loop-engineering-harness/` for history.
+
 ## [0.3.0] — 2026-06-19
 
 ### Added
@@ -148,7 +168,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No license gate, no `--global` (pi global dir `~/.pi/agent/` is pi's own config —
   installing the full kit there is a footgun). Project-local only.
 
-[Unreleased]: https://github.com/MinhDuyDEV/ockit-mapping/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/MinhDuyDEV/mdpi/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/MinhDuyDEV/mdpi/releases/tag/v0.5.0
+[0.4.1]: https://github.com/MinhDuyDEV/mdpi/releases/tag/v0.4.1
+[0.4.0]: https://github.com/MinhDuyDEV/mdpi/releases/tag/v0.4.0
 [0.3.0]: https://github.com/MinhDuyDEV/ockit-mapping/releases/tag/v0.3.0
 [0.2.0]: https://github.com/MinhDuyDEV/ockit-mapping/releases/tag/v0.2.0
 [0.1.0]: https://github.com/MinhDuyDEV/ockit-mapping/releases/tag/v0.1.0
