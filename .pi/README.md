@@ -95,9 +95,8 @@ pi
 ├── scripts/                        # 1 utility script
 │   └── gc-check.sh                 # Structural invariants for /gc
 │
-├── context/                        # 2 reference docs
-│   ├── architecture.md             # Pi 5-layer architecture
-│   └── fallow.md                   # Fallow CLI reference
+├── context/                        # 1 reference doc
+│   └── architecture.md             # Pi 5-layer architecture
 │
 ├── state/                          # Runtime state (gitignored)
 │   └── session-summary.{json,md}

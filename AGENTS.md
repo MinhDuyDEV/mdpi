@@ -29,7 +29,7 @@ The deliverable is a **curated `.pi/` kit**, not the agent's own runtime config.
 - **`.pi/prompts/`** — slash commands (init, create, plan, fix, verify, ship, audit, research, gc, loop-*, status, close)
 - **`.pi/workflows/`** — DAG workflows (audit-pattern, batch-implement, deep-research, garbage-collection, development-lifecycle, quality-loop)
 - **`.pi/templates/`** — project context templates (prd, project, state, tech-stack, roadmap, etc.)
-- **`.pi/context/`** — reference docs (architecture, fallow)
+- **`.pi/context/`** — reference docs (architecture)
 - **`.pi/extensions/`** — TypeScript extensions (workflows-runner, templates-injector); long-term memory via external `npm:pi-hermes-memory`
 
 Treat `.pi/` content as the **deliverable**. Don't modify it unless the user explicitly requests changes.

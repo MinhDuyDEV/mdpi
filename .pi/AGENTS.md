@@ -21,7 +21,7 @@ For project-wide rules (kernel, drift signals, hard constraints, output style), 
 | `prompts/` | slash commands | Dispatched by primary agent |
 | `workflows/` | DAG workflows | Executed via subagent tool |
 | `templates/` | project context templates | Referenced via auto-inject |
-| `context/` | reference docs (architecture, fallow) | Manual reference only, never auto-injected |
+| `context/` | reference docs (architecture) | Manual reference only, never auto-injected |
 | `extensions/` | TypeScript extensions | Compiled JS code, gated by pi extension SDK |
 
 ---

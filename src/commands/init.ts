@@ -216,6 +216,7 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
   if (only) adaptSettingsJson(piDir, only);
   const manifest = generateManifest(piDir, version);
   const fileCount = Object.keys(manifest.files).length;
+  const hasSkills = !only || only.has("skills");
 
   if (quiet) {
     const subset = only ? ` subset=[${[...only].join(",")}]` : "";
@@ -226,10 +227,16 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
         `settings.json trimmed to drop references to excluded\nskills/prompts/extensions dirs.\n\n` +
         `Note: mdpi upgrade compares against the FULL template —\nrun \`mdpi upgrade --check\` before applying.\n\n`
       : "";
+    const fallowHint = hasSkills
+      ? `Fallow skill included (codebase intelligence: dead code,\n` +
+        `duplication, complexity). For JS/TS projects, run \`/init\`\n` +
+        `in a pi session to generate \`.fallowrc.json\`; other stacks skip it.\n\n`
+      : "";
     p.note(
       `Pi kit installed at:\n${piDir}\n\n` +
         `${fileCount} template files tracked via manifest.\n\n` +
         subsetNote +
+        fallowHint +
         `Next: run ${color.cyan("mdpi install")} to install the kit's npm packages,\n` +
         `then open pi in this repo to use the kit.`,
       "Installation complete",

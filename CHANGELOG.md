@@ -59,6 +59,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 (no unreleased changes)
 
+## [0.6.0] — 2026-06-21
+
+### Added
+- **Fallow wired into the `/verify` lifecycle** — new Phase 2b runs a
+  non-blocking `fallow audit --base <base> --gate new-only` after the hard
+  gates pass, surfacing dead code, complexity, and duplication introduced
+  by the change as an ADVISORY row. Never blocks `/ship` (pre-existing
+  issues are logged only); escalates to the user on >5 new issues or any
+  new circular dependency / architecture boundary violation. `/ship`
+  inherits the gate via its Phase 4 delegation to `/verify`.
+- **`mdpi init` Fallow hint** — the post-scaffold `Installation complete`
+  note now tells users the Fallow skill is included and to run `/init` in a
+  pi session to generate `.fallowrc.json` for JS/TS projects. Shown only
+  when the `skills` category is installed (hidden for `--only` subsets
+  that exclude skills).
+- **INDEX.md keyword trigger for Fallow** — `dead code`, `duplication`,
+  `circular dependency`, `unused exports`, `unused dependencies`,
+  `complexity hotspot`, `codebase health`, `fallow` now route to the
+  `fallow` skill (previously only the Tools table and Quick Routing
+  referenced it).
+
+### Changed
+- **`/gc` Fallow invocation hardened** — `npx fallow --format json --quiet`
+  now appends `|| true` per the skill's Agent Rule 2 (exit 1 = issues
+  found, not a runtime error; only exit 2 is a real failure).
+
+### Removed
+- **Stale `.pi/context/fallow.md`** — deleted. It documented obsolete
+  flags (`--circular`, `--unused-dependencies`) and a wrong config path
+  (`.fallow/config.yaml`), and was missing `--changed-workspaces`,
+  `audit --base`, MCP tools, runtime coverage, `security`, and `flags`
+  commands. The canonical Fallow reference is now the `fallow` skill
+  (`SKILL.md` + `references/cli-reference.md` + `gotchas.md` +
+  `patterns.md`). Updated refs in `AGENTS.md`, `.pi/AGENTS.md`, and
+  `.pi/README.md`.
+
 ## [0.5.0] — 2026-06-21
 
 ### Added

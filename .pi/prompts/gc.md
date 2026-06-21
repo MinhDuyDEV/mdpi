@@ -41,8 +41,9 @@ This command delegates to the `garbage-collection` workflow via the `run_workflo
 
 1. **Run Fallow scan:**
    ```bash
-   npx fallow --format json --quiet
+   npx fallow --format json --quiet || true
    ```
+   > Append `|| true`: exit 1 means "issues found" (normal for GC), not a runtime error. Only exit 2 (invalid config/parse) is a real failure — see `fallow` skill Agent Rule 2.
 2. Extract findings: dead code, duplication, complexity hotspots, unused exports
 
 ### Phase 2: Quality Grade Update

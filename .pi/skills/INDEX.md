@@ -47,6 +47,7 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | performance, slow, latency, optimize, profile, bundle size | `performance-optimization` |
 | bug, fix, error, crash, broken, debug, trace | `debugging-and-error-recovery`, `root-cause-tracing` |
 | refactor, cleanup, simplify, clean code, complex | `code-cleanup`, `code-simplification`, `deep-module-design` |
+| dead code, duplication, circular dependency, unused exports, unused dependencies, complexity hotspot, codebase health, fallow | `fallow` |
 | test, spec, verify, assert, coverage, TDD | `test-driven-development`, `testing-anti-patterns` |
 | review, audit, quality, check, PR | `code-review-and-quality`, `agent-code-quality-gate` |
 | design, UI, component, style, layout, CSS, tailwind, DESIGN.md, design identity, design token, brand identity | `frontend-design`, `design-taste-frontend` |
