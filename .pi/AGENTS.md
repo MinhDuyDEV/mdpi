@@ -17,7 +17,7 @@ For project-wide rules (kernel, drift signals, hard constraints, output style), 
 | Subdir | Purpose | Treat as |
 |--------|---------|----------|
 | `agents/` | 7 agent personas (pi format) | Source of truth — don't modify casually |
-| `skills/` | 59 skills (Agent Skills spec) | Tier-1 auto-load + Tier-2 on-demand |
+| `skills/` | 97 skills (Agent Skills spec) | Tier-1 auto-load + Tier-2 on-demand |
 | `prompts/` | slash commands | Dispatched by primary agent |
 | `workflows/` | DAG workflows | Executed via subagent tool |
 | `templates/` | project context templates | Referenced via auto-inject |

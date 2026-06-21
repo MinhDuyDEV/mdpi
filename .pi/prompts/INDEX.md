@@ -4,7 +4,7 @@ purpose: Index of slash commands with purpose, when-to-use, and lifecycle positi
 
 # Prompts Index
 
-11 slash commands. Lifecycle is canonical; utilities attach at any phase.
+17 slash commands. Lifecycle is canonical; utilities attach at any phase.
 
 ## Canonical Lifecycle
 
@@ -18,7 +18,7 @@ purpose: Index of slash commands with purpose, when-to-use, and lifecycle positi
    │                              │
    └──── /close ←─────────────────┘
    
-Utilities (any phase):  /research  /audit  /fix  /gc
+Utilities (any phase):  /research  /audit  /fix  /gc  /test  /defect  /flake  /qa-report  /api-test
 Status:                 /status
 ```
 
@@ -39,6 +39,12 @@ Status:                 /status
 | `/gc` | Fallow analysis + quality grades + optional cleanup PRs | Maintenance cadence; not during active feature work | `[--dry-run] [--apply] [--scope <dir>]` | Maintenance |
 | `/status` | Show active feature, progress tail, blockers | Orient at session start or when unsure | `[--full]` | Any (read-only) |
 | `/close` | Finalize active feature, clear `.active` | Feature done/blocked/abandoned, or recover dangling `.active` | `[--done\|--blocked\|--abandoned] [--note <text>]` | Ship/Recovery |
+| `/test` | Design + execute black-box tests from specs/contracts/mockups (no source code) | QA needs test cases from docs + running app | `<spec path or desc> [--app-url <url>] [--dry-run]` | Plan/Build |
+| `/release-gate` | Aggregate quality signals into a go/no-go release decision | Pre-release QA sign-off (high-risk/public releases) | `[--slug <slug>] [--dod <path>] [--dry-run]` | Ship |
+| `/defect` | Triage + process RCA + regression loop for a reported defect | A defect needs structured triage + RCA + closure (not a quick fix) | `<defect> [--severity <hint>] [--attach <file>] [--dry-run]` | Verify (utility) |
+| `/flake` | Detect + quarantine flaky tests, decide retry vs fix | CI shows intermittent failures; suite health | `[--suite <pattern>] [--runs <N>] [--quarantine] [--dry-run]` | Maintenance |
+| `/qa-report` | Generate a QA metrics report (defect density, escape, DORA, flake) | Release retrospective; quality decisions | `[--period <range>] [--scope <dir>]` | Maintenance |
+| `/api-test` | Test an API black-box by sending requests + validating against contract | Black-box API testing (no source needed) | `<api-url or openapi-path> [--scope <op>] [--auth <token>] [--dry-run]` | Verify |
 
 ## When to use what
 
@@ -54,6 +60,12 @@ Status:                 /status
 | "Where am I / what's the state" | `/status` |
 | Feature done but `/ship` left `.active` dangling | `/close --done` |
 | Maintenance / dead code sweep | `/gc --dry-run` |
+| "Design + run tests from spec/contract" (black-box) | `/test "<spec>" --app-url <url>` |
+| "Is this ready to release?" (QA sign-off) | `/release-gate` |
+| "A bug was reported" (needs triage + RCA) | `/defect "..."` |
+| "Tests are flaky" | `/flake --runs 5` |
+| "How good is our quality?" (metrics) | `/qa-report` |
+| "Test this API" (black-box, no code) | `/api-test "<url or openapi>"` |
 
 ## Conventions (shared across commands)
 
@@ -67,6 +79,6 @@ Status:                 /status
 
 ## Related
 
-- `skills/INDEX.md` — task → skill routing (67 skills)
-- `workflows/INDEX.md` — 6 DAG workflows invoked by commands
+- `skills/INDEX.md` — task → skill routing (97 skills)
+- `workflows/INDEX.md` — 10 DAG workflows invoked by commands
 - `templates/` — 12 template files (PRD, plan body, state, roadmap, etc.)

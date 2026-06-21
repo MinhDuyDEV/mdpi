@@ -25,7 +25,7 @@ When you operate inside `.pi/`, both this file AND `.pi/AGENTS.md` are loaded. T
 The deliverable is a **curated `.pi/` kit**, not the agent's own runtime config. Contents:
 
 - **`.pi/agents/`** — 7 agent personas (build, explore, general, plan, review, scout, vision)
-- **`.pi/skills/`** — 59 skills (4 Tier-1 auto-loaded + 55 Tier-2 on-demand)
+- **`.pi/skills/`** — 97 skills (4 Tier-1 auto-loaded + 93 Tier-2 on-demand)
 - **`.pi/prompts/`** — slash commands (init, create, plan, fix, verify, ship, audit, research, gc, loop-*, status, close)
 - **`.pi/workflows/`** — DAG workflows (audit-pattern, batch-implement, deep-research, garbage-collection, development-lifecycle, quality-loop)
 - **`.pi/templates/`** — project context templates (prd, project, state, tech-stack, roadmap, etc.)

@@ -84,6 +84,25 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | scrape, crawl, webclaw, bot protection, 403, webfetch fail, extract web content, web scraping | `webclaw` |
 
 | Swift, iOS, macOS, actor, async/await, Sendable | `swift-concurrency`, `swiftui-expert-skill`, `core-data-expert` |
+| test strategy, test pyramid, test trophy, what to test, which layer, test tiering, test ownership | `test-strategy` |
+| test case design, equivalence partitioning, boundary value, decision table, state transition, pairwise, BDD, Gherkin, ATDD, acceptance criteria | `test-case-design` |
+| coverage strategy, mutation testing, property-based testing, meaningful coverage, coverage gate, coverage decay | `coverage-strategy` |
+| regression suite, regression selection, impacted tests, suite health, test pruning | `regression-strategy` |
+| flaky, flake, intermittent test, test fails on retry, nondeterministic test, find polluter, quarantine test | `flaky-test-management` |
+| defect, bug triage, severity vs priority, defect lifecycle, RCA, 5-whys, fishbone, postmortem, blameless, defect prevention | `defect-management` |
+| QA metrics, defect density, escape rate, DORA, test effectiveness, flake rate, quality report, leading lagging | `qa-metrics` |
+| NFR, non-functional testing, perf + security + a11y, NFR sweep, NFR gate | `nfr-testing` |
+| SAST, DAST, SCA, semgrep, codeql, OWASP ZAP, npm audit, trivy, snyk, security testing, OWASP Top 10 | `security-testing` |
+| a11y testing, axe-core, WCAG 2.2, conformance testing, keyboard test, screen reader test, contrast test | `a11y-testing` |
+| load testing, stress testing, soak testing, k6, Lighthouse CI, performance budget gate, breaking point | `load-testing` |
+| release readiness, go no-go, release gate, definition of done, DoD, release sign-off, QA sign-off | `release-readiness` |
+| QA, QC, testing, quality assurance, quality control, which quality skill | `qa-qc-framework` |
+| agent output QA, eval harness, golden test, snapshot guardrail, hallucination detection, agent regression, agent-generated code | `agent-output-qa` |
+| black-box testing, no code access, QA without source, test from docs, test from mockup, test from spec, white-box vs black-box | `black-box-qa-playbook` |
+| contract testing, OpenAPI, GraphQL schema, Pact, consumer-driven, schema conformance, API contract, breaking change diff | `contract-testing` |
+| spec-based testing, requirement traceability, RTM, acceptance criteria, IEEE-829, behavior oracle, requirement coverage | `spec-based-testing` |
+| exploratory testing, session-based, charter, timebox, SFDIPOT, FEW HICCUPPS, bug oracle, heuristic testing | `exploratory-testing` |
+| API testing, REST testing, GraphQL testing, request execution, payload validation, auth matrix, pagination testing, black-box API | `api-testing` |
 
 ---
 
@@ -221,6 +240,24 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | `gemini-large-context` | Analyzing large codebases, comparing multiple files exceeding typical context limits | Plan | Low |
 | `fallow` | Codebase intelligence — quality, dead code, duplication, complexity hotspots | Review | Low |
 
+### QA / QC
+
+| Skill | Use when | Phase | Risk |
+|-------|----------|-------|------|
+| `qa-qc-framework` | Orienting QA/QC work for the no-code lane — defines QA vs QC vs Testing and routes to black-box skills | Define | Low |
+| `test-case-design` | Designing concrete test cases — equivalence partitioning, BVA, decision tables, state transition, pairwise, BDD/ATDD, IEEE-829. From the spec, not the code | Plan/Build | Low |
+| `flaky-test-management` | A test fails intermittently — detection, retry-vs-fix, quarantine (black-box: running app, no source). Flakes mask real regressions | Verify/Maintenance | Low |
+| `defect-management` | Managing a reported defect — triage (severity vs priority), lifecycle, blameless process RCA (5-whys/fishbone), defect→regression→prevention loop | Verify/Maintenance | Low |
+| `qa-metrics` | Measuring quality over time — defect density, escape rate, DORA, test effectiveness, flake rate, leading vs lagging | Maintenance | Low |
+| `a11y-testing` | TESTING a11y for WCAG 2.2 AA — axe automated + manual matrix on the running app (no source needed) | Verify | Medium |
+| `load-testing` | RUNNING load/stress/soak tests against budgets — k6, Lighthouse CI against the running app (no source) | Verify | Medium |
+| `release-readiness` | Go/no-go release sign-off aggregating black-box signals (contract, a11y, load, DAST, smoke, exploratory) vs DoD. No-code QA lane | Ship | High |
+| `black-box-qa-playbook` | Testing as QA/QC WITHOUT reading source code — router/playbook for the no-code lane (UI/workflow/API from docs + mockups + running app), integrates Playwright/MCP for evidence | Verify | Medium |
+| `contract-testing` | Testing APIs from their contract (OpenAPI/GraphQL/Pact) — schema conformance, status codes, payload validation, breaking-change diff. No code needed | Verify | Medium |
+| `spec-based-testing` | Deriving/tracing tests from requirements/specs — RTM, acceptance-criteria→scenario, IEEE-829 from docs, behavior-oracle. No code needed | Plan/Verify | Low |
+| `exploratory-testing` | Session-based exploration — charters, timeboxes, SFDIPOT/FEW HICCUPPS heuristics, bug oracles. Fills gaps scripted cases miss | Verify | Medium |
+| `api-testing` | Testing REST/GraphQL by sending requests + validating responses — black-box execution, payload edge cases, auth matrix, pagination. No code needed | Verify | Medium |
+
 ---
 
 ## Quick Routing Table
@@ -286,6 +323,23 @@ Maps user intent to skill(s). `→` = sequential pipeline (execute in order). `+
 | "create skill" / "write skill" / "edit skill" | `writing-skills` | Build | Low |
 | "codebase health" / "dead code" / "duplication" | `fallow` | Review | Low |
 | "large codebase" / "compare repos" / "big picture" | `gemini-large-context` | Plan | Low |
+| "design tests" / "what should I test" / "test plan" | `test-strategy` + `test-case-design` + `coverage-strategy` | Plan | Low |
+| "is it secure" (testing) / "run SAST/DAST/SCA" | `security-testing` + `nfr-testing` | Verify | High |
+| "a11y conformance" / "WCAG test" / "axe scan" | `a11y-testing` + `nfr-testing` | Verify | Medium |
+| "load test" / "stress test" / "perf budget gate" | `load-testing` + `nfr-testing` | Verify | Medium |
+| "NFR sweep" / "non-functional checks" | `nfr-testing` → `security-testing` + `a11y-testing` + `load-testing` | Verify | Medium |
+| "ready to release?" / "release sign-off" / "go no-go" | `release-readiness` + `regression-strategy` | Ship | High |
+| "bug reported" (triage + RCA) / "defect management" | `defect-management` + `root-cause-tracing` → `/fix` | Verify | Medium |
+| "test is flaky" / "intermittent failure" | `flaky-test-management` → `debugging-and-error-recovery` | Maintenance | Low |
+| "regression suite" / "which tests to run" | `regression-strategy` + `test-strategy` | Verify | Low |
+| "quality metrics" / "defect density" / "DORA" / "escape rate" | `qa-metrics` + `fallow` | Maintenance | Low |
+| "QA vs QC" / "which quality skill" | `qa-qc-framework` | Define | Low |
+| "agent code trustworthy?" / "eval harness" / "golden test" | `agent-output-qa` + `agent-code-quality-gate` | Review | Medium |
+| "test API from its docs" / "OpenAPI conformance" | `contract-testing` + `api-testing` | Verify | Medium |
+| "test from PRD" / "requirement traceability" / "RTM" | `spec-based-testing` + `test-case-design` | Plan/Verify | Low |
+| "explore the app for bugs" / "session-based testing" | `exploratory-testing` + `playwright` | Verify | Medium |
+| "test UI from mockup" / "test workflow end-to-end" (no code) | `black-box-qa-playbook` + `playwright` | Verify | Medium |
+| "black-box testing" / "QA without code access" | `black-box-qa-playbook` | Verify | Medium |
 
 ---
 
@@ -327,6 +381,17 @@ Phase 3 (Craft):    ui-craft-principles + oklch-color-workflow
 Phase 4 (Build):    frontend-ui-engineering + incremental-implementation
 Phase 5 (Harden):   production-hardening + fixing-accessibility
 Phase 6 (Audit):    ui-quality-audit
+```
+
+### QA / QC pipelines
+
+```
+Test design:   qa-qc-framework → test-strategy → test-case-design → coverage-strategy → (feed TDD RED)
+NFR testing:   nfr-testing → security-testing + a11y-testing + load-testing (parallel) → triage
+Release gate:  regression-strategy + (/verify) + nfr-testing-workflow → release-readiness → shipping-and-launch
+Defect loop:   defect-management → root-cause-tracing (code RCA) → /fix → regression-strategy → qa-metrics
+Flake loop:    flaky-test-management → debugging-and-error-recovery → root-cause-tracing
+Black-box QA:  black-box-qa-playbook → (contract-testing + spec-based-testing + exploratory-testing + api-testing) → playwright/chrome-devtools (evidence) → /defect
 ```
 
 ### Choose One (`|`)

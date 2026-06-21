@@ -39,7 +39,7 @@ pi
 ├── VERSION                         # Kit version (0.2.0)
 ├── .env.example                    # Environment variables (none required)
 ├── guard.example.json              # pi-guard ruleset example
-├── settings.json                   # 4 extensions + 67 skills + 11 prompts
+├── settings.json                   # 4 extensions + 97 skills + 17 prompts
 │
 ├── agents/                         # 7 subagent personas
 │   ├── INDEX.md                    # Agent index + routing table
@@ -55,7 +55,7 @@ pi
 │   ├── workflows-runner.ts         # DAG workflow executor
 │   └── templates-injector.ts       # Auto-inject project templates
 │
-├── prompts/                        # 11 slash commands (pi-native)
+├── prompts/                        # 17 slash commands (pi-native)
 │   ├── INDEX.md                    # Command index + lifecycle diagram
 │   ├── init.md                     # Bootstrap project context
 │   ├── create.md                   # Create spec + task outline
@@ -69,7 +69,7 @@ pi
 │   ├── status.md                   # Show active feature + blockers
 │   └── close.md                    # Finalize feature, clear .active
 │
-├── workflows/                      # 6 DAG workflows
+├── workflows/                      # 10 DAG workflows
 │   ├── INDEX.md                    # Workflow index + phase format
 │   ├── audit-pattern.md
 │   ├── batch-implement.md
@@ -78,13 +78,13 @@ pi
 │   ├── garbage-collection.md
 │   └── quality-loop.md
 │
-├── skills/                         # 67 skills (all shipped)
+├── skills/                         # 97 skills (all shipped)
 │   ├── INDEX.md                    # Task → skill routing
 │   ├── behavioral-kernel/          # Tier 1
 │   ├── defense-in-depth/           # Tier 1
 │   ├── incremental-implementation/ # Tier 1
 │   ├── verification-before-completion/  # Tier 1
-│   ├── (63 Tier 2 skills — all loaded on-demand)
+│   ├── (93 Tier 2 skills — all loaded on-demand)
 │
 ├── templates/                      # 12 project context templates
 │   ├── prd.md, project.md, state.md, tech-stack.md
@@ -115,7 +115,7 @@ pi
 
 ## Slash commands
 
-11 pi-native slash commands (full detail + lifecycle in [`prompts/INDEX.md`](./prompts/INDEX.md)):
+17 pi-native slash commands (full detail + lifecycle in [`prompts/INDEX.md`](./prompts/INDEX.md)):
 
 | Command | Purpose |
 |---------|---------|
@@ -130,6 +130,13 @@ pi
 | `/gc` | Fallow analysis + quality grades + cleanup |
 | `/status` | Show active feature, progress, blockers |
 | `/close` | Finalize active feature, clear `.active` |
+| `/test` | Design test strategy + generate test cases |
+| `/nfr` | Run non-functional testing (perf + security + a11y) |
+| `/release-gate` | Aggregate quality signals → go/no-go |
+| `/defect` | Triage + process RCA + regression loop |
+| `/flake` | Detect + quarantine flaky tests |
+| `/qa-report` | Generate QA metrics report |
+| `/api-test` | Test an API black-box (contract + requests) |
 
 ---
 
@@ -281,7 +288,7 @@ block into `.pi/settings.json` to enable its rules.
 
 ---
 
-## Skills (67 all shipped)
+## Skills (97 all shipped)
 
 See `skills/INDEX.md` for the full task → skill routing table.
 
@@ -291,7 +298,7 @@ See `skills/INDEX.md` for the full task → skill routing table.
 - `incremental-implementation` — Thin vertical slices with verify-after-each
 - `verification-before-completion` — Evidence before claiming completion
 
-**Tier 2 (63 skills, loaded on-demand):**
+**Tier 2 (93 skills, loaded on-demand):**
 
 | Category | Skills |
 |----------|--------|
@@ -303,6 +310,7 @@ See `skills/INDEX.md` for the full task → skill routing table.
 | Platform | `cloudflare`, `vercel-deploy-claimable`, `supabase`, `supabase-postgres-best-practices`, `ci-cd-and-automation`, `shipping-and-launch`, `performance-optimization`, `security-and-hardening` |
 | Mobile | `swift-concurrency`, `swiftui-expert-skill`, `core-data-expert` |
 | Tools | `figma`, `jira`, `polar`, `resend`, `playwright`, `chrome-devtools`, `browser-testing-with-devtools`, `srcwalk`, `opensrc`, `pdf-extract`, `webclaw`, `gemini-large-context`, `fallow` |
+| QA/QC | `qa-qc-framework`, `test-case-design`, `flaky-test-management`, `defect-management`, `qa-metrics`, `a11y-testing`, `load-testing`, `release-readiness`, `black-box-qa-playbook`, `contract-testing`, `spec-based-testing`, `exploratory-testing`, `api-testing` |
 
 All skills live directly in `.pi/skills/<name>/SKILL.md`. Pi auto-discovers them on startup. No manual installation needed.
 
@@ -403,7 +411,7 @@ The kit still follows Addy Osmani's 4 memory-type model (*Lesson 5: memory and c
 | Short-term | one session | context window + pi-vcc compaction |
 | Episodic | across sessions (searchable) | `pi-hermes-memory` session indexing → SQLite FTS5; `session_search` tool |
 | Long-term | across sessions (retrieved on demand) | `pi-hermes-memory` markdown (`MEMORY.md`/`USER.md`) + SQLite FTS5; `memory` / `memory_search` tools |
-| Procedural | permanent | Agent Skills `.pi/skills/*` (67 curated, shipped) + `pi-hermes-memory` `skill_manage` (runtime-saved, `~/.pi/agent/pi-hermes-memory/skills/`) |
+| Procedural | permanent | Agent Skills `.pi/skills/*` (97 curated, shipped) + `pi-hermes-memory` `skill_manage` (runtime-saved, `~/.pi/agent/pi-hermes-memory/skills/`) |
 | Declarative | varies (RAG) | `templates/` + `context/` + `semantic_*` / `websearch` / `context7` |
 
 **`pi-hermes-memory` provides:**
@@ -432,7 +440,7 @@ The kit still follows Addy Osmani's 4 memory-type model (*Lesson 5: memory and c
 ### Integration notes (verified against installed v0.7.17 source)
 
 - **`memory` tool `target: "failure"` holds ALL categorized memories** — the 6 categories (failure/correction/insight/preference/convention/tool-quirk) all live under `target: "failure"` (the name is historical; not limited to failures). `target: "memory"`/`"user"`/`"project"` are uncategorized facts — passing `category` with those targets is silently ignored. To save a categorized decision/learning, use `target: "failure"` + `category`.
-- **`skill_manage` "project" scope writes to user home, not the repo** — `scope: "project"` saves to `~/.pi/agent/projects-memory/<project>/skills/<name>/SKILL.md` (per-project, in the user's home, NOT committed with the repo). The kit's 67 curated skills live in `.pi/skills/` (repo, portable, shared across kit users). So hermes-saved project skills are user-local and won't ship with the kit — by design (runtime-saved vs curated-shipped).
+- **`skill_manage` "project" scope writes to user home, not the repo** — `scope: "project"` saves to `~/.pi/agent/projects-memory/<project>/skills/<name>/SKILL.md` (per-project, in the user's home, NOT committed with the repo). The kit's 97 curated skills live in `.pi/skills/` (repo, portable, shared across kit users). So hermes-saved project skills are user-local and won't ship with the kit — by design (runtime-saved vs curated-shipped).
 - **Config is global-only** — `pi-hermes-memory` reads only `~/.pi/agent/hermes-memory-config.json` (global `AGENT_ROOT`), not a project-local config. Defaults are sane (policy-only injection, background review every 10 turns / 15 tool-calls, auto-consolidation). For cost-conscious use, document a recommended global config: raise `nudgeInterval` / `nudgeToolCalls` (fewer LLM-subprocess reviews) or set `memoryPolicyStyle: "compact"` (leaner policy block). The kit cannot ship a kit-local config — only document recommended global settings.
 
 ---

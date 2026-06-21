@@ -4,7 +4,7 @@ purpose: Index of DAG workflows with trigger, phases, and invoking command
 
 # Workflows Index
 
-7 DAG workflows. All have `description` frontmatter (for `run_workflow` discovery) and use a consistent Phase format: `Agent`, `Concurrency`, `Depends on`, `Prompt`.
+10 DAG workflows. All have `description` frontmatter (for `run_workflow` discovery) and use a consistent Phase format: `Agent`, `Concurrency`, `Depends on`, `Prompt`.
 
 ## Invocation
 
@@ -27,6 +27,9 @@ Workflows may compose recursively (e.g., `development-lifecycle-workflow` Phase 
 | `frontend-feature-workflow` | 7 | Frontend feature build (mockup or spec) | `run_workflow({ name: "frontend-feature-workflow", args: { feature: "..." } })` | design analysis → deslop → architecture → craft → implement → harden → audit |
 | `garbage-collection` | 5 | Manual `/gc` or scheduled cadence | `/gc` | Fallow scan → grade → prioritize → optional cleanup PRs |
 | `quality-loop` | 7 (looped) | High-risk feature, explicit quality gating | `/ship` Phase 5 (Iterative Quality Loop) | Score-gated review loop until 5/5 or escalation |
+| `release-readiness-workflow` | 3 + synthesis | Pre-release go/no-go for no-code QA | `/release-gate` | parallel: contract + a11y + load + DAST + smoke + exploratory signals → go/no-go |
+| `defect-workflow` | 4 + synthesis | Reported defect needing process RCA | `/defect` | triage (severity/priority) → process RCA (5-whys/fishbone — no code) → fix (delegates `/fix`) → regression test → defect→regression loop |
+| `black-box-test-workflow` | 3 + synthesis | QA/QC without code access; test from specs/contracts/mockups + running app | `/test`, `/api-test` | derive cases from artifacts (no code) → review coverage → execute via Playwright/MCP with screenshot evidence |
 
 ## Phase format (canonical)
 
@@ -48,9 +51,18 @@ Workflows may compose recursively (e.g., `development-lifecycle-workflow` Phase 
 ```
 development-lifecycle-workflow
   └── Phase 4 → run_workflow('batch-implement')
+
+release-readiness-workflow
+  └── Phase 1 → collects black-box signals (contract + a11y + load + DAST + smoke + exploratory)
+
+defect-workflow
+  └── Phase 3 → delegates to /fix
+
+black-box-test-workflow
+  └── Phase 3 → uses playwright + chrome-devtools (tool skills, not duplicated)
 ```
 
-No other cross-workflow dependencies. `quality-loop` is self-contained (loops internally).
+The QA/QC workflows compose — `release-readiness-workflow` collects black-box signals only (no `/verify`, no code); `defect-workflow` delegates fixing to `/fix` and does process RCA only (no code call-stack); `black-box-test-workflow` uses `playwright`/`chrome-devtools` for execution (never reads source). `quality-loop` is self-contained (loops internally).
 
 ## Notes
 
@@ -60,5 +72,5 @@ No other cross-workflow dependencies. `quality-loop` is self-contained (loops in
 
 ## Related
 
-- `prompts/INDEX.md` — 11 commands that invoke these workflows
+- `prompts/INDEX.md` — 17 commands that invoke these workflows
 - `skills/INDEX.md` — skills loaded by workflow phases
