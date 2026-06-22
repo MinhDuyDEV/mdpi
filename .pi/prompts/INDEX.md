@@ -4,32 +4,34 @@ purpose: Index of slash commands with purpose, when-to-use, and lifecycle positi
 
 # Prompts Index
 
-11 slash commands. Lifecycle is canonical; utilities attach at any phase.
+12 slash commands. Lifecycle is canonical; utilities attach at any phase.
 
 ## Canonical Lifecycle
 
 ```
-   ┌──── /init ────┐
-   │               ▼
-/init → /create → /plan? → /ship ⇄ /verify
-   │                  │           │
-   │                  ▼           │
-   │            (tasks.json)      │
-   │                              │
-   └──── /close ←─────────────────┘
-   
+   ┌──── /init ──────────────────────┐
+   │                                 ▼
+/init → /clarify (vague) ┐   /plan? → /ship ⇄ /verify
+       \                 │      │           │
+        → /create (clear) ┘      ▼           │
+                           (tasks.json)      │
+   ┌──── /close ←────────────────────────────┘
+   │
 Utilities (any phase):  /research  /audit  /fix  /gc
 Status:                 /status
 ```
 
-**Artifact chain:** `/init` → templates · `/create` → `spec.md` · `/plan` → `plan.md` + `tasks.json` · `/ship` → implementation + `progress.md` · `/verify` → `verify.log` · `/close` → clears `.active`.
+**Two Define-phase entries:** `/clarify` (vague/complex ask — discussion pipeline: interview → brainstorm/refine → grill → doubt → spec) · `/create` (clear ask — fast path to spec + workspace + branch).
+
+**Artifact chain:** `/init` → templates · `/clarify`|`/create` → `spec.md` · `/plan` → `plan.md` + `tasks.json` · `/ship` → implementation + `progress.md` · `/verify` → `verify.log` · `/close` → clears `.active`.
 
 ## Commands
 
 | Command | Purpose | When to use | Arg-hint | Lifecycle |
 |---------|---------|-------------|----------|-----------|
 | `/init` | Bootstrap project: AGENTS.md + planning context + user profile | Once per project (or after stack change) | `[--deep] [--context\|--user\|--all] [--dry-run]` | Setup |
-| `/create` | Create spec (PRD) + workspace + task outline | Starting a feature/fix with a description | `<desc> [--lite] [--dry-run]` | Define |
+| `/clarify` | Discuss + clarify + stress-test a vague idea into a hardened spec | Vague/underspecified/high-stakes ask needing structured discussion | `[<topic>] [--grill] [--spec <path>] [--dry-run]` | Define (deep) |
+| `/create` | Create spec (PRD) + workspace + task outline | Starting a feature/fix with a clear description | `<desc> [--lite] [--dry-run]` | Define (fast) |
 | `/plan` | Detailed implementation plan + tasks.json (optional, between create and ship) | Complex tasks needing TDD-step guidance | `[--level 0-3] [--dry-run]` | Plan |
 | `/ship` | Execute tasks, verify, review, close | Ready to implement the spec | `[--skip-review] [--dry-run]` | Build/Ship |
 | `/verify` | Check completeness/correctness/coherence against PRD | Before shipping, or anytime mid-implementation | `[path\|all] [--quick] [--full] [--fix] [--no-cache]` | Verify |
@@ -46,6 +48,9 @@ Status:                 /status
 |-----------|---------|
 | Fresh repo, first session | `/init --all` |
 | Existing repo, want codebase map | `/init --deep` then `/research` |
+| "Build X" but I'm not sure what X really is | `/clarify "X"` → `/plan` |
+| Vague idea needs discussion before spec | `/clarify` (interactive) |
+| Stress-test an existing idea/ADR/PRD | `/clarify --grill` or `/clarify --spec path/to/adr.md` |
 | "Build X" with a clear description | `/create "X"` → `/ship` |
 | "Build X" but complex/multi-step | `/create "X"` → `/plan` → `/ship` |
 | "Fix this bug / failing test" | `/fix "..."` |

@@ -39,7 +39,7 @@ pi
 ├── VERSION                         # Kit version (0.2.0)
 ├── .env.example                    # Environment variables (none required)
 ├── guard.example.json              # pi-guard ruleset example
-├── settings.json                   # 4 extensions + 67 skills + 11 prompts
+├── settings.json                   # 4 extensions + 67 skills + 12 prompts
 │
 ├── agents/                         # 7 subagent personas
 │   ├── INDEX.md                    # Agent index + routing table
@@ -55,7 +55,7 @@ pi
 │   ├── workflows-runner.ts         # DAG workflow executor
 │   └── templates-injector.ts       # Auto-inject project templates
 │
-├── prompts/                        # 11 slash commands (pi-native)
+├── prompts/                        # 12 slash commands (pi-native)
 │   ├── INDEX.md                    # Command index + lifecycle diagram
 │   ├── init.md                     # Bootstrap project context
 │   ├── create.md                   # Create spec + task outline
@@ -114,11 +114,12 @@ pi
 
 ## Slash commands
 
-11 pi-native slash commands (full detail + lifecycle in [`prompts/INDEX.md`](./prompts/INDEX.md)):
+12 pi-native slash commands (full detail + lifecycle in [`prompts/INDEX.md`](./prompts/INDEX.md)):
 
 | Command | Purpose |
 |---------|---------|
 | `/init` | Bootstrap project context (AGENTS.md + templates + user profile) |
+| `/clarify` | Discuss + clarify + stress-test a vague idea into a hardened spec |
 | `/create` | Create spec (PRD) + workspace + task outline |
 | `/plan` | Detailed implementation plan + tasks.json |
 | `/ship` | Execute tasks, verify, review, close |

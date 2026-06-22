@@ -26,7 +26,7 @@ The deliverable is a **curated `.pi/` kit**, not the agent's own runtime config.
 
 - **`.pi/agents/`** — 7 agent personas (build, explore, general, plan, review, scout, vision)
 - **`.pi/skills/`** — 59 skills (4 Tier-1 auto-loaded + 55 Tier-2 on-demand)
-- **`.pi/prompts/`** — slash commands (init, create, plan, fix, verify, ship, audit, research, gc, loop-*, status, close)
+- **`.pi/prompts/`** — slash commands (init, clarify, create, plan, fix, verify, ship, audit, research, gc, loop-*, status, close)
 - **`.pi/workflows/`** — DAG workflows (audit-pattern, batch-implement, deep-research, garbage-collection, development-lifecycle, quality-loop)
 - **`.pi/templates/`** — project context templates (prd, project, state, tech-stack, roadmap, etc.)
 - **`.pi/context/`** — reference docs (architecture)

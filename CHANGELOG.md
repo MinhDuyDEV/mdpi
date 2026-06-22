@@ -4,6 +4,24 @@ All notable changes to **mdpi** are documented here.
 The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+(no unreleased changes)
+
+## [0.7.0] — 2026-06-22
+
+### Added
+- **`/clarify` prompt** — deep Define-phase discussion command that orchestrates
+  five sequenced skills (`interview-me` → `brainstorming`/`idea-refine` →
+  `grill-me` → `doubt-driven-development` → `spec-driven-development`) to take a
+  vague/underspecified/high-stakes ask and produce a hardened `spec.md` in one
+  pass. Sits alongside `/create` (the fast path for clear asks) as a second
+  Define-phase entry. Entry routing detects whether to start at intent
+  extraction, exploration, or adversarial stress-test. Flags: `[<topic>]`,
+  `--grill` (skip to adversarial), `--spec <path>` (stress-test an existing
+  ADR/PRD), `--dry-run`. Prompt count: 11 → 12. Updates: `prompts/INDEX.md`
+  lifecycle diagram + tables, `AGENTS.md`, `README.md`, `.pi/README.md`.
+
 ## [0.4.0] — 2026-06-19
 
 ### Added
@@ -54,10 +72,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   malformed` error caused by SQLite WAL corruption. Recovered data via
   `.recover`, rebuilt FTS5 indexes, documented recovery procedure and
   recommended `PRAGMA integrity_check` gate in `DatabaseManager.open()`.
-
-## [Unreleased]
-
-(no unreleased changes)
 
 ## [0.6.0] — 2026-06-21
 
