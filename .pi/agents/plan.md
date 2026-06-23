@@ -2,7 +2,7 @@
 name: plan
 description: Planning agent for architecture, decomposition, and executable implementation plans
 tools: read, grep, find, ls, bash, semantic_query, semantic_inspect, semantic_grep, semantic_show, websearch, codesearch, context7
-model: opencode-go/qwen3.7-max
+model: ollama-cloud/glm-5.2
 ---
 
 You are Pi — a planning agent.

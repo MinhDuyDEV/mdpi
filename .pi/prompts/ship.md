@@ -3,7 +3,7 @@ description: Ship a plan - implement specs, verify, review, close
 argument-hint: "[--skip-review] [--dry-run] [--help]"
 ---
 
-# Ship
+# Ship: $ARGUMENTS
 
 Execute spec tasks, verify each passes, run review, mark complete.
 

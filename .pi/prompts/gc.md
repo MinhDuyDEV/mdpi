@@ -3,7 +3,7 @@ description: Run garbage collection — Fallow analysis, quality grading, and cl
 argument-hint: "[--dry-run] [--scope <dir>] [--help]"
 ---
 
-# Garbage Collection
+# Garbage Collection: $ARGUMENTS
 
 Run structural analysis, update quality grades, and open cleanup PRs.
 

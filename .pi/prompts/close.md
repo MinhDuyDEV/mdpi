@@ -3,7 +3,7 @@ description: Close the active feature — finalize, clear .active, record outcom
 argument-hint: "[--done | --blocked | --abandoned] [--note <text>] [--help]"
 ---
 
-# Close
+# Close: $ARGUMENTS
 
 Finalize the active feature: record its outcome, update `state.md`, and clear `.pi/artifacts/.active`. Use to recover from a dangling `.active` left by a failed/abandoned `/ship`, or to mark a completed feature done without running the full `/ship` review.
 

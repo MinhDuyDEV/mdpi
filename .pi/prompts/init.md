@@ -3,7 +3,7 @@ description: Initialize project setup — AGENTS.md, planning context, user prof
 argument-hint: "[--deep] [--context|--user|--all] [--dry-run] [--help]"
 ---
 
-# Init
+# Init: $ARGUMENTS
 
 Initialize project setup. Run once per project.
 

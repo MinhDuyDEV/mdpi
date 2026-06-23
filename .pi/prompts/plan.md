@@ -3,7 +3,7 @@ description: Create detailed implementation plan with TDD steps
 argument-hint: "[--level 0-3] [--dry-run] [--help]"
 ---
 
-# Plan
+# Plan: $ARGUMENTS
 
 Create a detailed implementation plan with TDD steps. Optional deep-planning between `/create` and `/ship`.
 

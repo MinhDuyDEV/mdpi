@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 (no unreleased changes)
 
+## [0.7.1] — 2026-06-23
+
+### Fixed
+- **Prompt argument injection** — six slash commands (`/close`, `/gc`,
+  `/init`, `/plan`, `/ship`, `/status`) declared `argument-hint` plus a
+  "Parse Arguments" table but omitted `$ARGUMENTS` in their body, so pi's
+  template expander silently dropped any args typed after the command name;
+  the agent only received the static body. Added `# <Title>: $ARGUMENTS` to
+  each H1, matching the already-working `/audit`, `/clarify`, `/create`,
+  `/fix`, `/research`, `/verify`. All 12 prompts now inject args; `vitest`
+  93/93 pass.
+
+### Changed
+- `plan` and `review` agent `model` updated to `ollama-cloud/glm-5.2`.
+
 ## [0.7.0] — 2026-06-22
 
 ### Added

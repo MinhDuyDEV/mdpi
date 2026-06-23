@@ -3,7 +3,7 @@ description: Show active feature, recent progress, and blockers
 argument-hint: "[--full] [--help]"
 ---
 
-# Status
+# Status: $ARGUMENTS
 
 Surface where the project is right now: active feature, recent work, open blockers, and the next step. Read-only — never modifies state.
 
