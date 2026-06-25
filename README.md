@@ -47,7 +47,7 @@ npx mdpi init
 
 ## How it works
 
-- `.pi/` in this repo is the **curated kit** (the template payload). `npm run build` = `tsdown` (bundles `src/index.ts` → `dist/index.js`, inlines the package version) + `scripts/bundle-template.mjs` (copies an explicit INCLUDE list `.pi/` → `dist/template/.pi/`, stripping runtime dirs `npm/memory/state/tasks`).
+- `.pi/` in this repo is the **curated kit** (the template payload). `pnpm run build` = `tsdown` (bundles `src/index.ts` → `dist/index.js`, inlines the package version) + `scripts/bundle-template.mjs` (copies an explicit INCLUDE list `.pi/` → `dist/template/.pi/`, stripping runtime dirs `npm/memory/state/tasks`).
 - The published package ships only `dist/` (CLI + bundled template) + this README — `files: [dist, README.md]`.
 - `mdpi init` copies `dist/template/.pi/` → `./.pi/`, writes `.version` + `.template-manifest.json` (SHA-256 map) so `mdpi upgrade` can later detect user modifications.
 - No license gate, no `--global` (the pi global dir `~/.pi/agent/` is pi's own config — installing the full kit there is a footgun). Project-local only.

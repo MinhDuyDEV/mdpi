@@ -6,7 +6,7 @@
  * accumulated in the dev .pi/ (npm/, memory/, state/, tasks/, artifacts/) are
  * NEVER bundled — they are pi runtime state, not part of the distributable kit.
  *
- * Run via: npm run build (after tsdown).
+ * Run via: pnpm run build (after tsdown).
  */
 import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";

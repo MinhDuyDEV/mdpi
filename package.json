@@ -37,7 +37,7 @@
   "scripts": {
     "build": "tsdown && node scripts/bundle-template.mjs",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build && npm run typecheck",
+    "prepublishOnly": "pnpm run build && pnpm run typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
     "dev": "tsx src/index.ts"
