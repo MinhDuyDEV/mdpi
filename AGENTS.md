@@ -30,7 +30,7 @@ The deliverable is a **curated `.pi/` kit**, not the agent's own runtime config.
 - **`.pi/workflows/`** — DAG workflows (audit-pattern, batch-implement, deep-research, garbage-collection, development-lifecycle, quality-loop)
 - **`.pi/templates/`** — project context templates (prd, project, state, tech-stack, roadmap, etc.)
 - **`.pi/context/`** — reference docs (architecture)
-- **`.pi/extensions/`** — TypeScript extensions (workflows-runner, templates-injector); long-term memory via external `npm:pi-hermes-memory`
+- **`.pi/extensions/`** — TypeScript extensions (workflows-runner, templates-injector, memory, skill-manage, session-search); in-house markdown long-term memory (no external dep, no SQLite, no LLM subprocess) — see `.pi/README.md` ## Memory
 
 Treat `.pi/` content as the **deliverable**. Don't modify it unless the user explicitly requests changes.
 
@@ -95,6 +95,10 @@ npx tsc --noEmit .pi/extensions/*.ts  # verify extensions compile (when TypeScri
 | `subagent` | Single/parallel/chain subagent delegation |
 | `vcc_recall` | Session history search |
 | `memory` / `memory_search` / `session_search` / `skill_manage` | Long-term memory + session search + procedural skills |
+
+### Context Optimization (auto-active 3-layer stack)
+
+Context is kept lean automatically by `rtk` (tool-output compaction) → `dcp` (in-flight dedup/purge + compress nudge) → `vcc` (deterministic compaction + `vcc_recall`). The `context-optimizer` extension patches vcc auto-compaction + injects the policy every turn — so this works in **normal usage**, not just workflow prompts. Auto-use: `vcc_recall` before re-exploring a topic; `compress` closed work-streams when dcp nudges (keep file:line + decisions + results in the summary); `/pi-vcc` for manual compaction. See `.pi/skills/context-optimization/SKILL.md`. `/context-check` reports status.
 
 ---
 

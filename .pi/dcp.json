@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "pruneNotification": "minimal",
+  "manualMode": { "enabled": false, "automaticStrategies": true },
+  "turnProtection": { "enabled": true, "turns": 3 },
+  "compress": {
+    "mode": "range",
+    "permission": "allow",
+    "nudgeEveryTurns": 5,
+    "nudgeFrequency": 3,
+    "nudgeForce": "strong",
+    "minContextLimit": 30000,
+    "maxContextLimit": 70000
+  },
+  "strategies": {
+    "deduplication": { "enabled": true },
+    "purgeErrors": { "enabled": true, "turns": 2 }
+  }
+}

@@ -151,8 +151,8 @@ Read only context files in or above the target scope. Do not import unrelated AG
 ## Context Retrieval Routing
 
 - **`vcc_recall`** — session history search (active session)
-- **`memory_search`** — durable LTM across sessions (pi-hermes-memory: markdown + SQLite FTS5; filter by `category`: failure/correction/insight/preference/convention/tool-quirk)
-- **`session_search`** — search across all past session conversations (pi-hermes-memory SQLite FTS5)
+- **`memory_search`** — durable LTM across sessions (in-house: markdown + in-process TF-IDF; filter by `category`: failure/correction/insight/preference/convention/tool-quirk)
+- **`session_search`** — search across all past session conversations (in-house: grep JSONL sessions, no SQLite)
 - **`pi-vcc` (compaction)** — context history management: phase transitions, closed exploration, finished research
 
 **Verify from disk before acting.** Session memory or compressed context is not proof of current workspace state.

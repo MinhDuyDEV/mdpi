@@ -2,10 +2,6 @@
   "$comment": "Optional packages recommended by this kit. `mdpi install` installs these alongside the core packages declared in settings.json:packages. Core lives there (single source of truth); this file only lists the opt-in set. Edit freely — adding an entry here makes `mdpi install` pick it up.",
   "optional": [
     {
-      "id": "npm:@davecodes/pi-dcp",
-      "note": "Dynamic context pruning — dedup, error purge, compress tool. Superset of the kit's former dcp-strategies extension."
-    },
-    {
       "id": "npm:pi-guard",
       "note": "Tool permission system (bash AST parser, path globs, default ruleset). Config example at .pi/guard.example.json."
     }

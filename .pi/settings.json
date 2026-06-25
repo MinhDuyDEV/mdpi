@@ -1,9 +1,19 @@
 {
   "$schema": "https://pi.dev/schema/settings.json",
-  "packages": ["npm:@tintinweb/pi-subagents", "npm:@sting8k/pi-srcwalk", "npm:pi-hermes-memory"],
+  "packages": [
+    "npm:@tintinweb/pi-subagents",
+    "npm:@sting8k/pi-srcwalk",
+    "npm:@sting8k/pi-vcc",
+    "npm:pi-rtk-optimizer",
+    "npm:@davecodes/pi-dcp"
+  ],
   "extensions": [
     "./extensions/workflows-runner.ts",
-    "./extensions/templates-injector.ts"
+    "./extensions/templates-injector.ts",
+    "./extensions/memory.ts",
+    "./extensions/skill-manage.ts",
+    "./extensions/session-search.ts",
+    "./extensions/context-optimizer.ts"
   ],
   "skills": ["./skills"],
   "prompts": ["./prompts"],

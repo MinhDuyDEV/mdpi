@@ -62,7 +62,7 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | commit, branch, merge, rebase, git, worktree | `git-workflow-and-versioning`, `using-git-worktrees` |
 | context, memory, token, agent quality, degraded | `context-engineering` |
 | memory_system, memory-search, memory_search, pi-hermes, /memory-insights, save memory, remember this, past failure, previous attempt | `memory-system` |
-| compress, dcp, context prune, cleanup context, context filling up | `context-engineering`, `dcp-hygiene` |
+| compress, dcp, vcc, rtk, context prune, cleanup context, context filling up, compaction, context optimization, token usage | `context-engineering`, `dcp-hygiene`, `context-optimization` |
 | brainstorm, idea, design, concept, explore, ideate, refine | `brainstorming`, `idea-refine`, `spec-driven-development` |
 | interview, grill, are we sure, what do you want | `interview-me` |
 | plan, break down, decompose, tasks, roadmap | `planning-and-task-breakdown` |
@@ -124,7 +124,8 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | `writing-skills` | Creating new skills, editing existing skills, verifying skills before deployment | Build | Low |
 | `context-engineering` | Optimizing agent context setup — rules files, selective loading, confusion management | All | Low |
 | `dcp-hygiene` | At command/phase closure — compress closed exploratory work-streams via pi-dcp when `compress` is available; no-ops if DCP absent | All | Low |
-| `memory-system` | Understanding/leveraging pi-hermes-memory — auto-flywheel, tools, commands, when to use memory_search vs vcc_recall | All | Low |
+| `context-optimization` | Auto-activating 3-layer stack (rtk inflow / dcp in-flight / vcc compaction) — context kept lean in long sessions; vcc_recall before re-explore, compress at closures, /pi-vcc for manual compaction | All | Low |
+| `memory-system` | Understanding/leveraging the in-house markdown memory layer — tools (memory/memory_search/session_search/skill_manage), auto-inject brief, deterministic correction detection, commands; when to use memory_search vs vcc_recall | All | Low |
 | `doubt-driven-development` | In-flight adversarial review of non-trivial decisions before they stand | Build | Medium |
 
 
@@ -266,6 +267,7 @@ Maps user intent to skill(s). `→` = sequential pipeline (execute in order). `+
 | "optimize context" / "agent quality degraded" / "too many tokens" | `context-engineering` | All | Low |
 | "remember this" / "memory-search" / "past failure" / "previous attempt" / "save to memory" | `memory-system` | All | Low |
 | "compress context" / "dcp" / "context filling up" / "cleanup context" | `dcp-hygiene` | All | Low |
+| "context optimization" / "vcc" / "rtk" / "compaction" / "tune context stack" | `context-optimization` | All | Low |
 | "verify this approach" / "challenge this decision" / "doubt check" | `doubt-driven-development` | Build | Medium |
 | "security audit" / "auth setup" / "vulnerability" | `security-and-hardening` | Review | High |
 | "profile" / "too slow" / "bundle size" / "lighthouse" | `performance-optimization` | Review | Medium |

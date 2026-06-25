@@ -51,9 +51,12 @@ pi
 │   ├── scout.md                    # External research
 │   └── vision.md                   # UI/UX & accessibility
 │
-├── extensions/                     # 2 custom TypeScript extensions (memory via external npm:pi-hermes-memory)
+├── extensions/                     # 5 custom TypeScript extensions (in-house markdown memory)
 │   ├── workflows-runner.ts         # DAG workflow executor
-│   └── templates-injector.ts       # Auto-inject project templates
+│   ├── templates-injector.ts       # Auto-inject project templates
+│   ├── memory.ts                   # memory + memory_search + auto-inject + correction detection
+│   ├── skill-manage.ts             # skill_manage (CRUD procedural skills)
+│   └── session-search.ts           # session_search (grep JSONL sessions)
 │
 ├── prompts/                        # 12 slash commands (pi-native)
 │   ├── INDEX.md                    # Command index + lifecycle diagram
@@ -232,14 +235,18 @@ See `context/architecture.md` for full details.
 
 ## Extensions
 
-This kit ships **2 custom TypeScript extensions** and uses **2 external npm packages** for specialized functionality. Long-term memory is provided by `npm:pi-hermes-memory` (declared in `settings.json:packages`) — see [## Memory](#memory) for architecture and tradeoffs.
+This kit ships **6 custom TypeScript extensions** (in-house memory + context-optimizer) and **5 core external npm packages** (`@tintinweb/pi-subagents`, `@sting8k/pi-srcwalk`, `@sting8k/pi-vcc`, `pi-rtk-optimizer`, `@davecodes/pi-dcp`) + 1 optional (`pi-guard`). Long-term memory is **in-house** (`.pi/extensions/{memory,skill-manage,session-search}.ts`) — no external memory dependency, no native SQLite, no LLM subprocess. `npm:pi-hermes-memory` was **fully removed** (global + project) on 2026-06-25. See [## Memory](#memory) for architecture and [## Context Optimization](#context-optimization) for the rtk/dcp/vcc stack.
 
-### Custom (2)
+### Custom (6)
 
 | Extension | Purpose | Status |
 |-----------|---------|--------|
 | `workflows-runner` | Parses DAG workflows from `.pi/workflows/*.md`, returns execution plan with `subagent()` calls | Production |
 | `templates-injector` | Auto-injects `project.md`, `tech-stack.md`, `state.md` into system prompt | Production |
+| `memory` | `memory`/`memory_search` (markdown `.pi/memory/*.md`, in-process TF-IDF) + `before_agent_start` auto-inject brief + deterministic correction detection + secret-scan + `/memory-insights` `/memory-consolidate` `/memory-import-hermes` commands | Production |
+| `skill-manage` | `skill_manage` CRUD (project→`.pi/skills/`, global→`~/.pi/agent/skills/`) | Production |
+| `session-search` | `session_search` over pi's JSONL session store (no SQLite) | Production |
+| `context-optimizer` | Coordinator: patches vcc auto-compaction + verifies `rtk` + injects `<context-optimization>` policy every turn + `/context-check` (rtk/dcp/vcc stack) | Production |
 
 ### External packages
 
@@ -254,8 +261,9 @@ The kit depends on external npm packages, split into two sets:
 |---------|-----|---------|--------------|
 | `@tintinweb/pi-subagents` | core | Subagent dispatch (`subagent()` tool) | Battle-tested pi-native package |
 | `@sting8k/pi-srcwalk` | core | `semantic_*` code navigation tools | Trigram-indexed search, deep |
-| `pi-hermes-memory` | core | Long-term memory (`memory`/`memory_search`/`session_search`/`skill_manage`) | Mature, 368 tests, FTS5 + two-tier |
-| `@davecodes/pi-dcp` | optional | Dynamic context pruning (dedup, error purge, compress tool) | Superset of the kit's former dcp-strategies extension |
+| `@sting8k/pi-vcc` | core | Deterministic no-LLM compaction + `vcc_recall` lineage recall | Context-optimization stack — compaction layer |
+| `pi-rtk-optimizer` | core | Tool-output compaction (bash/read/grep) + `rtk` command rewriting | Context-optimization stack — inflow layer (`rtk` binary optional) |
+| `@davecodes/pi-dcp` | core | Dynamic context pruning (dedup, error purge, `compress`) | Context-optimization stack — in-flight layer |
 | `pi-guard` | optional | Tool permission system (bash AST parser, path globs) | AST parser handles `\|`, `&&`, `xargs` — regex can't |
 
 Install the full set with one command (idempotent, safe to re-run):
@@ -394,46 +402,76 @@ Then `/reload` in pi.
 
 ## Memory
 
-The kit's memory layer is [`pi-hermes-memory`](https://github.com/chandra447/pi-hermes-memory) (`npm:pi-hermes-memory`, wired in `settings.json:packages`) — a mature external package (368 tests, 140★, MIT) ported from the Hermes agent. It replaces the kit's former in-house `pi-memory` + `pi-session-summary` extensions.
+The kit's memory layer is **in-house** — `.pi/extensions/memory.ts` (+ `skill-manage.ts`, `session-search.ts`), backed by markdown files in `.pi/memory/`. **No external memory dependency, no native SQLite, no LLM subprocess.** This replaces the former `npm:pi-hermes-memory` adoption (commit `d160db3`, 2026-06-18), **fully removed (global + project + data dirs) on 2026-06-25** because of recurring `better-sqlite3` corruption (2026-06-20 / 2026-06-23 / 2026-06-25), LLM-subprocess cost on every background review/correction/consolidation, policy-only injection that missed memory when the agent "forgot" to search, and user-home storage that wasn't repo-portable. Design + history: `.pi/artifacts/memory-markdown/spec.md`.
 
 The kit still follows Addy Osmani's 4 memory-type model (*Lesson 5: memory and context*):
 
 | Type | Duration | Kit component |
 |------|----------|---------------|
 | Short-term | one session | context window + pi-vcc compaction |
-| Episodic | across sessions (searchable) | `pi-hermes-memory` session indexing → SQLite FTS5; `session_search` tool |
-| Long-term | across sessions (retrieved on demand) | `pi-hermes-memory` markdown (`MEMORY.md`/`USER.md`) + SQLite FTS5; `memory` / `memory_search` tools |
-| Procedural | permanent | Agent Skills `.pi/skills/*` (67 curated, shipped) + `pi-hermes-memory` `skill_manage` (runtime-saved, `~/.pi/agent/pi-hermes-memory/skills/`) |
+| Episodic | across sessions (searchable) | `session-search.ts` → grep over pi's JSONL session store (`~/.pi/agent/sessions/`); `session_search` tool |
+| Long-term | across sessions (retrieved on demand) | `memory.ts` → `.pi/memory/*.md` (markdown) + in-process TF-IDF; `memory` / `memory_search` tools |
+| Procedural | permanent | Agent Skills `.pi/skills/*` (67 curated, shipped) + `skill-manage.ts` `skill_manage` (project→`.pi/skills/`, global→`~/.pi/agent/skills/`) |
 | Declarative | varies (RAG) | `templates/` + `context/` + `semantic_*` / `websearch` / `context7` |
 
-**`pi-hermes-memory` provides:**
+**The in-house memory layer provides:**
 
-1. **Capture** — `memory` tool (add/replace/remove; targets `memory`/`user`/`project` for uncategorized facts, `failure` + `category` for categorized memories) + **background learning loop** (LLM review every 10 turns / 15 tool-calls) + **correction detection** (saves when the user corrects the agent).
-2. **Retrieval** — `memory_search` (SQLite FTS5 BM25, filter by `category`: failure/correction/insight/preference/convention/tool-quirk) + `session_search` (across all past sessions).
-3. **Injection** — **policy-only by default** (a `<memory-policy>` block tells the agent *when* to call `memory_search`); `memoryMode:"legacy-inject"` restores full-content injection.
-4. **Security** — **secret scanning** (blocks API keys/tokens/SSH keys) + XML fencing ("NOT new user input") against prompt injection.
-5. **Consolidation** — auto-merges when memory hits the 5000-char cap (LLM subprocess); never loses data.
-6. **Two-tier** — global (`~/.pi/agent/pi-hermes-memory/`) + per-project (`~/.pi/agent/projects-memory/<project>/`).
+1. **Capture** — `memory` tool (add/replace/remove; targets `memory`/`user`/`project` for uncategorized facts, `failure` + `category` for the 6 categories) + **deterministic correction detection** (regex strong/weak/negative patterns, EN + VI; auto-saves a `correction` entry on user `message_end`, rate-limited 1 per 3 turns; **0 LLM subprocess**). Disable: `PI_MEMORY_NO_CORRECTION=1`.
+2. **Retrieval** — `memory_search` (in-process TF-IDF over the markdown, filter by `target`/`category`; no SQLite) + `session_search` (grep over JSONL sessions, current project by default, `project` param for others).
+3. **Injection** — **auto-inject, NOT policy-only**: `before_agent_start` builds a keyword-matched **memory brief** (~1.5k chars, relevance to the user's prompt) + a compact `<memory-policy>` block. Memory surfaces automatically; the agent still calls `memory_search` for deeper recall.
+4. **Security** — **secret scanning** before every write (API keys / tokens / SSH keys / `ghp_` / `AKIA` / `sk-` / JWT); blocked + warned. Zero-dep regex.
+5. **Consolidation** — `/memory-consolidate` command: deterministic dedupe of exact-duplicate entries + cap per file (archive oldest beyond 60 to `.pi/memory/archive/`). **No LLM merge.**
+6. **Storage** — `.pi/memory/{USER,PROJECT,MEMORY,LESSONS}.md` (markdown, gitignored, repo-local, portable). Entry format: `<!-- mem:<id> cat:<category> ts:<ts> -->` + `### <title>` + narrative. Cross-project user facts → existing `~/.pi/agent/AGENTS.md` (pi auto-loads); no separate global memory store.
+7. **Migration (one-time, completed 2026-06-25)** — `/memory-import-hermes` migrated hermes markdown into `.pi/memory/` (26 entries, prefixed `[hermes]`). The hermes data dirs are now deleted (backup at `~/pi-hermes-memory-backup-20260625.tar.gz`); the command is retained but finds no source post-removal.
 
 **Memory vs RAG** — don't conflate:
 
 - **Memory** (`memory` / `memory_search` / `session_search`): personal — this project, this agent, written during sessions.
 - **RAG** (`semantic_*` / `websearch` / `codesearch` / `context7`): general knowledge, looked up on demand.
 
-**Honest tradeoffs (decision B, 2026-06-18):**
+**Honest tradeoffs (in-house, 2026-06-24):**
 
-- **Native dep** — `better-sqlite3` (compiled); needs a build toolchain on unusual platforms (prebuilds cover common ones). The kit already accepts external binary deps (`pi-srcwalk`).
-- **LLM-subprocess cost** — every background review / correction / consolidation spawns `pi.exec("pi",["-p","--no-session",…])` → real token cost + latency + non-determinism per session.
-- **Vendor dependency** — core memory component is maintained by `chandra447` (9 contributors, active). The kit no longer owns its memory layer.
-- **Policy-only injection** — memory only surfaces if the agent chooses to call `memory_search`; can miss relevant memory if the agent "forgets" to search.
-- **Lost (vs former in-house extensions)** — the former `decision`, `intent`, `summary` commands + the always-injected "Session Summary (anchored)" block. Gained: `session_search`, learning loop, secret scan, consolidation, two-tier, 368 tests.
-- **Retrieval is lexical** — FTS5 BM25 + literal-phrase match, case-insensitive. No embeddings/synonymy ("deploy" ≈ "ship" still needs embeddings — same gap as before, just indexed).
+- **Lexical retrieval** — TF-IDF + keyword match, no embeddings/synonymy ("deploy" ≈ "ship" still needs embeddings). Same gap as hermes; deferred.
+- **Deterministic correction capture is coarse** — it saves the raw user correction text (not an LLM-distilled lesson), rate-limited. Review/prune via `/memory-consolidate` or `memory remove`. Some noise is the trade-off for 0 LLM cost.
+- **Repo-local only** — memory is this-project-this-user (gitignored). Not shared across projects automatically; cross-project facts go in `~/.pi/agent/AGENTS.md`.
+- **`skill_manage` project scope writes to `.pi/skills/`** — runtime-created skills are committed (ship with the kit). Curate/prune or gitignore if personal-only.
+- **`session_search` is bounded** — recent ~40 JSONL files, current project by default. Not a full cross-project/cross-time index.
 
-### Integration notes (verified against installed v0.7.17 source)
+### Integration notes
 
-- **`memory` tool `target: "failure"` holds ALL categorized memories** — the 6 categories (failure/correction/insight/preference/convention/tool-quirk) all live under `target: "failure"` (the name is historical; not limited to failures). `target: "memory"`/`"user"`/`"project"` are uncategorized facts — passing `category` with those targets is silently ignored. To save a categorized decision/learning, use `target: "failure"` + `category`.
-- **`skill_manage` "project" scope writes to user home, not the repo** — `scope: "project"` saves to `~/.pi/agent/projects-memory/<project>/skills/<name>/SKILL.md` (per-project, in the user's home, NOT committed with the repo). The kit's 67 curated skills live in `.pi/skills/` (repo, portable, shared across kit users). So hermes-saved project skills are user-local and won't ship with the kit — by design (runtime-saved vs curated-shipped).
-- **Config is global-only** — `pi-hermes-memory` reads only `~/.pi/agent/hermes-memory-config.json` (global `AGENT_ROOT`), not a project-local config. Defaults are sane (policy-only injection, background review every 10 turns / 15 tool-calls, auto-consolidation). For cost-conscious use, document a recommended global config: raise `nudgeInterval` / `nudgeToolCalls` (fewer LLM-subprocess reviews) or set `memoryPolicyStyle: "compact"` (leaner policy block). The kit cannot ship a kit-local config — only document recommended global settings.
+- **`memory` tool targets** — `target: "failure"` + `category` holds the 6 categorized types (failure/correction/insight/preference/convention/tool-quirk); `target: "memory"`/`"user"`/`"project"` are uncategorized facts (category ignored). Same shape as the former hermes tool — existing prompt wiring (`init.md`/`close.md`/Guard phases) works unchanged.
+- **`npm:pi-hermes-memory` fully removed** — was filtered per-project, then fully removed (global settings + project filter entry + uninstalled node_modules + deleted data dirs `~/.pi/agent/pi-hermes-memory` + `projects-memory`) on 2026-06-25. No hermes reference remains in the kit; the in-house extensions own all memory tools (no conflict). Data backed up to `~/pi-hermes-memory-backup-20260625.tar.gz`.
+- **No background LLM loop** — there is no every-N-turns LLM review (the main cost source in hermes). Capture is manual (`memory`) + deterministic correction detection. Consolidation is a manual/on-threshold command, not an LLM subprocess.
+
+## Context Optimization
+
+The kit ships a 3-layer context-optimization stack (all **required** core packages) that auto-activates in **any** `.pi/` kit usage — not just workflow prompts. The three hook disjoint pi events (no conflict); each owns a stage:
+
+| Layer | Package | Pi event | Role | Auto? |
+|-------|---------|----------|------|-------|
+| Inflow | `pi-rtk-optimizer` | `tool_call`/`tool_result` | auto-rewrite bash→`rtk` + compact tool output (ANSI/test/build/git/linter/search/truncate) | ✅ |
+| In-flight | `@davecodes/pi-dcp` | `context` (every LLM call) | auto dedup + purge stale errors + apply compressions + nudge `compress` | ✅ |
+| Compaction | `@sting8k/pi-vcc` | `session_before_compact` | deterministic no-LLM structured summary (35–99% reduction) + `vcc_recall` recover lineage | ✅ (via `overrideDefaultCompaction:true`) |
+
+**Pipeline:** rtk shrinks inflow → dcp prunes in-flight + nudges compress → vcc handles compaction deterministically + recall.
+
+**Auto-activation (normal usage):** the `context-optimizer` extension (`.pi/extensions/context-optimizer.ts`):
+- On `session_start` in a `.pi/` kit: patches `~/.pi/agent/pi-vcc-config.json` `overrideDefaultCompaction:true` (idempotent — vcc has no `.pi/` project config) + verifies the `rtk` binary (warns if missing; output compaction still works).
+- On every `before_agent_start`: injects a `<context-optimization>` policy block guiding `vcc_recall` (before re-exploring) / `compress` (closed work-streams) / `/pi-vcc` (manual compaction).
+
+**Agent auto-use (no workflow prompt needed):**
+- Before re-exploring a topic → `vcc_recall({query:"<topic>"})`.
+- When a work-stream closes or dcp nudges → `compress({startToolCallId, endToolCallId, topic, summary})` (keep file:line + decisions + results in the summary).
+- Manual compaction → `/pi-vcc` (deterministic, 0 LLM) over `/compact`.
+
+**Config:**
+- vcc: `~/.pi/agent/pi-vcc-config.json` `overrideDefaultCompaction:true` (auto-patched; global only).
+- dcp: `~/.pi-dcp/config.json` (global) + `.pi/dcp.json` (project override, **shipped by the kit** with optimal defaults: auto strategies, turn protection 3, strong compress nudge at 30k–70k tokens).
+- rtk: `~/.pi/agent/extensions/pi-rtk-optimizer/config.json` (global, **user-owned — not overwritten**); defaults optimal.
+
+**Observability:** `/context-check` (kit) reports stack status; `/dcp context` + `/dcp stats`; `/rtk stats`; vcc toast per compaction.
+
+See `.pi/skills/context-optimization/SKILL.md` for the full protocol.
 
 ---
 

@@ -1,118 +1,95 @@
 ---
 name: memory-system
-description: "Documents pi-hermes-memory capabilities: background auto-review, correction detection, tools (memory, memory_search, session_search), and commands. Load when the agent needs to understand or leverage the memory system — searching past failures, saving learnings, or learning the auto-flywheel."
+description: "Documents the in-house markdown memory layer (.pi/extensions/memory.ts + skill-manage.ts + session-search.ts): memory/memory_search/session_search/skill_manage tools, before_agent_start auto-inject brief, deterministic correction detection, and /memory-insights /memory-consolidate /memory-import-hermes commands. Load when the agent needs to understand or leverage the memory system — searching past failures, saving learnings, or running maintenance."
 ---
 
-# Memory System (pi-hermes-memory)
+# Memory System (in-house markdown)
 
 ## Overview
 
-pi-hermes-memory is the **persistent memory extension** that runs automatically in every pi session. It provides a self-learning flywheel without the agent needing to trigger it manually. This skill documents its capabilities so the agent can leverage them strategically.
+The kit's memory layer is **in-house** (`.pi/extensions/memory.ts`, `skill-manage.ts`, `session-search.ts`) — markdown files in `.pi/memory/`, in-process TF-IDF retrieval, `before_agent_start` auto-injection, deterministic correction detection, secret scanning. **No SQLite, no native dep, no LLM subprocess.** It replaces the former `npm:pi-hermes-memory` (reverted 2026-06-24 due to recurring `better-sqlite3` corruption, LLM-subprocess cost on every background review/correction/consolidation, and policy-only injection that missed memory when the agent "forgot" to search).
 
-## Auto-Flywheel (already running — no trigger needed)
+## How memory surfaces (no trigger needed)
 
-### 1. Background Review — automated "compound" every ~10 turns
+- **Auto-inject brief** — at every `before_agent_start`, the extension keyword-matches your prompt against `.pi/memory/*.md` and injects a compact **Memory Brief** (~1.5k chars) of relevant entries into the system prompt. Memory surfaces automatically — you do NOT have to call `memory_search` for it to appear. (Fixes hermes's policy-only "agent forgets to search" failure.)
+- **`<memory-policy>` block** — also injected each turn, telling you when to `memory_search` for deeper recall.
 
-Every N turns (default: 10) OR after accumulating enough tool calls, pi-hermes-memory spawns a background child process that:
-
-- Snaps the full conversation as `[USER]`/`[ASSISTANT]` prefixed text
-- Reviews for: user preferences, corrections, failures, insights, conventions, tool-quirks  
-- Saves notable findings to `MEMORY.md`, `USER.md`, or `failures.md`
-- Only acts if there's something genuinely worth saving ("Nothing to save." otherwise)
-- Non-blocking — the session continues while the review runs
-
-**→ You do NOT need to call this yourself.** It fires automatically on `turn_end`.
-
-### 2. Correction Detection — real-time error learning
-
-On every user message, pi-hermes-memory checks for correction patterns:
-
-| Strength | Patterns | Example |
-|----------|----------|---------|
-| **Strong** (always trigger) | `"don't do that"`, `"not like that"`, `"I said..."`, `"I told you..."`, `"that's not what I..."` | "Don't do that — use pnpm instead" |
-| **Weak** (needs directive) | `"no, ..."`, `"wrong, ..."`, `"actually..."` + verb like "use", "change", "fix" | "No, use the other approach" |
-| **Negative** (suppress) | `"no worries"`, `"no problem"`, `"actually looks great"` | Ignored |
-
-When detected → immediately saves to `target='failure', category='correction'` with the reason "User corrected the agent".
-
-**→ Corrections are captured automatically.** You don't need to save them — it's already done.
-
-### 3. Session Flush
-
-Before session compaction/shutdown, a flush prompt extracts anything worth remembering from the closing session.
-
-### 4. Auto-Consolidation
-
-When `MEMORY.md` reaches the 5,000 character limit, entries are auto-merged, deduped, and staled entries (>30 days, unreferenced) are removed.
-
-## Tools Available (agent can call)
+## Tools available
 
 | Tool | Purpose | Key params |
 |------|---------|------------|
-| `memory` | Save/update/delete memories | `action` (add/replace/remove), `target` (memory/user/failure/project), `content`, `category` |
-| `memory_search` | Search durable memories across sessions | `query`, `target`, `category`, `project` |
-| `session_search` | Search past conversation messages | `query`, `project`, `role` |
-| `skill_manage` | Create/update procedural skills | `action`, `name`, `scope`, `when_to_use`, `procedure_steps` |
+| `memory` | Save/update/delete a markdown entry in `.pi/memory/*.md` | `action` (add/replace/remove), `target` (memory/user/project/failure), `content`, `category` (for target=failure), `id`/`old_text` (replace/remove) |
+| `memory_search` | In-process TF-IDF over `.pi/memory/*.md` (no SQLite) | `query`, `target`, `category`, `limit` |
+| `session_search` | Grep pi's JSONL session store (current project) | `query`, `project`, `role`, `limit` |
+| `skill_manage` | CRUD procedural skills (SKILL.md) | `action` (create/view/patch/update/edit/delete/list), `name`/`skill_id`, `scope` (project/global), structured fields or `content` |
 
-## Memory Categories (for `target='failure'`)
+## Memory categories (for `target=failure`)
 
-| Category | When to use | Example |
-|----------|------------|---------|
-| `failure` | Something tried that didn't work | "Used localStorage for tokens — XSS vulnerability" |
-| `correction` | User corrected the agent | "Use pnpm, not npm" |
-| `insight` | Durable learning from experience | "Complexity over 15 in a single function causes CI timeout" |
-| `preference` | User preference or work style | "Prefers terse responses, no cheerleading" |
-| `convention` | Project or team convention | "Monorepo with turborepo, uses pnpm workspaces" |
-| `tool-quirk` | Non-obvious tool behavior | "tsc --noEmit fails silently on .d.ts syntax errors" |
+| Category | When to use |
+|----------|------------|
+| `failure` | Something tried that didn't work |
+| `correction` | User corrected the agent (also auto-captured — see below) |
+| `insight` | Durable learning from experience |
+| `preference` | User preference or work style |
+| `convention` | Project or team convention |
+| `tool-quirk` | Non-obvious tool behavior |
 
-## Commands Available (user can run)
+`target=memory`/`user`/`project` are uncategorized facts (category ignored).
+
+## Storage
+
+`.pi/memory/{USER,PROJECT,MEMORY,LESSONS}.md` — gitignored, repo-local, portable. Entry format: `<!-- mem:<id> cat:<category> ts:<ts> -->` + `### <title>` + narrative. Cross-project user facts belong in `~/.pi/agent/AGENTS.md` (auto-loaded), not here.
+
+## Deterministic correction detection (0 LLM)
+
+On every user message, the extension checks for correction patterns (EN + VI):
+
+- **Strong** — "don't do that", "not like that", "I said/told you", "that's not what I", "no, don't", "stop doing/using", "đừng làm/dùng/chạy/cài/thêm", "không phải vậy/thế", "sai rồi", "tôi đã nói/bảo".
+- **Weak** — "no/wrong/actually, ..." + directive verb (use/change/fix/switch/prefer/...).
+- **Negative (suppressed)** — "no worries", "looks great/good", "that's right/fine", "đúng rồi", "tốt rồi", "ok rồi".
+
+When detected → auto-saves a `[correction]` entry to `LESSONS.md` (target=failure, category=correction). Rate-limited 1 save per 3 user turns. **You do NOT need to save corrections manually** — but DO save manually when you want a richer/curated entry than the raw correction text. Disable: env `PI_MEMORY_NO_CORRECTION=1`.
+
+## Commands
 
 | Command | Purpose |
 |---------|---------|
-| `/memory-insights` | Show everything stored in memory |
-| `/memory-skills` | List all saved procedural skills |
-| `/memory-consolidate` | Manually trigger memory cleanup/merge |
-| `/memory-interview` | Onboarding interview to pre-fill user profile |
-| `/memory-switch-project` | List all project memories |
-| `/memory-index-sessions` | Import past sessions for search |
-| `/memory-sync-markdown` | Backfill Markdown entries into SQLite search |
-| `/memory-preview-context` | Show memory policy or legacy prompt blocks |
-| `/learn-memory-tool` | Interactive guide to the memory system |
+| `/memory-insights` | List all entries grouped by file |
+| `/memory-consolidate` | Dedupe exact-duplicate entries + cap per file (archive oldest beyond 60) |
+| `/memory-import-hermes` | Migrate hermes markdown (`~/.pi/agent/pi-hermes-memory/{USER,MEMORY,failures}.md`) into `.pi/memory/` (titles prefixed `[hermes]` for review/prune) |
 
-## When to Use memory_search
+## When to use memory_search
 
-Use `memory_search` when you need **durable, cross-session knowledge** — things that happened in previous sessions, not just the current one:
+Use `memory_search` for **durable, cross-session knowledge** — past failures, conventions, preferences, tool-quirks:
 
-- **Searching past failures**: `memory_search({ query: "similar error", target: "failure", category: "failure" })`
-- **Finding project conventions**: `memory_search({ query: "typescript pattern", project: "<project>" })`
-- **Recalling user preferences**: `memory_search({ query: "prefers", target: "user" })`
-- **Checking tool quirks**: `memory_search({ query: "pnpm install", category: "tool-quirk" })`
+- `memory_search({ query: "similar error", target: "failure", category: "failure" })`
+- `memory_search({ query: "prefers", target: "user" })`
+- `memory_search({ query: "pnpm", project: "<project>" })`
 
-Use `vcc_recall` when you need **current-session lineage** — what was just discussed or tried in this active workflow.
+Use `vcc_recall` for **current-session lineage** (what was just discussed). Use both in Guard phases for dual coverage.
 
-Use both together in Guard phases for maximum recall coverage.
+## When to explicitly save (manual `memory`)
 
-## When to Explicitly Save (manual `memory` tool)
+Correction detection runs automatically, but manually save when:
 
-Even though auto-review runs every 10 turns, manually save when:
-
-- **On 2x verification failure** — save the failed approach immediately so future sessions won't repeat it. Use `target='failure', category='failure'` with: what was tried, why it failed, the error, and what worked instead (if known).
-- **On a critical discovery** — if you learn something that would save 15+ minutes for future-self, don't wait for the auto-review cycle.
-- **On user's explicit request** — "remember this" → save immediately.
-- **On learning a tool-quirk** — non-obvious behavior that would trip up a future agent.
+- **On 2× verification failure** — save the failed approach immediately (`target=failure`, `category=failure`) so future sessions don't repeat it.
+- **On a critical discovery** — something that would save 15+ minutes for future-self.
+- **On user's explicit request** — "remember this".
+- **On learning a tool-quirk** — non-obvious behavior.
 
 ## Pitfalls
 
-- **Waiting for auto-review for critical failures** — if verification just failed 2x, save that failure NOW. The auto-review might not fire for 10 more turns.
-- **Using vcc_recall for cross-session knowledge** — vcc_recall is lineage-scoped (active session); it may not find failures from a closed session. Use `memory_search` instead.
-- **Over-saving** — don't save task progress, session outcomes, or temporary state. The auto-review already captures durable learnings. Manual saves are for URGENT or USER-REQUESTED facts only.
-- **Assuming memory_search has everything** — if the SQLite sync is broken (the memory-sync-markdown command can fix this), older Markdown entries may not appear in search. The `/memory-sync-markdown` command backfills them.
+- **Correction capture is coarse** — it saves the raw user correction text, not an LLM-distilled lesson. Prune noisy `[correction]` entries via `memory remove` or `/memory-consolidate`.
+- **`skill_manage` project scope writes to `.pi/skills/` (committed)** — runtime-created skills ship with the kit. Curate/prune or gitignore if personal-only.
+- **`session_search` is bounded** — recent ~40 JSONL files, current project by default. Not a full cross-project index.
+- **Lexical only** — TF-IDF/keyword, no semantic synonymy ("deploy" ≈ "ship" needs embeddings, deferred).
+- **Repo-local** — memory is this-project-this-user (gitignored); not auto-shared across projects.
 
 ## Verification
 
 Before relying on memory_search:
 
-- [ ] Check if the SQLite sync is healthy (`/memory-insights` shows recent entries)
-- [ ] If search returns nothing but you KNOW the info was saved, run `/memory-sync-markdown` 
-- [ ] Use both `memory_search` AND `vcc_recall` in Guard phases for dual coverage
-- [ ] When saving a failure, include: what was tried, why it failed, the error message, reproduction steps
+- [ ] `.pi/memory/*.md` exist (created on first save) — `/memory-insights` lists entries.
+- [ ] If a known entry isn't returned, check the file directly (`cat .pi/memory/LESSONS.md`).
+- [ ] Use `memory_search` AND `vcc_recall` in Guard phases for dual coverage.
+- [ ] When saving a failure, include: what was tried, why it failed, the error, what worked instead.

@@ -281,7 +281,7 @@ Document key planning decisions and constraints for later LTM retrieval.
 
 ### Reset Phase — Save Plan & Learnings
 
-Save the completed plan and document planning insights via the `memory` tool (action: `add`, target: `memory`) — pi-hermes-memory persists across sessions.
+Save the completed plan and document planning insights via the `memory` tool (action: `add`, target: `memory`) — persists across sessions in `.pi/memory/*.md`.
 
 **Only leader agents create memory entries.** Subagents report research; you record decisions.
 

@@ -3,7 +3,7 @@
  *
  * The kit references two kinds of external packages:
  *   - **core**: declared in `.pi/settings.json:packages` (auto-loaded by pi at
- *     startup — e.g. `@sting8k/pi-srcwalk`, `pi-hermes-memory`). Single source
+ *     startup — e.g. `@sting8k/pi-srcwalk`). Single source
  *     of truth = settings.json; this command reads it, does not duplicate it.
  *   - **optional**: declared in `.pi/packages.json` (recommended add-ons the
  *     user opts into — e.g. `@davecodes/pi-dcp`, `pi-guard`).

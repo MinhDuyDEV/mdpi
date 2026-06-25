@@ -86,7 +86,7 @@ If lower-ranked sources conflict with higher-ranked sources, follow the higher-r
 Before searching, check existing memory:
 
 ```typescript
-// Search prior findings across sessions (pi-hermes-memory; filter by category: failure/correction/insight/preference/convention/tool-quirk)
+// Search prior findings across sessions (in-house .pi/memory; filter by category: failure/correction/insight/preference/convention/tool-quirk)
 memory_search({ query: "<topic>", limit: 5 });
 
 // Or search across all past session conversations
