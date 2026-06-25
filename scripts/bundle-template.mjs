@@ -39,6 +39,7 @@ const INCLUDES = [
   ".env.example",
   "guard.example.json",
   "subagents.json",
+  "dcp.json",
 ];
 
 if (!existsSync(srcPi)) {
