@@ -66,6 +66,7 @@ cli
   .option("--force", "Overwrite user-modified files (default: preserve them)")
   .option("--check", "Dry-run: report what would change without writing")
   .option("--prune-all", "Delete orphan files (template-removed since install)")
+  .option("--merge-settings", "Union-merge settings.json packages (upstream + user); other keys preserved")
   .action(async (options) => {
     await upgradeCommand(options);
   });

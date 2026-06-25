@@ -18,6 +18,9 @@ export interface TemplateManifest {
   version: string;
   createdAt: string;
   files: Record<string, string>; // relative path → SHA-256 hash
+  /** Installed category subset from `mdpi init --only` (sorted). null/absent = full install.
+   *  Used by `mdpi upgrade` to avoid pulling in categories the user excluded. */
+  categories?: string[] | null;
 }
 
 export const MANIFEST_FILE = ".template-manifest.json";
@@ -35,7 +38,7 @@ export function hashContent(content: string): string {
 /** Walk a directory recursively → {relativePath: sha256}. */
 export function buildManifestFromDir(
   dir: string,
-  skipDirs: string[] = ["node_modules", ".git", "dist", "coverage"],
+  skipDirs: string[] = ["node_modules", ".git", "dist", "coverage", ".next", ".turbo"],
 ): Record<string, string> {
   const files: Record<string, string> = {};
 
@@ -56,12 +59,19 @@ export function buildManifestFromDir(
   return files;
 }
 
-/** Generate + write the manifest into a kit directory. */
-export function generateManifest(piDir: string, version: string): TemplateManifest {
+/** Generate + write the manifest into a kit directory.
+ *  `categories` records an `--only` subset so `mdpi upgrade` can avoid re-adding
+ *  excluded categories; pass null/omit for a full install. */
+export function generateManifest(
+  piDir: string,
+  version: string,
+  categories: string[] | null = null,
+): TemplateManifest {
   const manifest: TemplateManifest = {
     version,
     createdAt: new Date().toISOString(),
     files: buildManifestFromDir(piDir),
+    categories: categories ?? null,
   };
   writeFileSync(join(piDir, MANIFEST_FILE), JSON.stringify(manifest, null, 2));
   return manifest;

@@ -14,9 +14,8 @@
  * --only <cats> installs only the listed category dirs (plus the always-on kit
  * config/docs) and rewrites settings.json to drop references to the excluded
  * `skills`/`prompts`/`extensions` dirs so pi doesn't resolve dangling paths.
- * Caveat: `mdpi upgrade` always compares against the FULL template — a subset
- * install is not remembered as partial, so upgrade will offer the missing
- * categories (use `--check` first, or re-run `init` without `--only`).
+ * The chosen subset is recorded in `.template-manifest.json` so `mdpi upgrade`
+ * respects it and won't re-add the excluded categories.
  *
  * --quiet suppresses the @clack UI but still performs the install (emits one
  * machine-readable line). --force overwrites template files but preserves any
@@ -46,7 +45,7 @@ export const CATEGORIES = [
 export type Category = (typeof CATEGORIES)[number];
 
 /** Kit infrastructure always installed (not selectable via --only). */
-const ALWAYS_ENTRIES = [
+export const ALWAYS_ENTRIES = [
   "scripts",
   "artifacts/example",
   "settings.json",
@@ -214,7 +213,10 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
   const version = getPackageVersion();
   writeFileSync(join(piDir, ".version"), version);
   if (only) adaptSettingsJson(piDir, only);
-  const manifest = generateManifest(piDir, version);
+  // Record the --only subset in the manifest so `mdpi upgrade` won't re-add
+  // excluded categories (a subset install is otherwise indistinguishable from
+  // a full one on upgrade — see the `--only` caveat above).
+  const manifest = generateManifest(piDir, version, only ? [...only].sort() : null);
   const fileCount = Object.keys(manifest.files).length;
   const hasSkills = !only || only.has("skills");
 

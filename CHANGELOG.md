@@ -6,7 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-(no unreleased changes)
+### Added
+- **`mdpi upgrade` remembers `--only` subsets** — `mdpi init --only` now
+  records the chosen category subset in `.template-manifest.json` (`categories`
+  field), and `mdpi upgrade` filters the bundled template down to those
+  categories + always-on kit config before classification. Previously a subset
+  install was indistinguishable from a full one on upgrade, so upgrade would
+  re-add the categories the user intentionally excluded. Old manifests without
+  `categories` keep full-template behavior (backward-compatible). New pure,
+  unit-tested helper `filterToSubset()`.
+- **`mdpi upgrade --merge-settings`** — opt-in flag that union-merges
+  `settings.json:packages` from the new template into the user's file
+  (template-first, deduped, other keys preserved), so a user-customized
+  settings.json still picks up upstream-added npm packages without being
+  clobbered or frozen. Best-effort (own try/catch, never fails the upgrade).
+  New pure, unit-tested helpers `unionPackages()` + `previewSettingsMerge()`.
+
+### Fixed
+- `buildManifestFromDir` default `skipDirs` now includes `.next`/`.turbo`,
+  matching `SKIP_DIRS` used elsewhere — avoids a theoretical orphan
+  false-positive for those dirs and keeps manifest hashing consistent.
 
 ## [0.7.1] — 2026-06-23
 
