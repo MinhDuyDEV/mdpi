@@ -323,7 +323,7 @@ When planning under constraint:
 | Calibrate | Agent: `scout`       | External research required         |
 | Transform | Agent: `plan` (self) | Core planning work                 |
 | Release   | Agent: `plan` (self) | Write artifact                     |
-| Reset     | Agent: `build`       | Handoff to implementation          |
+| Reset     | Main agent (orchestrator) | Handoff to implementation          |
 
 ## Workflow
 
@@ -354,7 +354,7 @@ When consulted for architectural guidance or planning review, structure response
 5. **When to consider an alternative** — concrete triggers that would change the recommendation
 6. **Effort estimate** — **S** (<1h), **M** (1-3h), **L** (1-2d), **XL** (>2d)
 
-**IMPORTANT:** Plans are advisory, not directive. The build agent should use plan output as a starting point, then do independent investigation before acting. Plans create leverage — they don't remove the builder's judgment.
+**IMPORTANT:** Plans are advisory, not directive. The orchestrator (main session agent) should use plan output as a starting point, then do independent investigation before acting. Plans create leverage — they don't remove the builder's judgment.
 
 ### Plan Artifact Structure
 

@@ -32,7 +32,7 @@ Workflows may compose recursively (e.g., `development-lifecycle-workflow` Phase 
 
 ```markdown
 ### Phase N: <name>
-- **Agent:** <type>           # explore | scout | review | plan | general | vision | build
+- **Agent:** <type>           # explore | scout | review | plan | general | vision
 - **Concurrency:** <N | Dynamic: min..max>
 - **Depends on:** Phase <M> | —
 - **Tool:** `subagent` (single|parallel mode)   # omit if main-agent phase

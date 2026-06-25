@@ -83,6 +83,7 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | browser, e2e, screenshot, playwright, chrome | `playwright`, `chrome-devtools`, `browser-testing-with-devtools` |
 | dependency, package, library, npm, PyPI, source | `opensrc` |
 | scrape, crawl, webclaw, bot protection, 403, webfetch fail, extract web content, web scraping | `webclaw` |
+| monorepo, workspace, nested package, which service, service boundary, scoped context, tech-stack, nearest AGENTS.md | `service-scoping` |
 
 | Swift, iOS, macOS, actor, async/await, Sendable | `swift-concurrency`, `swiftui-expert-skill`, `core-data-expert` |
 
@@ -127,6 +128,7 @@ When the user's prompt contains these keywords (case-insensitive), the listed sk
 | `context-optimization` | Auto-activating 3-layer stack (rtk inflow / dcp in-flight / vcc compaction) — context kept lean in long sessions; vcc_recall before re-explore, compress at closures, /pi-vcc for manual compaction | All | Low |
 | `memory-system` | Understanding/leveraging the in-house markdown memory layer — tools (memory/memory_search/session_search/skill_manage), auto-inject brief, deterministic correction detection, commands; when to use memory_search vs vcc_recall | All | Low |
 | `doubt-driven-development` | In-flight adversarial review of non-trivial decisions before they stand | Build | Medium |
+| `service-scoping` | Before editing a file in a monorepo/nested subtree — walk up to nearest AGENTS.md + service manifest + .pi/tech-stack.md, bounded by worktree root | Build | Low |
 
 
 ### Implementation

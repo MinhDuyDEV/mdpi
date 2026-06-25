@@ -41,9 +41,8 @@ pi
 ├── guard.example.json              # pi-guard ruleset example
 ├── settings.json                   # 4 extensions + 67 skills + 12 prompts
 │
-├── agents/                         # 7 subagent personas
+├── agents/                         # 6 subagent personas
 │   ├── INDEX.md                    # Agent index + routing table
-│   ├── build.md                    # Primary orchestrator
 │   ├── explore.md                  # Read-only codebase search
 │   ├── general.md                  # Surgical implementation (1-3 files)
 │   ├── plan.md                     # Architecture & decomposition
@@ -229,7 +228,6 @@ See `context/architecture.md` for full details.
 | Plan/architect | `plan` | read, bash, find, ls, semantic_*, websearch, codesearch, context7 |
 | Visual/UI | `vision` | read, bash, find, ls |
 | Implement (1-3 files) | `general` | full tool set |
-| Orchestrate | `build` | full tool set + subagent |
 
 ---
 
