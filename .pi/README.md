@@ -1,6 +1,10 @@
 # `.pi/` — Drop-in Kit for Pi Coding Agent
 
+[![npm version](https://img.shields.io/npm/v/@minhduydev/mdpi.svg?style=flat-square)](https://www.npmjs.com/package/@minhduydev/mdpi)
+
 A self-contained `.pi/` directory that turns any repository into a pi-coding-agent workspace with structured agents, skills, slash commands, workflows, templates, and safety guards.
+
+Installable via npm as [`@minhduydev/mdpi`](https://www.npmjs.com/package/@minhduydev/mdpi) — the `mdpi` CLI scaffolds this kit into any repo and wires its extensions (`mdpi install`).
 
 Optimized for the **"copy and use"** workflow: no global setup required.
 
