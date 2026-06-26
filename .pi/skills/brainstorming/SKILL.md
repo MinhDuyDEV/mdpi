@@ -24,7 +24,7 @@ Start by understanding the current project context, then ask questions one at a 
 
 **Part of:** `development-lifecycle` skill (Phase 1: Ideation)
 
-**Output template:** `.pi/templates/design.md`
+**Output template:** `.pi/templates/DESIGN.md`
 
 ## The Process
 
@@ -55,7 +55,7 @@ Start by understanding the current project context, then ask questions one at a 
 **Documentation:**
 
 - Write the validated design to `.pi/artifacts/<slug>/design.md`
-- Use template from `.pi/templates/design.md`
+- Use template from `.pi/templates/DESIGN.md`
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 

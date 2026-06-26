@@ -70,6 +70,28 @@ done
 - **Skill directories are not project context.** Never treat `.pi/skills/<name>/` files as scoped project context — they are kit content, not the running project's rules.
 - **No git worktree** (e.g., bare directory): fall back to `pwd` as the root bound; state that the bound is uncertain.
 
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---------------|--------|
+| "I'll just read the root `AGENTS.md` — it's the project's rules anyway." | The root file is the *coarsest* context. A nested service often has its own `AGENTS.md` that overrides, narrows, or contradicts root rules (different framework, different conventions). Loading root first silently drowns the service-specific rules in generic noise. |
+| "Loading the whole monorepo context is safer — more information is better." | More *unrelated* information is noise, not safety. Pulling sibling services' conventions creates training-distribution output: code that "works" in some repo but violates the owning service's conventions. Scoped context is the safety; breadth is the hazard. |
+| "Scoping wastes time — I know which service this file is in." | The walk is one shell snippet (sub-second) and prevents the *expensive* failure: editing a file against the wrong conventions, then debugging the mismatch downstream. Skipping it trades a millisecond for a multi-hour mistake. |
+| "The root `package.json` is the service manifest — I'll use that." | A root `package.json` with no `name` is a workspace shell, not a service. Using it as the owning service misidentifies the target and imports workspace-level deps as if they were the service's. Keep walking to the real service. |
+| "Sibling services share the monorepo, so their `AGENTS.md` is relevant too." | Relevance is a property of the *target file's path*, not the repo topology. Sibling context applies only to sibling files. Importing it invites cross-service contamination (e.g., applying the API service's error shape to the web service). |
+| "There's no `AGENTS.md` near the file, so I'll load whatever `AGENTS.md` I can find." | No nearer `AGENTS.md` means use the **project root rules**, explicitly reported as "no scoped AGENTS.md" — not the nearest `AGENTS.md` from a different subtree. "Something is better than nothing" is wrong when the something is from the wrong service. |
+
+## Red Flags
+
+- **Editing a nested package but loading the root `AGENTS.md`** without first walking up from the target to check for a nearer one.
+- **Context includes another service's conventions** (e.g., the API service's error shape or the web service's component rules) while editing a file in a different service.
+- **No nearest-scope lookup was performed** — the agent jumped straight from "edit this file" to reading context without running the walk-up.
+- **The walk crossed `git rev-parse --show-toplevel`** — context from a parent checkout or sibling worktree leaked into an isolated worktree.
+- **A workspace-root `package.json` (no `name`) was reported as the owning service** instead of skipping to the real service manifest.
+- **`.pi/skills/<name>/` files were loaded as scoped project context** — skill directories are kit content, never the running project's rules.
+- **`{ servicePath, serviceName, stack }` was never reported to the caller** — downstream work has no scoping boundary and may drift into sibling-service territory.
+- **No `AGENTS.md` was found, and the agent silently loaded nothing** instead of explicitly reporting "no scoped AGENTS.md — using project root rules."
+
 ## Verification
 
 - `git rev-parse --show-toplevel` succeeds → the walk was bounded by a real worktree.

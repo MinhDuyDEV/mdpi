@@ -74,7 +74,7 @@ This skill guides a single agent through the complete feature development workfl
 - Design validated by user
 - Output: `.pi/artifacts/<slug>/design.md`
 
-**Template:** `.pi/templates/design.md`
+**Template:** `.pi/templates/DESIGN.md`
 
 ---
 
@@ -213,7 +213,7 @@ For small changes, you can skip early phases:
 
 | Phase         | Template                 | Purpose                                  |
 | ------------- | ------------------------ | ---------------------------------------- |
-| Design        | `templates/design.md`    | Architecture decisions                   |
+| Design        | `templates/DESIGN.md`    | Architecture decisions                   |
 | Specification | `templates/prd.md`       | Requirements + high-level task outline    |
 | Planning      | `templates/tasks.md`     | Detailed task body structure (for plan.md)|
 | Progress      | `templates/progress.md`  | Append-only execution log                |
@@ -283,3 +283,16 @@ User: "I want to add a dark mode toggle"
 - Testing deferred to a later phase
 - No verification checkpoint between phases
 - Lifecycle treated as waterfall (single pass) instead of iterative
+
+## Verification
+
+Prove the lifecycle was followed correctly for this feature before claiming it done. Every box must be checkable against a concrete artifact or command output, not intent.
+
+- [ ] **Phase entry criteria met** — each entered phase satisfied its entry gate: design validated before Specification, `.pi/artifacts/<slug>/spec.md` existed before Planning, `.pi/artifacts/<slug>/plan.md` existed before Implementation, all implementation tasks marked complete before Verification
+- [ ] **Phase exit criteria met** — each exited phase produced its required output: `.pi/artifacts/<slug>/design.md` (Phase 1), `.pi/artifacts/<slug>/spec.md` with all PRD sections completed (Phase 2), `plan.md` + `tasks.json` + initialized `progress.md` (Phase 3), all tasks completed with per-task verifications passing (Phase 4)
+- [ ] **Artifact chain intact and in sync** — `spec.md` (PRD + high-level outline) → `plan.md` (authoritative decomposition) → `tasks.json` (runtime mirror derived from `plan.md`) → `progress.md` (append-only log) all exist at `.pi/artifacts/<slug>/` and `tasks.json` matches `plan.md` with no drift
+- [ ] **No artifact generated out of phase** — `tasks.json` was NOT produced in Phase 2 (it is Phase 3's job), `plan.md` was NOT written before `spec.md` was approved, `design.md` was validated by the user before Specification began
+- [ ] **Phase transitions justified** — every transition from one phase to the next has an explicit verification checkpoint; any skipped phase (e.g. bug fix → Phase 4, clear requirements → skip Phase 1) is recorded with an explicit justification, not silently omitted
+- [ ] **Sub-skills loaded at the right phase** — `brainstorming` (Phase 1), `spec-driven-development` (Phase 2), `planning-and-task-breakdown` (Phase 3), `incremental-implementation` (+ `test-driven-development` for TDD tasks) (Phase 4), `verification-before-completion` (Phase 5) were each loaded in their phase, not substituted or skipped
+- [ ] **Implementation ran in verified slices** — work was executed in thin vertical slices (3-task batches) with verify-after-each; for TDD tasks the failing-test → verify-fail → implement → verify-pass → commit loop ran per task; progress was appended to `progress.md` after each task
+- [ ] **Phase 5 verification-before-completion run** — verification commands were IDENTIFIED, RUN fresh, READ for failure count, and their output confirmed the completion claim BEFORE completion was asserted; evidence (test/lint/build output) is attached, not asserted

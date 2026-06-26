@@ -93,6 +93,27 @@ This skill must work whether or not DCP is installed:
 - **Compressing inside turn protection** — DCP refuses; don't try to work around it.
 - **Over-compressing short commands** — a 3-call `/status` has nothing worth compressing.
 
+## Common Rationalizations
+
+| Rationalization | Reality |
+|----------------|--------|
+| "I might need the raw tool output later, better keep it." | The summary preserves every file:line, root cause, and decision you'd act on. Raw output is re-fetchable via `vcc_recall` or a re-read; verbatim output occupying context is what forces re-reads elsewhere. |
+| "Compressing takes a turn; it's not worth the effort." | One `compress` call costs ~1 turn; the closed span it frees often costs 5-20 turns of recurring context tax every subsequent request. The math favors compression at any real closure point. |
+| "The session isn't that long yet." | Context tax compounds per-request, not per-session. Compressing at the first closure point keeps every later turn cheaper — waiting until "long enough" means you've already paid the tax N times. |
+| "The artifact (spec.md/plan.md) already captured everything." | Artifacts capture *conclusions*, not the *evidence trail* (which reads/greps ran, what they found at which line). A lossless summary bridges that gap; skipping leaves the trail either verbatim-in-context or gone. |
+| "I'll compress at the next big closure point instead." | Closure points are where compression is safe. Deferring past one means the span now straddles in-flight or turn-protected work, and DCP refuses those endpoints — you lose the window. |
+| "DCP might not even be installed, so why bother checking." | The check is one tool lookup. If absent, the no-op is correct and costs near-zero. If present and you skipped the check, you've leaked verbatim output that compounds for the rest of the session. |
+
+## Red Flags
+
+- A closed exploratory work-stream (the reads/greps/bash that produced an already-written artifact) is still occupying context verbatim past its closure point.
+- Context "filling up" warnings firing with no `compress` call made at the most recent phase/artifact closure.
+- A `compress` summary that omits file:line references, root cause, or verification results — terse but lossy, forcing a later re-read of the same code.
+- `compress` endpoints chosen inside the most recent turn or in-flight work (DCP will refuse; repeated attempts mean the closure point was misidentified).
+- The same closed span being re-explored in a later turn (re-running the same greps/reads) because it was neither compressed into a summary nor left verbatim — the facts went missing.
+- Compressing the phase *output summary* that is about to be passed to the next phase, instead of the exploratory calls that produced it — the next phase loses its input.
+- Forcing a `compress` call (or retrying) when the tool isn't registered, instead of accepting the documented no-op — wasted turns on an unavailable optimization.
+
 ## Verification
 
 Before claiming a compress was done correctly:

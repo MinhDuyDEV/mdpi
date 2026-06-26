@@ -311,6 +311,20 @@ Phantom Completion Check:
 | **SUSPECT** | 1-2 MEDIUM stubs OR 1 artifact not Level 3     | Report, ask user                  |
 | **PHANTOM** | Any HIGH stubs OR >2 artifacts not substantive | **BLOCK** — fix before completion |
 
+## Common Rationalizations
+
+These are the structural excuses agents graduate to once they've stopped using the obvious "should work now" phrasing. Each one sounds reasonable and each one violates the Iron Law in a different way.
+
+| Rationalization | Reality |
+| --- | --- |
+| "It compiled, so it works" | Compilation proves the build exits 0, not that behavior is correct. The Iron Law demands the command that proves **the claim you're making** — if the claim is "the bug is fixed," the build command is the wrong command. Build ≠ behavior. |
+| "Tests pass, so it's correct / requirements met" | Tests passing proves tests pass. Requirements met requires a line-by-line checklist against the plan, per the Requirements pattern. Green tests on the wrong behavior are the most expensive false completion. |
+| "I'll verify at the end" | Batching verification breaks evidence freshness and compounds phantom completion — a session's worth of unverified changes cannot be retroactively proven by one final run. Gate 1 requires a current `verify.log` PASS **at claim time**, not a promise to produce one later. |
+| "The subagent reported success" | Agent reports are claims, not evidence — this is the entire point of the Worker Distrust Protocol. Read the VCS diff, confirm the changes exist and are substantive, run the gates yourself. Trusting the report is the documented failure mode from the 24 failure memories. |
+| "I already ran verification earlier this session" | The Verification Cache is only valid when nothing changed since the stamp. If any file in scope has been edited, the stamp is stale and Gate 1 blocks. "Earlier" is not "fresh" — re-run unless state matches. |
+| "It's a trivial change, nothing else is affected" | Minimization is a Diagnostic Failure Phrase ("just a minor change", "safe change"). Type errors propagate across files — that's why typecheck is always full, never incremental. Partial scope proves nothing about the system. |
+| "No TODO/FIXME/stub markers, so it's substantive" | Absence of markers ≠ real implementation. Phantom Completion Detection exists precisely because files can be marker-free yet hollow. Level 1 (exists) is not Level 2 (substantive) is not Level 3 (wired) — verify the level your claim requires. |
+
 ## Why This Matters
 
 From 24 failure memories:

@@ -24,13 +24,13 @@ When you operate inside `.pi/`, both this file AND `.pi/AGENTS.md` are loaded. T
 
 The deliverable is a **curated `.pi/` kit**, not the agent's own runtime config. Contents:
 
-- **`.pi/agents/`** — 6 agent personas (explore, general, plan, review, scout, vision)
-- **`.pi/skills/`** — 59 skills (4 Tier-1 auto-loaded + 55 Tier-2 on-demand)
-- **`.pi/prompts/`** — slash commands (init, clarify, create, plan, fix, verify, ship, audit, research, gc, loop-*, status, close)
-- **`.pi/workflows/`** — DAG workflows (audit-pattern, batch-implement, deep-research, garbage-collection, development-lifecycle, quality-loop)
+- **`.pi/agents/`** — 10 agent personas (explore, general, plan, review, scout, vision + code-reviewer, test-engineer, security-auditor, web-performance-auditor)
+- **`.pi/skills/`** — 86 skills (4 Tier-1 auto-loaded + 82 Tier-2 on-demand)
+- **`.pi/prompts/`** — slash commands (init, clarify, create, plan, fix, verify, ship, audit, research, gc, status, close)
+- **`.pi/workflows/`** — DAG workflows (audit-pattern, batch-implement, deep-research, development-lifecycle-workflow, frontend-feature-workflow, garbage-collection, quality-loop)
 - **`.pi/templates/`** — project context templates (prd, project, state, tech-stack, roadmap, etc.)
-- **`.pi/context/`** — reference docs (architecture)
-- **`.pi/extensions/`** — TypeScript extensions (workflows-runner, templates-injector, memory, skill-manage, session-search); in-house markdown long-term memory (no external dep, no SQLite, no LLM subprocess) — see `.pi/README.md` ## Memory
+- **`.pi/context/`** — reference docs (architecture + 7 adapted addyosmani checklists: definition-of-done, testing-patterns, security/performance/accessibility/observability-checklist, orchestration-patterns)
+- **`.pi/extensions/`** — TypeScript extensions (workflows-runner, templates-injector, memory, skill-manage, session-search, context-optimizer); in-house markdown long-term memory (no external dep, no SQLite, no LLM subprocess) — see `.pi/README.md` ## Memory
 
 Treat `.pi/` content as the **deliverable**. Don't modify it unless the user explicitly requests changes.
 
@@ -64,7 +64,7 @@ This project uses **Tier 1 inline** + **Tier 2 on-demand** skill loading.
 - verification-before-completion
 
 **Tier 2 (load on-demand via `/skill:<name>` or context-aware discovery):**
-- 55 domain-specific skills (frontend-design, react-best-practices, test-driven-development, etc.)
+- 82 domain-specific skills (frontend-design, react-best-practices, test-driven-development, etc.)
 
 ---
 

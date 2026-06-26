@@ -85,6 +85,28 @@ Correction detection runs automatically, but manually save when:
 - **Lexical only** — TF-IDF/keyword, no semantic synonymy ("deploy" ≈ "ship" needs embeddings, deferred).
 - **Repo-local** — memory is this-project-this-user (gitignored); not auto-shared across projects.
 
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|--------|
+| "I'll just remember it in context this session" | Context is ephemeral — compaction/`/compact`/new session wipes it. Markdown memory survives across sessions and is auto-injected via the brief. Save durable facts explicitly. |
+| "`memory_search` is the same as `websearch`/`codesearch`" | `websearch`/`codesearch` hit the open web; `memory_search` is in-process TF-IDF over **this repo's** `.pi/memory/*.md` for project-specific failures/conventions/preferences. Web search cannot know that `better-sqlite3` corrupted here, or that you prefer untrimmed descriptions. |
+| "Corrections are noise — I'll skip saving them" | Correction detection is deterministic (0 LLM) and auto-saves to `LESSONS.md`. Skipping manual curation means raw correction text accumulates; run `/memory-consolidate` and `memory remove` to prune, don't disable capture (you lose the signal entirely). |
+| "The auto-injected brief is enough, no need to `memory_search`" | The brief is ~1.5k chars, keyword-matched only. Deeper/different-topic recall needs an explicit `memory_search` query. The brief surfaces, the tool drills. |
+| "`vcc_recall` replaces `memory_search`" | `vcc_recall` searches **current-session lineage** (pruned JSONL); `memory_search` searches **cross-session markdown**. They cover different time horizons — use both in Guard phases. |
+| "Memory is RAG — it retrieves docs/chunks" | This is **memory, not RAG**. No embeddings, no vector store, no doc chunking. TF-IDF + keyword over curated markdown entries you (or correction detection) wrote. It's a durable fact layer, not a knowledge-base retriever. |
+
+## Red Flags
+
+- Using `websearch`/`codesearch` for **project-specific facts** (e.g. "did better-sqlite3 corrupt in this repo?") instead of `memory_search` — the web can't know your repo's history.
+- Ignoring the auto-injected `<memory-policy>` block / Memory Brief — repeating work a prior session already did (e.g. re-investigating hermes removal that's already a `failure` entry).
+- Never running `/memory-consolidate` despite duplicate `[hermes]`-prefixed or repeated `[correction]` entries accumulating in `.pi/memory/*.md`.
+- Saving **secrets** via `memory` (token scanning blocks them, but attempting it signals a misuse — secrets belong in env/secret manager, never markdown memory).
+- Treating `session_search` as a cross-project index — it's bounded to recent ~40 JSONL files of the **current project**; expecting global recall produces false negatives.
+- Disabling correction capture (`PI_MEMORY_NO_CORRECTION=1`) to "clean up noise" instead of pruning entries — you lose the only deterministic correction signal.
+- Saving task progress / temporary state (e.g. "currently editing file X") as memory entries — memory is for **durable** facts only; progress state belongs in todos/session lineage.
+- Conflating `skill_manage` (procedural SKILL.md CRUD) with `memory` (fact entries) — skills are committed procedure docs; memory is gitignored repo-local facts. Writing a skill when you meant to save a lesson pollutes `.pi/skills/`.
+
 ## Verification
 
 Before relying on memory_search:

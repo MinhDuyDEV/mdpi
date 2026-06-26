@@ -337,3 +337,16 @@ Fix: Test real behavior or question why you're mocking at all.
 | "The test is too complex to write simply" | Complex tests indicate complex code. Simplify the code, and the test simplifies too. |
 | "I'll add test-only methods to the production code" | Test-only methods in production code create untested production paths. Use dependency injection instead. |
 | "100% coverage means the code is tested" | Coverage measures execution, not correctness. 80% coverage with good assertions beats 100% with none. |
+
+## Verification
+
+Confirm the tests you wrote/reviewed avoid the anti-patterns above:
+
+- [ ] Assertions target real component behavior (DOM roles, return values, observable state) — not mock existence (`*-mock` test IDs, `expect(mock).toHaveBeenCalled()` as the sole proof)
+- [ ] No test-only methods (e.g. `destroy()`, `__reset()`, `setTestState()`) live in production classes; cleanup/state-injection helpers are in `test-utils/` or injected dependencies
+- [ ] Every mock is justified: you can name the real dependency's side effects and explain why mocking at this level preserves the behavior the test depends on
+- [ ] Mocks mock the slow/external boundary only; high-level methods the test exercises run real (or use test doubles that preserve necessary side effects)
+- [ ] Mock data mirrors the real API/schema completely — all fields downstream code may consume are present, not just the ones this one test touches
+- [ ] Each test was written before/with implementation and observed failing against real (or near-real) behavior — no "mock everything to be safe" patches added retroactively
+- [ ] Removing a mock causes the test to fail for a real-behavior reason (not pass vacuously); mock setup is well under ~50% of the test body
+- [ ] Coverage gains come with meaningful assertions, not bare execution — no test passes solely because a line ran without an assertion

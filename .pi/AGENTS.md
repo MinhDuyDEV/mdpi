@@ -16,12 +16,12 @@ For project-wide rules (kernel, drift signals, hard constraints, output style), 
 
 | Subdir | Purpose | Treat as |
 |--------|---------|----------|
-| `agents/` | 6 agent personas (pi format) | Source of truth — don't modify casually |
-| `skills/` | 59 skills (Agent Skills spec) | Tier-1 auto-load + Tier-2 on-demand |
+| `agents/` | 10 agent personas (pi format) | Source of truth — don't modify casually |
+| `skills/` | 86 skills (Agent Skills spec) | Tier-1 auto-load + Tier-2 on-demand |
 | `prompts/` | slash commands | Dispatched by primary agent |
 | `workflows/` | DAG workflows | Executed via subagent tool |
 | `templates/` | project context templates | Referenced via auto-inject |
-| `context/` | reference docs (architecture) | Manual reference only, never auto-injected |
+| `context/` | reference docs (architecture + 7 addyosmani checklists) | Manual reference only, never auto-injected |
 | `extensions/` | TypeScript extensions | Compiled JS code, gated by pi extension SDK |
 
 ---

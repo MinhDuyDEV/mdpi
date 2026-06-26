@@ -38,6 +38,87 @@ Performance optimization is an empirical process. Measure, identify, fix, verify
 
 **Rule:** Skip to step 3 only if you have measurement data that justifies the optimization.
 
+### How to Measure
+
+Two complementary approaches — use both:
+
+- **Synthetic (Lighthouse, DevTools Performance tab):** Controlled conditions, reproducible. Best for CI regression detection and isolating specific issues.
+- **RUM (web-vitals library, CrUX):** Real user data in real conditions. Required to validate that a fix actually improved user experience.
+
+**Frontend:**
+```bash
+# Synthetic: Lighthouse in Chrome DevTools (or CI)
+# Chrome DevTools → Performance tab → Record
+# Chrome DevTools MCP → Performance trace
+
+# RUM: Web Vitals library in code
+import { onLCP, onINP, onCLS } from 'web-vitals';
+
+onLCP(console.log);
+onINP(console.log);
+onCLS(console.log);
+```
+
+**Backend:**
+```bash
+# Response time logging
+# Application Performance Monitoring (APM)
+# Database query logging with timing
+
+# Simple timing
+console.time('db-query');
+const result = await db.query(...);
+console.timeEnd('db-query');
+```
+
+### Where to Start Measuring
+
+Use the symptom to decide what to measure first:
+
+```
+What is slow?
+├── First page load
+│   ├── Large bundle? --> Measure bundle size, check code splitting
+│   ├── Slow server response? --> Measure TTFB in DevTools Network waterfall
+│   │   ├── DNS long? --> Add dns-prefetch / preconnect for known origins
+│   │   ├── TCP/TLS long? --> Enable HTTP/2, check edge deployment, keep-alive
+│   │   └── Waiting (server) long? --> Profile backend, check queries and caching
+│   └── Render-blocking resources? --> Check network waterfall for CSS/JS blocking
+├── Interaction feels sluggish
+│   ├── UI freezes on click? --> Profile main thread, look for long tasks (>50ms)
+│   ├── Form input lag? --> Check re-renders, controlled component overhead
+│   └── Animation jank? --> Check layout thrashing, forced reflows
+├── Page after navigation
+│   ├── Data loading? --> Measure API response times, check for waterfalls
+│   └── Client rendering? --> Profile component render time, check for N+1 fetches
+└── Backend / API
+    ├── Single endpoint slow? --> Profile database queries, check indexes
+    ├── All endpoints slow? --> Check connection pool, memory, CPU
+    └── Intermittent slowness? --> Check for lock contention, GC pauses, external deps
+```
+
+## Identify the Bottleneck
+
+Common bottlenecks by category:
+
+**Frontend:**
+
+| Symptom | Likely Cause | Investigation |
+|---------|-------------|---------------|
+| Slow LCP | Large images, render-blocking resources, slow server | Check network waterfall, image sizes |
+| High CLS | Images without dimensions, late-loading content, font shifts | Check layout shift attribution |
+| Poor INP | Heavy JavaScript on main thread, large DOM updates | Check long tasks in Performance trace |
+| Slow initial load | Large bundle, many network requests | Check bundle size, code splitting |
+
+**Backend:**
+
+| Symptom | Likely Cause | Investigation |
+|---------|-------------|---------------|
+| Slow API responses | N+1 queries, missing indexes, unoptimized queries | Check database query log |
+| Memory growth | Leaked references, unbounded caches, large payloads | Heap snapshot analysis |
+| CPU spikes | Synchronous heavy computation, regex backtracking | CPU profiling |
+| High latency | Missing caching, redundant computation, network hops | Trace requests through the stack |
+
 ## Performance Targets
 
 ### Core Web Vitals (Web)
@@ -122,6 +203,24 @@ function debounce(fn, ms) {
 }
 ```
 
+Modern bundlers (Vite, webpack 5+) handle named imports with tree-shaking automatically, provided the dependency ships ESM and is marked `sideEffects: false` in `package.json`. Profile before changing import styles — the real gains come from splitting and lazy loading:
+
+```typescript
+// GOOD: Dynamic import for heavy, rarely-used features
+const ChartLibrary = lazy(() => import('./ChartLibrary'));
+
+// GOOD: Route-level code splitting wrapped in Suspense
+const SettingsPage = lazy(() => import('./pages/Settings'));
+
+function App() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <SettingsPage />
+    </Suspense>
+  );
+}
+```
+
 ### Missing Image Optimization
 
 ```html
@@ -141,6 +240,64 @@ function debounce(fn, ms) {
 />
 ```
 
+#### Advanced: Art Direction with `<picture>`
+
+For LCP hero images where crop/composition should differ per breakpoint, combine two techniques — **art direction** (different crop per breakpoint via `media`) and **resolution switching** (right file size per screen density via `srcset` + `sizes`):
+
+```html
+<picture>
+  <!-- Mobile: portrait crop (8:10) -->
+  <source
+    media="(max-width: 767px)"
+    srcset="/hero-mobile-400.avif 400w, /hero-mobile-800.avif 800w"
+    sizes="100vw"
+    width="800"
+    height="1000"
+    type="image/avif"
+  />
+  <source
+    media="(max-width: 767px)"
+    srcset="/hero-mobile-400.webp 400w, /hero-mobile-800.webp 800w"
+    sizes="100vw"
+    width="800"
+    height="1000"
+    type="image/webp"
+  />
+  <!-- Desktop: landscape crop (2:1) -->
+  <source
+    srcset="/hero-800.avif 800w, /hero-1200.avif 1200w, /hero-1600.avif 1600w"
+    sizes="(max-width: 1200px) 100vw, 1200px"
+    width="1200"
+    height="600"
+    type="image/avif"
+  />
+  <source
+    srcset="/hero-800.webp 800w, /hero-1200.webp 1200w, /hero-1600.webp 1600w"
+    sizes="(max-width: 1200px) 100vw, 1200px"
+    width="1200"
+    height="600"
+    type="image/webp"
+  />
+  <img
+    src="/hero-desktop.jpg"
+    width="1200"
+    height="600"
+    fetchpriority="high"
+    alt="Hero image description"
+  />
+</picture>
+
+<!-- Below-the-fold image — lazy loaded + async decoding -->
+<img
+  src="/content.webp"
+  width="800"
+  height="400"
+  loading="lazy"
+  decoding="async"
+  alt="Content image description"
+/>
+```
+
 ### Unnecessary Re-renders (React)
 
 ```typescript
@@ -156,6 +313,35 @@ function Parent() {
   return <Child style={style} onClick={handleClick} />;
 }
 ```
+
+### Missing Caching (Backend)
+
+```typescript
+// Cache frequently-read, rarely-changed data
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+let cachedConfig: AppConfig | null = null;
+let cacheExpiry = 0;
+
+async function getAppConfig(): Promise<AppConfig> {
+  if (cachedConfig && Date.now() < cacheExpiry) {
+    return cachedConfig;
+  }
+  cachedConfig = await db.config.findFirst();
+  cacheExpiry = Date.now() + CACHE_TTL;
+  return cachedConfig;
+}
+
+// HTTP caching headers for static assets
+app.use('/static', express.static('public', {
+  maxAge: '1y',           // Cache for 1 year
+  immutable: true,        // Never revalidate (use content hashing in filenames)
+}));
+
+// Cache-Control for API responses
+res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
+```
+
+> **Caveat:** Caching masks problems. Fix the root cause first, then add caching as defense in depth — never as a substitute for fixing a fundamentally slow operation.
 
 ## Profiling Tools
 
@@ -208,6 +394,8 @@ function Parent() {
 | "Users won't notice 200ms"        | Studies show 100ms delays reduce conversions. Users notice more than you think.    |
 | "Adding metrics is overhead"      | The overhead of measurement is trivial compared to the cost of blind optimization. |
 | "Caching will fix it"             | Caching masks problems. Fix the root cause, then add caching as defense.           |
+| "This optimization is obvious"    | If you didn't measure, you don't know. Profile first.                              |
+| "The framework handles performance" | Frameworks prevent some issues but can't fix N+1 queries or oversized bundles.   |
 
 ## Red Flags — STOP
 
@@ -217,6 +405,11 @@ function Parent() {
 - Bundle size growing without review
 - No performance budget or monitoring in place
 - Using `SELECT *` in production queries
+- N+1 query patterns in data fetching
+- List endpoints without pagination
+- Images without dimensions, lazy loading, or responsive sizes
+- No performance monitoring in production
+- `React.memo` and `useMemo` everywhere (overusing is as bad as underusing)
 
 ## Verification
 
@@ -225,9 +418,14 @@ function Parent() {
 - [ ] Performance budget is set and enforced in CI
 - [ ] No regressions in existing benchmarks
 - [ ] Optimization doesn't sacrifice correctness or readability
+- [ ] Core Web Vitals are within "Good" thresholds
+- [ ] Bundle size hasn't increased significantly
+- [ ] No N+1 queries in new data fetching code
+- [ ] Existing tests still pass (optimization didn't break behavior)
 
 ## See Also
 
 - **react-best-practices** — React-specific performance patterns (server components, bundle optimization)
 - **ci-cd-and-automation** — Enforcing performance budgets in CI
 - **code-simplification** — Simplifying code often improves performance as a side effect
+- `.pi/context/performance-checklist.md` — Detailed performance checklists, optimization commands, and anti-pattern reference

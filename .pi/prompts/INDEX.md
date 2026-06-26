@@ -72,6 +72,6 @@ Status:                 /status
 
 ## Related
 
-- `skills/INDEX.md` — task → skill routing (67 skills)
-- `workflows/INDEX.md` — 6 DAG workflows invoked by commands
-- `templates/` — 12 template files (PRD, plan body, state, roadmap, etc.)
+- `skills/INDEX.md` — task → skill routing (86 skills)
+- `workflows/INDEX.md` — 7 DAG workflows invoked by commands
+- `templates/` — 13 template files (PRD, plan body, state, roadmap, etc.)

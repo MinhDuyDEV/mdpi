@@ -59,8 +59,8 @@ JSON configuration that controls which extensions, skills, prompts are loaded. M
 - Agent Skills spec frontmatter: `name`, `description` (required), others optional
 - Loaded into system prompt at startup
 - Agent can `read` full SKILL.md on-demand via `/skill:name` command
-- Tier 1 (5 skills): always loaded, core execution discipline
-- Tier 2 (12 skills): loaded on-demand when relevant
+- Tier 1 (4 skills): always loaded, core execution discipline
+- Tier 2 (82 skills): loaded on-demand when relevant
 
 **Prompts** (`.pi/prompts/*.md`):
 - Non-recursive — only root `*.md` files

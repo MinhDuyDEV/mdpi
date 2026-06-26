@@ -135,11 +135,29 @@ Partial or exploratory work should be committed only after clearly labeling it (
 
 ## Change Summaries
 
-After any modification, provide a structured summary:
+After any modification, provide a structured summary. This makes review easier, documents scope discipline, and surfaces unintended changes:
 
 - **CHANGES MADE** — what files changed and what behavior was added, removed, or fixed.
 - **THINGS I DIDN'T TOUCH** — adjacent code, unrelated worktree files, or out-of-scope concerns deliberately left alone.
 - **POTENTIAL CONCERNS** — edge cases, manual steps, rollback considerations, or follow-up work.
+
+Concrete example:
+
+```
+CHANGES MADE:
+- src/routes/tasks.ts: Added validation middleware to POST endpoint
+- src/lib/validation.ts: Added TaskCreateSchema using Zod
+
+THINGS I DIDN'T TOUCH (intentionally):
+- src/routes/auth.ts: Has similar validation gap but out of scope
+- src/middleware/error.ts: Error format could be improved (separate task)
+
+POTENTIAL CONCERNS:
+- The Zod schema is strict — rejects extra fields. Confirm this is desired.
+- Added zod as a dependency (72KB gzipped) — already in package.json
+```
+
+The "DIDN'T TOUCH" section is especially important — it shows you exercised scope discipline and didn't go on an unsolicited renovation.
 
 ## Pre-Commit Hygiene
 
@@ -147,9 +165,65 @@ Before every commit:
 
 1. `git status --short` — know what is staged and unstaged.
 2. `git diff --staged` — review the exact diff you are about to commit.
-3. Check for secrets, tokens, or credentials in the diff.
-4. Run tests, lint, and type checks for the affected scope.
+3. Check for secrets, tokens, or credentials in the diff:
+
+   ```bash
+   git diff --staged | grep -i "password\|secret\|api_key\|token"
+   ```
+
+4. Run tests, lint, and type checks for the affected scope:
+
+   ```bash
+   npm test
+   npm run lint
+   npx tsc --noEmit
+   ```
+
 5. Confirm `.gitignore` excludes generated files, dependencies, and build artifacts.
+
+Automate this with git hooks (e.g., lint-staged + husky) so formatting and lint checks run automatically on staged files:
+
+```json
+// package.json
+{
+  "lint-staged": {
+    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.{json,md}": ["prettier --write"]
+  }
+}
+```
+
+Hooks turn pre-commit hygiene from a manual checklist into a structural guarantee.
+
+## Handling Generated Files
+
+- **Commit generated files** only if the project expects them (e.g., `package-lock.json`, Prisma migrations).
+- **Don't commit** build output (`dist/`, `.next/`), environment files (`.env`), or IDE config (`.vscode/settings.json` unless shared).
+- **Maintain a `.gitignore`** that covers at minimum: `node_modules/`, `dist/`, `.env`, `.env.local`, `*.pem`.
+
+## Using Git for Debugging
+
+Git is also a debugging tool. When a regression appears, use history to localize it:
+
+```bash
+# Find which commit introduced a bug
+git bisect start
+git bisect bad HEAD
+git bisect good <known-good-commit>
+# Git checks out midpoints; run your test at each to narrow down
+
+# View what changed recently
+git log --oneline -20
+git diff HEAD~5..HEAD -- src/
+
+# Find who last changed a specific line
+git blame src/services/task.ts
+
+# Search commit messages for a keyword
+git log --grep="validation" --oneline
+```
+
+`git bisect` is the fastest way to turn "something broke" into "this specific commit broke it" — pair it with a reproducible test command for each step.
 
 ## Process
 
@@ -175,6 +249,7 @@ Before every commit:
 | "This unrelated formatting is harmless." | It increases review noise and can hide real regressions. |
 | "One big commit is faster." | Small verified commits are easier to review, revert, bisect, and ship. |
 | "The worktree was already dirty." | Dirty worktrees require more discipline, not less. |
+| "I don't need a .gitignore." | Until `.env` with production secrets gets committed. Set it up immediately. |
 
 ## Red Flags
 
@@ -188,6 +263,7 @@ Before every commit:
 - Committing generated or cache files unintentionally.
 - Version bump without changelog or release rationale.
 - Claiming clean worktree without checking status.
+- Force-pushing to shared branches.
 
 ## Verification
 
@@ -215,3 +291,7 @@ Before declaring git workflow complete, confirm:
   <risks>Unrelated worktree changes, uncommitted files, release risk, or none</risks>
 </skill_result>
 ```
+
+## See Also
+
+- `using-git-worktrees` — dedicated skill for parallel AI agent work via git worktrees (isolated branches in separate directories without switching).

@@ -369,3 +369,42 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Ship | documentation-and-adrs | Low | Document the why, not just the what |
 | Ship | observability-and-instrumentation | Medium | Structured logs, RED metrics, traces, alerts |
 | Ship | shipping-and-launch | High | Pre-launch checklist, monitoring, rollback plan |
+
+## Common Rationalizations
+
+These are the excuses agents reach for when skipping skill-discovery, and why this skill's routing logic rebuts each one:
+
+| Rationalization | Reality |
+|-----------------|--------|
+| "I'll just handle it without a skill" | Skills encode senior-engineer process, not optional fluff. Skipping one means reinventing its steps ad hoc and usually dropping the verification gate. The Routing Tree exists because every phase has a correct skill — `When to Use` triggers when intent is ambiguous, so "no skill" is rarely the right answer. |
+| "Loading skills wastes tokens" | A skill load costs hundreds of tokens; a wrong approach costs a full rework cycle. Routing first via the INDEX.md Quick Routing Table is the cheapest path — it is one lookup before any code is written. Skimping on discovery to save tokens is false economy. |
+| "I'll guess which skill" | Guessing bypasses the File Match > Keyword Match > Intent Match priority (Skill Rule 2) and the Decision Tree. Guessing is the #1 way to land in the wrong phase — e.g. jumping to `incremental-implementation` when `spec-driven-development` was required because there is no spec yet. |
+| "The task is small, no skill needed" | `When NOT to Use` exempts only trivial one-liners. If a skill clearly matches, Skill Rule says load it directly — "small" is not an exemption. A "small" change that touches tests, security, or git hygiene still needs `test-driven-development` / `security-and-hardening` / `git-workflow-and-versioning`. |
+| "I know this codebase, I'll pick from memory" | The kit drifts — 67 skills now, more added over time. Routing from memory skips INDEX.md updates and the composition patterns, and silently violates Skill Rule 1 ("Check INDEX.md first"). Always re-check INDEX.md; memory is not a routing source. |
+| "Multiple skills match, I'll load all of them" | Speculative multi-load bloats context and dilutes guidance with conflicting steps. The Disambiguation Protocol (step 6) is explicit: narrow by phase → risk → file context → keyword overlap → composition, and if STILL ambiguous ask ONE question. Do NOT load all candidates speculatively. |
+| "Intent is obvious, I'll skip the Decision Tree" | "Obvious" is exactly where hidden assumptions live. The Routing Tree forces phase + risk narrowing before skill selection; skipping it is how you load `code-review-and-quality` for a task that actually needed `debugging-and-error-recovery` first. Obvious intent still gets a one-pass routing check. |
+
+## Red Flags
+
+Observable signs that skill-discovery is being violated — any of these means stop and re-run the routing tree:
+
+1. **Handling a task whose keywords match a skill's `description` without ever reading that skill's SKILL.md** — you are operating on the description string alone, not the encoded process.
+2. **Loading 3+ skills speculatively "just in case"** instead of running the Disambiguation Protocol — context bloat with no decision made.
+3. **Ignoring the Routing Tree / Decision Tree when intent is ambiguous** and jumping straight to a familiar skill by name-recognition.
+4. **Auto-invoking a High-risk skill** (`shipping-and-launch`, `cloudflare`, `polar`, `security-and-hardening`, `ci-cd-and-automation`, `deprecation-and-migration`) without an explicit user `/skill` invocation — violates the Risk Gating rule.
+5. **Going straight to the Routing Tree without checking INDEX.md** Quick Routing Table first — violates Skill Rule 1 and misses the token-cheap intent → skill map.
+6. **Picking a skill by name-recognition** rather than by File Match > Keyword Match > Intent Match priority — e.g. reaching for `code-simplification` when the open file is a test (should be `testing-anti-patterns`).
+7. **Forcing one-skill-per-task** when the task clearly needs composition — e.g. UI work without pairing `frontend-design` + an aesthetic overlay + `fixing-accessibility`, or Supabase work without `supabase` + `supabase-postgres-best-practices`.
+8. **Guessing when two candidates compete** instead of asking the ONE disambiguation question from step 6 — silence here is a silent assumption, the exact failure mode Core Operating Behavior #1 forbids.
+
+## Verification
+
+Before claiming the right skill was discovered and loaded for the task, confirm:
+
+- [ ] **Named the match** — the single skill (or composed set) matched to the task is stated explicitly before any implementation work began, not retrofitted after the fact.
+- [ ] **Checked INDEX.md first** — `.pi/skills/INDEX.md` Quick Routing Table was consulted (Skill Rule 1) before running the Routing Tree; the intent → skill row that matched is identifiable.
+- [ ] **Applied routing priority** — File Match > Keyword Match > Intent Match (Skill Rule 2) was applied; the file/keyword/intent signal that decided the match is named, not just the skill name.
+- [ ] **Consulted the Decision Tree when ambiguous** — when 2+ candidates competed, the Disambiguation Protocol was run (phase → risk → file context → keyword overlap → composition), not skipped.
+- [ ] **Asked ONE question if still ambiguous** — if narrowing did not resolve the choice, exactly one clarifying question was asked (step 6); the agent did not guess and did not load all candidates speculatively.
+- [ ] **Confirmed risk gating** — the chosen skill's risk level was checked; any High-risk skill was invoked only via explicit user `/skill`, never auto-loaded.
+

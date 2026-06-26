@@ -80,11 +80,48 @@ src/components/
 />
 ```
 
-**Keep components focused — one responsibility per component.**
+**Keep components focused — one responsibility per component:**
+
+```tsx
+// Good: Does one thing
+export function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
+  return (
+    <li className="flex items-center gap-3 p-3">
+      <Checkbox checked={task.done} onChange={() => onToggle(task.id)} />
+      <span className={task.done ? 'line-through text-muted' : ''}>{task.title}</span>
+      <Button variant="ghost" size="sm" onClick={() => onDelete(task.id)}>
+        <TrashIcon />
+      </Button>
+    </li>
+  );
+}
+```
 
 **Separate data fetching from presentation:**
 - Container components handle data (loading, error, empty states)
 - Presentation components handle rendering
+
+```tsx
+// Container: handles data
+export function TaskListContainer() {
+  const { tasks, isLoading, error, refetch } = useTasks();
+
+  if (isLoading) return <TaskListSkeleton />;
+  if (error) return <ErrorState message="Failed to load tasks" retry={refetch} />;
+  if (tasks.length === 0) return <EmptyState message="No tasks yet" />;
+
+  return <TaskList tasks={tasks} />;
+}
+
+// Presentation: handles rendering
+export function TaskList({ tasks }: { tasks: Task[] }) {
+  return (
+    <ul role="list" className="divide-y">
+      {tasks.map(task => <TaskItem key={task.id} task={task} />)}
+    </ul>
+  );
+}
+```
 
 ## State Management
 
@@ -99,7 +136,7 @@ Server state (React Query, SWR)  → Remote data with caching
 Global store (Zustand, Redux)    → Complex client state shared app-wide
 ```
 
-**Avoid prop drilling deeper than 3 levels.** Use context or restructure.
+**Avoid prop drilling deeper than 3 levels.** If you're passing props through components that don't use them, introduce context or restructure the component tree.
 
 ## Design System Adherence
 
@@ -107,43 +144,62 @@ Global store (Zustand, Redux)    → Complex client state shared app-wide
 
 These patterns degrade implementation quality. For design-level aesthetic rules, see `design-taste-frontend`.
 
-| Degraded Pattern | Production Quality |
-|---|---|
-| Purple/indigo everything | Use the project's actual color palette |
-| Excessive gradients | Flat or subtle gradients matching the design system |
-| Rounded everything (rounded-2xl) | Consistent border-radius from the design system |
-| Generic hero sections | Content-first layouts |
-| Lorem ipsum-style copy | Realistic placeholder content |
-| Oversized padding everywhere | Consistent spacing scale |
-| Stock card grids | Purpose-driven layouts |
-| Shadow-heavy design | Subtle or no shadows unless design system specifies |
+| AI Default | Why It Is a Problem | Production Quality |
+|---|---|---|
+| Purple/indigo everything | Models default to visually "safe" palettes, making every app look identical | Use the project's actual color palette |
+| Excessive gradients | Gradients add visual noise and clash with most design systems | Flat or subtle gradients matching the design system |
+| Rounded everything (rounded-2xl) | Maximum rounding signals "friendly" but ignores the hierarchy of corner radii in real designs | Consistent border-radius from the design system |
+| Generic hero sections | Template-driven layout with no connection to the actual content or user need | Content-first layouts |
+| Lorem ipsum-style copy | Placeholder text hides layout problems that real content reveals (length, wrapping, overflow) | Realistic placeholder content |
+| Oversized padding everywhere | Equal generous padding destroys visual hierarchy and wastes screen space | Consistent spacing scale |
+| Stock card grids | Uniform grids are a layout shortcut that ignores information priority and scanning patterns | Purpose-driven layouts |
+| Shadow-heavy design | Layered shadows add depth that competes with content and slows rendering on low-end devices | Subtle or no shadows unless the design system specifies |
 
 ### Spacing and Layout
 
 Use a consistent spacing scale. Don't invent values:
 
 ```css
-/* Use the scale: 0.25rem increments */
+/* Use the scale: 0.25rem increments (or whatever the project uses) */
 /* Good */  padding: 1rem;      /* 16px */
 /* Good */  gap: 0.75rem;       /* 12px */
 /* Bad */   padding: 13px;      /* Not on any scale */
+/* Bad */   margin-top: 2.3rem; /* Not on any scale */
 ```
 
 ### Typography
 
-Respect type hierarchy: h1 (one per page) → h2 → h3 → body → small. Don't skip heading levels.
+Respect type hierarchy: h1 (one per page) → h2 → h3 → body → small. Don't skip heading levels. Don't use heading styles for non-heading content.
 
 ### Color
 
-- Use semantic color tokens (`text-primary`, `bg-surface`) — not raw hex values
-- Ensure sufficient contrast (4.5:1 normal text, 3:1 large text)
+- Use semantic color tokens (`text-primary`, `bg-surface`, `border-default`) — not raw hex values
+- Ensure sufficient contrast (4.5:1 for normal text, 3:1 for large text)
 - Don't rely solely on color for information (add icons, text, or patterns)
 
 ## Accessibility (WCAG 2.1 AA)
 
+Every component must meet these standards.
+
 ### Keyboard Navigation
 
 Every interactive element must be keyboard accessible. Use native `<button>` and `<a>` — not `<div onClick>`.
+
+```tsx
+// Every interactive element must be keyboard accessible
+<button onClick={handleClick}>Click me</button>        // ✓ Focusable by default
+<div onClick={handleClick}>Click me</div>               // ✗ Not focusable
+<div role="button" tabIndex={0} onClick={handleClick}   // ✓ But prefer <button>
+     onKeyDown={e => {
+       if (e.key === 'Enter') handleClick();
+       if (e.key === ' ') e.preventDefault();
+     }}
+     onKeyUp={e => {
+       if (e.key === ' ') handleClick();
+     }}>
+  Click me
+</div>
+```
 
 ### ARIA Labels
 
@@ -154,15 +210,55 @@ Every interactive element must be keyboard accessible. Use native `<button>` and
 // Form inputs need labels
 <label htmlFor="email">Email</label>
 <input id="email" type="email" />
+
+// Or use aria-label when no visible label exists
+<input aria-label="Search tasks" type="search" />
 ```
 
 ### Focus Management
 
 Trap focus inside modals while open, return focus on close. Move focus when content changes significantly.
 
+```tsx
+// Move focus when content changes
+function Dialog({ isOpen, onClose }: DialogProps) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (isOpen) closeRef.current?.focus();
+  }, [isOpen]);
+
+  // Trap focus inside dialog when open
+  return (
+    <dialog open={isOpen}>
+      <button ref={closeRef} onClick={onClose}>Close</button>
+      {/* dialog content */}
+    </dialog>
+  );
+}
+```
+
 ### Meaningful Empty and Error States
 
 Never show blank screens. Every component must handle: loading state, empty state, error state, and the normal data state.
+
+```tsx
+// Don't show blank screens
+function TaskList({ tasks, onCreateTask }: TaskListProps) {
+  if (tasks.length === 0) {
+    return (
+      <div role="status" className="text-center py-12">
+        <TasksEmptyIcon className="mx-auto h-12 w-12 text-muted" />
+        <h3 className="mt-2 text-sm font-medium">No tasks</h3>
+        <p className="mt-1 text-sm text-muted">Get started by creating a new task.</p>
+        <Button className="mt-4" onClick={onCreateTask}>Create Task</Button>
+      </div>
+    );
+  }
+
+  return <ul role="list">...</ul>;
+}
+```
 
 ## Responsive Design
 
@@ -186,6 +282,55 @@ Test at: 320px, 768px, 1024px, 1440px.
 - `aria-busy="true"` on loading regions
 - Avoid layout shifts during loading (reserve space)
 
+```tsx
+// Skeleton loading (not spinners for content)
+function TaskListSkeleton() {
+  return (
+    <div className="space-y-3" aria-busy="true" aria-label="Loading tasks">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="h-12 bg-muted animate-pulse rounded" />
+      ))}
+    </div>
+  );
+}
+
+// Optimistic updates for perceived speed
+function useToggleTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: toggleTask,
+    onMutate: async (taskId) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks'] });
+      const previous = queryClient.getQueryData(['tasks']);
+
+      queryClient.setQueryData(['tasks'], (old: Task[]) =>
+        old.map(t => t.id === taskId ? { ...t, done: !t.done } : t)
+      );
+
+      return { previous };
+    },
+    onError: (_err, _taskId, context) => {
+      queryClient.setQueryData(['tasks'], context?.previous);
+    },
+  });
+}
+```
+
+## See Also
+
+For detailed accessibility requirements and testing tools, see `references/accessibility-checklist.md` and the `fixing-accessibility` skill.
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "Accessibility is a nice-to-have" | It's a legal requirement in many jurisdictions and an engineering quality standard. |
+| "We'll make it responsive later" | Retrofitting responsive design is 3x harder than building it from the start. |
+| "The design isn't final, so I'll skip styling" | Use the design system defaults. Unstyled UI creates a broken first impression for reviewers. |
+| "This is just a prototype" | Prototypes become production code. Build the foundation right. |
+| "The AI aesthetic is fine for now" | It signals low quality. Use the project's actual design system from the start. |
+
 ## Don't
 
 | Pattern | Replacement | Because |
@@ -197,6 +342,15 @@ Test at: 320px, 768px, 1024px, 1440px.
 | `<div onClick>` instead of `<button>` | Use `<button type="button">` with proper styling | div onClick has no keyboard or screen reader semantics |
 | Prop drilling deeper than 3 levels | Use context, composition, or state management | Deep prop drilling couples components unnecessarily |
 | Skipping heading levels (h1 → h3) | Maintain sequential hierarchy (h1 → h2 → h3) | Skipped levels break screen reader page navigation |
+
+## Red Flags
+
+- Components with more than 200 lines (split them)
+- Inline styles or arbitrary pixel values
+- Missing error states, loading states, or empty states
+- No keyboard navigation testing
+- Color as the sole indicator of state (red/green without text or icons)
+- Generic "AI look" (purple gradients, oversized cards, stock layouts)
 
 ## Verification
 

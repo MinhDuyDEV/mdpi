@@ -320,6 +320,18 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - `references/anti-patterns.md` - Anti-patterns to avoid
 - `references/discovery-workflow.md` - How future agents find and use skills
 
+## Common Rationalizations
+
+| Rationalization | Reality |
+| --- | --- |
+| "I'll write the skill now and pressure-test it later." | Later never comes. An untested skill is untested code — per the Iron Law, delete it and start over with RED first. Untested skills ship rationalization loopholes. |
+| "The description is short but it's clear enough; agents will figure out when to use it." | Vague descriptions don't trigger. If `when_to_use` doesn't name specific symptoms/contexts, discovery fails and the skill never loads. Short ≠ clear — specific triggers trigger. |
+| "I'll put everything in one big skill so it's all in one place." | Overloaded skills never trigger cleanly — ambiguous triggers mean the skill misses the cases it was meant for. Split by trigger condition; one skill = one clear use case. |
+| "This is a simple addition — I don't need to re-run the baseline test." | Edits violate the Iron Law same as new skills. Even "just adding a section" changes behavior. Re-run RED-GREEN on the edit or delete it. |
+| "I tested it once and it passed; no need to iterate or look for new rationalizations." | One GREEN pass isn't bulletproof. REFACTOR exists because agents find new loopholes across retests. Exit criteria = no new rationalizations emerge, not "passed once". |
+| "The agent ignored the skill, but the skill was clear — that's the agent's fault." | If the agent could ignore it, the foundational principle isn't strong enough. Meta-test: strengthen the principle, don't blame the agent. The skill's job is to make the right choice unambiguous. |
+| "Batching multiple skills is more efficient than testing each one before moving on." | Batching skips the mandatory per-skill deployment checklist. STOP after each skill — untested batches ship untested skills. Efficiency is not a valid reason to skip RED-GREEN-REFACTOR. |
+
 ## Red Flags
 
 - Skill written without pressure-testing by a subagent
@@ -327,3 +339,13 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - Verification section is generic ("tests pass") instead of skill-specific
 - Skill body is prose without process steps
 - Missing "When NOT to Use" section
+
+## Verification
+
+- [ ] Frontmatter has only `name` and `description` (the supported fields), ≤1024 chars total, `name` uses hyphens only (no parentheses/special chars)
+- [ ] `description` starts with "Use when...", written in third person, names specific triggering symptoms/contexts — not a vague summary
+- [ ] Baseline (RED) was run: pressure scenario executed with a subagent WITHOUT the skill, and the exact rationalizations the agent used were captured verbatim before any skill text was written
+- [ ] GREEN confirmed: the same scenario re-run WITH the skill produced compliant behavior, and the skill body addresses the specific baseline failures (not hypothetical cases)
+- [ ] REFACTOR completed: new rationalizations surfaced across retests were closed with explicit counters, and the `## Common Rationalizations` table (or equivalent anti-rationalization section) was built from real test iterations — not invented
+- [ ] Exit criteria met: agent chooses the correct action under maximum pressure, cites relevant skill sections to justify it, and no new rationalizations emerge on retest
+- [ ] `## When NOT to Use` and `## Red Flags` sections are present; skill body is process steps + reference tables, not narrative storytelling

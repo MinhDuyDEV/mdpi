@@ -43,27 +43,33 @@ pi
 ├── VERSION                         # Kit version (0.2.0)
 ├── .env.example                    # Environment variables (none required)
 ├── guard.example.json              # pi-guard ruleset example
-├── settings.json                   # 4 extensions + 67 skills + 12 prompts
+├── settings.json                   # 6 extensions + 86 skills + 12 prompts
 │
-├── agents/                         # 6 subagent personas
+├── agents/                         # 10 subagent personas
 │   ├── INDEX.md                    # Agent index + routing table
 │   ├── explore.md                  # Read-only codebase search
 │   ├── general.md                  # Surgical implementation (1-3 files)
 │   ├── plan.md                     # Architecture & decomposition
 │   ├── review.md                   # Code review & debugging
 │   ├── scout.md                    # External research
-│   └── vision.md                   # UI/UX & accessibility
+│   ├── vision.md                   # UI/UX & accessibility
+│   ├── code-reviewer.md            # Five-axis code review pass
+│   ├── test-engineer.md            # Test strategy + coverage review
+│   ├── security-auditor.md         # Vulnerability + threat-model review
+│   └── web-performance-auditor.md  # Core Web Vitals + perf audit
 │
-├── extensions/                     # 5 custom TypeScript extensions (in-house markdown memory)
+├── extensions/                     # 6 custom TypeScript extensions (in-house memory + context-optimizer)
 │   ├── workflows-runner.ts         # DAG workflow executor
 │   ├── templates-injector.ts       # Auto-inject project templates
 │   ├── memory.ts                   # memory + memory_search + auto-inject + correction detection
 │   ├── skill-manage.ts             # skill_manage (CRUD procedural skills)
-│   └── session-search.ts           # session_search (grep JSONL sessions)
+│   ├── session-search.ts           # session_search (grep JSONL sessions)
+│   └── context-optimizer.ts        # rtk/dcp/vcc stack coordinator + /context-check
 │
 ├── prompts/                        # 12 slash commands (pi-native)
 │   ├── INDEX.md                    # Command index + lifecycle diagram
 │   ├── init.md                     # Bootstrap project context
+│   ├── clarify.md                  # Discuss + clarify + stress-test vague idea → spec
 │   ├── create.md                   # Create spec + task outline
 │   ├── plan.md                     # Detailed implementation plan + tasks.json
 │   ├── ship.md                     # Execute tasks, verify, review, close
@@ -75,34 +81,43 @@ pi
 │   ├── status.md                   # Show active feature + blockers
 │   └── close.md                    # Finalize feature, clear .active
 │
-├── workflows/                      # 6 DAG workflows
+├── workflows/                      # 7 DAG workflows
 │   ├── INDEX.md                    # Workflow index + phase format
 │   ├── audit-pattern.md
 │   ├── batch-implement.md
 │   ├── deep-research.md
 │   ├── development-lifecycle-workflow.md
+│   ├── frontend-feature-workflow.md
 │   ├── garbage-collection.md
 │   └── quality-loop.md
 │
-├── skills/                         # 67 skills (all shipped)
+├── skills/                         # 86 skills (all shipped)
 │   ├── INDEX.md                    # Task → skill routing
 │   ├── behavioral-kernel/          # Tier 1
 │   ├── defense-in-depth/           # Tier 1
 │   ├── incremental-implementation/ # Tier 1
 │   ├── verification-before-completion/  # Tier 1
-│   ├── (63 Tier 2 skills — all loaded on-demand)
+│   ├── (82 Tier 2 skills — all loaded on-demand)
 │
-├── templates/                      # 12 project context templates
+├── templates/                      # 13 project context templates
 │   ├── prd.md, project.md, state.md, tech-stack.md
-│   ├── tasks.md, roadmap.md, user.md, design.md
+│   ├── tasks.md, roadmap.md, user.md, DESIGN.md, feature-design.md
 │   ├── proposal.md, adr.md
 │   └── progress.md, review-state.json   # runtime artifact schemas
 │
 ├── scripts/                        # 1 utility script
 │   └── gc-check.sh                 # Structural invariants for /gc
 │
-├── context/                        # 1 reference doc
-│   └── architecture.md             # Pi 5-layer architecture
+├── context/                        # 9 reference docs
+│   ├── architecture.md             # Pi 5-layer architecture
+│   ├── INDEX.md                    # Context index (manual-reference)
+│   ├── definition-of-done.md       # Standing done-bar (addyosmani-adapted)
+│   ├── testing-patterns.md         # Testing patterns quick reference
+│   ├── security-checklist.md       # Web security checklist
+│   ├── performance-checklist.md    # Web performance checklist
+│   ├── accessibility-checklist.md  # WCAG 2.1 AA checklist
+│   ├── observability-checklist.md  # Production instrumentation checklist
+│   └── orchestration-patterns.md   # Agent orchestration pattern catalog
 │
 ├── state/                          # Runtime state (gitignored)
 │   └── session-summary.{json,md}
@@ -232,12 +247,16 @@ See `context/architecture.md` for full details.
 | Plan/architect | `plan` | read, bash, find, ls, semantic_*, websearch, codesearch, context7 |
 | Visual/UI | `vision` | read, bash, find, ls |
 | Implement (1-3 files) | `general` | full tool set |
+| Five-axis code review | `code-reviewer` | read-only + semantic_* |
+| Test strategy/coverage | `test-engineer` | read-only + semantic_* |
+| Security audit | `security-auditor` | read-only + semantic_* |
+| Web performance audit | `web-performance-auditor` | read-only + semantic_* |
 
 ---
 
 ## Extensions
 
-This kit ships **6 custom TypeScript extensions** (in-house memory + context-optimizer) and **5 core external npm packages** (`@tintinweb/pi-subagents`, `@sting8k/pi-srcwalk`, `@sting8k/pi-vcc`, `pi-rtk-optimizer`, `@davecodes/pi-dcp`) + 1 optional (`pi-guard`). Long-term memory is **in-house** (`.pi/extensions/{memory,skill-manage,session-search}.ts`) — no external memory dependency, no native SQLite, no LLM subprocess. `npm:pi-hermes-memory` was **fully removed** (global + project) on 2026-06-25. See [## Memory](#memory) for architecture and [## Context Optimization](#context-optimization) for the rtk/dcp/vcc stack.
+This kit ships **6 custom TypeScript extensions** (in-house memory + context-optimizer) and **6 core external npm packages** (`@tintinweb/pi-subagents`, `@sting8k/pi-srcwalk`, `@sting8k/pi-vcc`, `pi-rtk-optimizer`, `@davecodes/pi-dcp`, `@eko24ive/pi-ask`) + 1 optional (`pi-guard`). Long-term memory is **in-house** (`.pi/extensions/{memory,skill-manage,session-search}.ts`) — no external memory dependency, no native SQLite, no LLM subprocess. `npm:pi-hermes-memory` was **fully removed** (global + project) on 2026-06-25. See [## Memory](#memory) for architecture and [## Context Optimization](#context-optimization) for the rtk/dcp/vcc stack.
 
 ### Custom (6)
 
@@ -266,6 +285,7 @@ The kit depends on external npm packages, split into two sets:
 | `@sting8k/pi-vcc` | core | Deterministic no-LLM compaction + `vcc_recall` lineage recall | Context-optimization stack — compaction layer |
 | `pi-rtk-optimizer` | core | Tool-output compaction (bash/read/grep) + `rtk` command rewriting | Context-optimization stack — inflow layer (`rtk` binary optional) |
 | `@davecodes/pi-dcp` | core | Dynamic context pruning (dedup, error purge, `compress`) | Context-optimization stack — in-flight layer |
+| `@eko24ive/pi-ask` | core | Interactive `ask_user` clarification gate for ambiguous/high-stakes decisions | pi-native interactive interview package |
 | `pi-guard` | optional | Tool permission system (bash AST parser, path globs) | AST parser handles `\|`, `&&`, `xargs` — regex can't |
 
 Install the full set with one command (idempotent, safe to re-run):
@@ -291,7 +311,7 @@ block into `.pi/settings.json` to enable its rules.
 
 ---
 
-## Skills (67 all shipped)
+## Skills (86 all shipped)
 
 See `skills/INDEX.md` for the full task → skill routing table.
 
@@ -301,7 +321,7 @@ See `skills/INDEX.md` for the full task → skill routing table.
 - `incremental-implementation` — Thin vertical slices with verify-after-each
 - `verification-before-completion` — Evidence before claiming completion
 
-**Tier 2 (63 skills, loaded on-demand):**
+**Tier 2 (82 skills, loaded on-demand):**
 
 | Category | Skills |
 |----------|--------|
@@ -413,7 +433,7 @@ The kit still follows Addy Osmani's 4 memory-type model (*Lesson 5: memory and c
 | Short-term | one session | context window + pi-vcc compaction |
 | Episodic | across sessions (searchable) | `session-search.ts` → grep over pi's JSONL session store (`~/.pi/agent/sessions/`); `session_search` tool |
 | Long-term | across sessions (retrieved on demand) | `memory.ts` → `.pi/memory/*.md` (markdown) + in-process TF-IDF; `memory` / `memory_search` tools |
-| Procedural | permanent | Agent Skills `.pi/skills/*` (67 curated, shipped) + `skill-manage.ts` `skill_manage` (project→`.pi/skills/`, global→`~/.pi/agent/skills/`) |
+| Procedural | permanent | Agent Skills `.pi/skills/*` (86 curated, shipped) + `skill-manage.ts` `skill_manage` (project→`.pi/skills/`, global→`~/.pi/agent/skills/`) |
 | Declarative | varies (RAG) | `templates/` + `context/` + `semantic_*` / `websearch` / `context7` |
 
 **The in-house memory layer provides:**

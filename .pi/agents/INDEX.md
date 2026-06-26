@@ -4,7 +4,7 @@ purpose: Index of subagent personas with tools, model, and routing
 
 # Agents Index
 
-6 subagent personas. Each is a focused, single-purpose agent invoked via the `subagent` (or `Agent`) tool with `subagent_type`. The main session agent (the one you chat with) is the primary orchestrator and delegates to these subagents; users can also invoke any directly.
+10 subagent personas. Each is a focused, single-purpose agent invoked via the `subagent` (or `Agent`) tool with `subagent_type`. The main session agent (the one you chat with) is the primary orchestrator and delegates to these subagents; users can also invoke any directly.
 
 ## Routing Table
 
@@ -16,6 +16,10 @@ purpose: Index of subagent personas with tools, model, and routing
 | `review` | sonnet-4-5 | read-only + semantic_* | Code review, debugging, security audit | "review/check for bugs/audit/is this correct" |
 | `scout` | haiku-4-5 | read + websearch/codesearch/context7/grepsearch/web_fetch | External research | "research/investigate/compare/what is/how does" |
 | `vision` | sonnet-4-5 | read + bash + find + ls | Visual UI/UX & accessibility | "inspect UI/screenshot/visual/accessibility/design review" |
+| `code-reviewer` | sonnet-4-5 | read-only + semantic_* | Five-axis code review (correctness, readability, architecture, security, performance) | five-axis code review pass before merge |
+| `test-engineer` | sonnet-4-5 | read-only + semantic_* | Test strategy, test writing, coverage analysis | test strategy + coverage review |
+| `security-auditor` | sonnet-4-5 | read-only + semantic_* | Vulnerability detection, threat modeling, hardening | vulnerability + threat-model review |
+| `web-performance-auditor` | sonnet-4-5 | read-only + semantic_* | Core Web Vitals, loading, rendering, network optimization | Core Web Vitals + perf audit |
 
 ## Notation (canonical)
 
@@ -23,7 +27,7 @@ Reference agents in prompts/docs as `Agent: <type>` or `subagent({ agent: "<type
 
 ## Tool tiers
 
-- **Read-only** (no edit/write): `explore`, `review`, `vision` — safe for analysis, never mutate.
+- **Read-only** (no edit/write): `explore`, `review`, `vision`, `code-reviewer`, `test-engineer`, `security-auditor`, `web-performance-auditor` — safe for analysis, never mutate.
 - **Web-capable**: `scout` (websearch/codesearch/context7/web_fetch), `plan` (websearch/codesearch/context7).
 - **Full edit**: `general`.
 - **Delegation**: the main session agent holds the `Agent`/`subagent` tool and dispatches these personas; subagents do not chain-spawn by default.
@@ -48,6 +52,6 @@ Reference agents in prompts/docs as `Agent: <type>` or `subagent({ agent: "<type
 
 ## Related
 
-- `prompts/INDEX.md` — 11 commands that invoke workflows using these agents
-- `workflows/INDEX.md` — 6 DAG workflows whose phases dispatch these agents
-- `skills/INDEX.md` — 67 skills loaded by these agents contextually
+- `prompts/INDEX.md` — 12 commands that invoke workflows using these agents
+- `workflows/INDEX.md` — 7 DAG workflows whose phases dispatch these agents
+- `skills/INDEX.md` — 86 skills loaded by these 10 agents contextually

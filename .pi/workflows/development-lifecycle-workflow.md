@@ -81,7 +81,7 @@ Keep each section under 200 words.
 ```
 Based on the validated requirements: {phase_2_output}, create a detailed implementation plan for the recommended approach. Break down into independent tasks that can be implemented in parallel.
 
-If the recommended approach has structural implications (new components, data flow changes, boundary shifts), also produce a design doc using `.pi/templates/design.md` written to `.pi/artifacts/$SLUG/design.md`.
+If the recommended approach has structural implications (new components, data flow changes, boundary shifts), also produce a design doc using `.pi/templates/DESIGN.md` written to `.pi/artifacts/$SLUG/design.md`.
 
 Return the plan in this format:
 

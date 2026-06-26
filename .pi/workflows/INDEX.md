@@ -60,5 +60,5 @@ No other cross-workflow dependencies. `quality-loop` is self-contained (loops in
 
 ## Related
 
-- `prompts/INDEX.md` — 11 commands that invoke these workflows
+- `prompts/INDEX.md` — 12 commands that invoke these workflows
 - `skills/INDEX.md` — skills loaded by workflow phases

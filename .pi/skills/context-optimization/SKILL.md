@@ -59,6 +59,28 @@ rtk + dcp are auto by their own defaults; vcc auto via the patched config.
 - **compress is agent-initiated** — dcp nudges but you decide; don't ignore nudges in long sessions or context fills and overflow compaction fires.
 - **Don't overwrite user rtk/dcp config** — the extension only flips the vcc default; respect user-owned runtime config.
 
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "Context looks fine, no need to manage it." | rtk/dcp keep it *looking* fine by auto-acting; the moment you stop honoring compress nudges, dcp's budget is consumed and overflow `/compact` fires — losing fidelity that a manual `compress` would have preserved. |
+| "Compressing loses information." | `compress` is **lossless-but-terse**: you write the summary with file:line, root cause, decisions, verification results. `/pi-vcc` is deterministic no-LLM structured compaction. `vcc_recall` recovers pruned lineage. The real info loss is *ignoring* nudges until overflow compaction rewrites the tail blindly. |
+| "I'll just re-run the search instead of `vcc_recall`." | Re-running exploration re-burns inflow (rtk has to compact it again) AND duplicates evidence dcp already deduped. `vcc_recall({query})` is one cheap call into already-compacted lineage — strictly cheaper than re-exploring. |
+| "dcp nudges are advisory, I'll compress at the end." | dcp nudges *because* the budget is strained now; deferring means the next turn's output gets pruned under pressure, often mid-work-stream. Compress at the **closure** (artifact written / phase done), not at the end. |
+| "`/compact` is the manual compaction command." | `/compact` is the LLM-based default; `/pi-vcc` is the deterministic, 0-LLM path the kit patches in (`overrideDefaultCompaction:true`). Prefer `/pi-vcc` — cheaper and reproducible. |
+| "rtk handles it, I don't need to do anything." | rtk only compacts **inflow** (tool output). It does not close work-streams or recover lineage. You still own `compress` at closures and `vcc_recall` before re-exploration. |
+
+## Red Flags
+
+- **Re-running the same exploration** a second session in a row instead of `vcc_recall({query})` first — the lineage was already compacted and recoverable in one call.
+- **Ignoring dcp `compress` nudges** repeatedly until the `context filling up` warning appears — the overflow compaction that follows is less faithful than a manual `compress`.
+- **Context filling up with no `compress` action** — a growing tail of closed exploratory tool calls sitting uncompressed because no closure was declared.
+- **Reaching for `/compact` instead of `/pi-vcc`** for manual compaction — paying for an LLM rewrite when a deterministic no-LLM summary is patched in.
+- **Compressing spans that include the last 3 turns** (turn protection) or endpoints inside in-flight work — violating the "only compress closed spans" safeguard.
+- **Writing a `compress` summary without file:line / decisions / verification results** — terse but lossy, defeating the point of lossless-but-terse.
+- **`vcc_recall` never called in a long session** — sign the agent is treating each turn as stateless and re-deriving context dcp already pruned.
+- **rtk binary missing and unflagged** — `/context-check` would warn; inflow rewrite silently skipped, so output compaction carries the full load.
+
 ## Verification
 
 - [ ] `/context-check` shows vcc `overrideDefaultCompaction=true` + rtk installed + dcp active.
