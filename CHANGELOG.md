@@ -6,7 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-06-26
+
 ### Added
+- **Kit now ships `@eko24ive/pi-ask`** — `npm:@eko24ive/pi-ask` added to the
+  scaffolded `.pi/settings.json:packages` (core), so `mdpi init` installs the
+  richer `ask_user` clarification tool (tabs/option+question notes/review with
+  Submit/Elaborate/Cancel/replay/custom keymaps + `/ask-settings` `/answer`
+  `/answer:again` `/ask:replay` slash commands) for kit users. `quality-loop`
+  workflow `suggested_action` enum updated `ask_user_question` → `ask_user` to
+  match the shipped tool.
 - **`mdpi upgrade` remembers `--only` subsets** — `mdpi init --only` now
   records the chosen category subset in `.template-manifest.json` (`categories`
   field), and `mdpi upgrade` filters the bundled template down to those

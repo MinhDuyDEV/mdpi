@@ -69,7 +69,7 @@ Score-gated, review-driven feedback loop for high-risk features. Runs iterative 
     "findings": [
       { "severity": "critical", "file": "src/auth.ts:42", "finding": "...", "suggestion": "..." }
     ],
-    "suggested_action": "fix" | "ask_user_question" | "proceed"
+    "suggested_action": "fix" | "ask_user" | "proceed"
   }
   ```
 

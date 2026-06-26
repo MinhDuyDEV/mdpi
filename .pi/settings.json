@@ -5,7 +5,8 @@
     "npm:@sting8k/pi-srcwalk",
     "npm:@sting8k/pi-vcc",
     "npm:pi-rtk-optimizer",
-    "npm:@davecodes/pi-dcp"
+    "npm:@davecodes/pi-dcp",
+    "npm:@eko24ive/pi-ask"
   ],
   "extensions": [
     "./extensions/workflows-runner.ts",
